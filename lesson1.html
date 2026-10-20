@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>1차시 사진은 숫자다</title>
+<title>1차시 RGB 필터 만들기</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="assets/common.css?v=202610201804">
 <style>
@@ -129,7 +129,7 @@
 <main class="wrap">
   <div class="lesson-head">
     <span class="eyebrow">1차시</span>
-    <h1>사진은 <span class="grad-text">숫자</span>다</h1>
+    <h1><span class="grad-text">RGB</span> 필터 만들기</h1>
   </div>
   <ol class="stepper" id="stepper"></ol>
   <div class="photo-bar" id="photoBar"><div id="picker"></div></div>
@@ -139,11 +139,11 @@
     <div class="step">
       <div class="step-head">
         <div class="step-num">1</div>
-        <div><h2>같은 사진, 다른 필터</h2><p>인스타그램에서 필터를 고르면 사진의 무엇이 바뀌는 걸까요?</p></div>
+        <div><h2>같은 사진, 다른 필터</h2><p>필터의 색감 차이는 어떻게 생기는 걸까요?</p></div>
       </div>
       <div class="box rgb-intro">
         <h3>🎨 미리 알아두기: 색 하나 = 숫자 3개</h3>
-        <p class="small">화면의 모든 점(픽셀)은 <b style="color:#d32f2f">빨강(R)</b>, <b style="color:#2e7d32">초록(G)</b>, <b style="color:#1565c0">파랑(B)</b> 세 빛을 섞어서 색을 내요. 각 빛의 세기를 <b>0(꺼짐)부터 255(가장 밝게)</b>까지의 숫자로 나타내요. 그래서 점 하나의 색은 <b>(R, G, B) 숫자 3개</b>예요.</p>
+        <p class="small">화면의 모든 점(픽셀)은 <b style="color:#d32f2f">빨강(R)</b>, <b style="color:#2e7d32">초록(G)</b>, <b style="color:#1565c0">파랑(B)</b> 세 빛을 섞어서 색을 내요. 각 빛의 세기를 <b>0(꺼짐)부터 255(가장 밝게)</b>까지의 숫자로 나타내요.<br>그래서 점 하나의 색은 <b>(R, G, B) 숫자 3개</b>예요.</p>
         <div class="rgb-chips" id="rgbChips"></div>
       </div>
       <p class="hook-hint">👆 왼쪽 <b>원본 사진 위에 마우스를 올려 보세요.</b> 그 점의 숫자 3개와, 오른쪽 사진들의 같은 위치 숫자가 함께 나타나요. 클릭하면 위치가 고정돼요.</p>
@@ -154,11 +154,11 @@
         </figure>
         <div class="hook-side" id="hookSide"></div>
       </div>
-      <p class="small muted" style="margin:8px 0 0">* 인스타그램 필터의 실제 계산식은 공개되어 있지 않아서, 필터의 느낌을 보고 비슷하게 만든 필터예요.</p>
+      <p class="small muted" style="margin:8px 0 0">* 원본 옆 4가지 필터는 인스타그램에 실제로 있는 필터입니다!<br>* 인스타그램 필터의 실제 계산식은 공개되어 있지 않아서, 필터의 느낌을 보고 비슷하게 만든 필터예요.</p>
       <div class="box key hidden" id="hookKey" style="margin-top:14px">
-        <p>다섯 사진 모두 <b>같은 위치</b>의 점인데 숫자가 달라요. 필터는 <b>사진 속 숫자를 규칙에 따라 계산해 바꾸는 것</b>이에요.</p>
+        <p>다섯 사진 모두 <b>같은 위치</b>의 점인데 숫자가 달라요. 필터는 <b>사진 속 숫자를 "규칙"에 따라 계산해 바꾸는 것</b>이에요.</p>
       </div>
-      <div class="screen-q" data-hint="숫자들이 마구 섞여 있다면 컴퓨터가 어느 점의 숫자인지 알 수 있을까요?|사진의 점들은 가로줄과 세로줄에 반듯하게 놓여 있어요. 수학에서 수를 가로·세로로 배열해 묶은 것을 무엇이라고 했나요?">사진이 숫자로 되어 있다면, 그 숫자들은 어떻게 정리되어 있을까요?</div>
+      <div class="screen-q" data-hint="원본 사진의 여러 곳(빨간 풍선, 하늘, 바다)에 마우스를 올려 보세요. 원본과 비교해 각 필터에서 R, G, B 중 어떤 숫자가 커지고 어떤 숫자가 작아졌나요?|예를 들어 Midnight는 R이 크게 줄고 B가 상대적으로 커져서 어둡고 푸르게 보여요. Fade는 어두운 곳의 숫자가 커져서 검정이 회색처럼 흐려져요. Paris와 Simple도 어떤 숫자가 어떻게 바뀌었는지 같은 방법으로 정리해 보세요.">각 필터들의 RGB 값의 특징을 정리해봅시다.</div>
     </div>
   </section>
 
@@ -811,7 +811,7 @@
 
   /* ===== 활동지 ===== */
   const ws = MF.worksheet({
-    lesson: 1, title: '사진은 숫자다',
+    lesson: 1, title: 'RGB 필터 만들기',
     q1hint: '예: 사진이 행렬이라는 것, 컬러 사진은 행렬 3장이라는 것, 필터는 모든 성분에 같은 규칙을 적용하는 것 등. 왜 인상 깊었는지도 써 주세요.',
     q2: '7번 화면에서 만든 필터의 이름과 R′, G′, B′ 식을 쓰고, 그 식이 사진을 어떻게 바꾸는지 설명해 주세요.',
     getResult: () => { if (!makerResult) renderMaker(); return { canvas: makerResult, name: nameIn.value.trim(), code: document.getElementById('codeOut').value }; }

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>3차시 색을 바꾸는 행렬 곱</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-<link rel="stylesheet" href="assets/common.css">
+<link rel="stylesheet" href="assets/common.css?v=202610201416">
 <style>
   .compare-wrap { position: relative; }
   .compare-badge { position: absolute; left: 10px; top: 10px; background: rgba(0,0,0,.7); color: #fff; font-size: 12px; padding: 3px 10px; border-radius: 999px; pointer-events: none; }
@@ -88,7 +88,7 @@
       <div class="box key hidden" id="hookKey" style="margin-top:14px">
         <p>세피아의 R'는 원래 R만으로 만들 수 없어요. <b>R' = 0.39R + 0.77G + 0.19B</b> 처럼 <b>R, G, B를 모두 섞어서</b> 만들어요. 이런 식 3개를 깔끔하게 정리하는 도구가 바로 <b>행렬의 곱셈</b>이에요.</p>
       </div>
-      <div class="screen-q">흑백 사진에서는 R', G', B'가 모두 같아요. 세피아는 R', G', B'의 크기가 어떤 순서인가요?</div>
+      <div class="screen-q" data-hint="[숫자로 들여다보기]를 누르고 세피아 사진의 숫자 3개를 읽어 보세요.|세피아는 갈색빛이에요. 갈색은 R, G, B 중 무엇이 가장 크고 무엇이 가장 작을까요?">흑백 사진에서는 R', G', B'가 모두 같아요. 세피아는 R', G', B'의 크기가 어떤 순서인가요?</div>
     </div>
   </section>
 
@@ -115,7 +115,7 @@
           <div class="canvas-frame" style="margin-top:10px;max-width:360px"><canvas id="eqCanvas"></canvas></div>
         </div>
       </div>
-      <div class="screen-q">1행 1열 성분이 0이면, R'를 만들 때 원래 R은 쓰일까요?</div>
+      <div class="screen-q" data-hint="1행은 R′ = aR + bG + cB 식이에요. 1행 1열 성분은 이 중 a예요.|a = 0이면 0 × R = 0 이에요. 왼쪽 식의 첫 칸에 0을 넣고 사진을 확인해 보세요.">1행 1열 성분이 0이면, R'를 만들 때 원래 R은 쓰일까요?</div>
     </div>
   </section>
 
@@ -134,7 +134,7 @@
         <span id="handResult" class="small"></span>
       </div>
       <div class="row-hint hidden" id="rowHint"></div>
-      <div class="screen-q">문제 1의 행렬은 어떤 필터일까요? 결과 픽셀의 색을 원래 색과 비교해 보세요.</div>
+      <div class="screen-q" data-hint="결과 픽셀에서 R, G, B 중 무엇이 그대로이고 무엇이 바뀌었나요?|(200, 120, 40) → (200, 40, 120). 두 숫자가 자리를 바꿨어요. 어떤 두 색일까요?">문제 1의 행렬은 어떤 필터일까요? 결과 픽셀의 색을 원래 색과 비교해 보세요.</div>
     </div>
   </section>
 
@@ -155,7 +155,7 @@
           <div id="diagMV"></div>
         </div>
       </div>
-      <div class="screen-q">R 세기만 0으로 하면 어떤 색의 사진이 되나요? 2차시의 '따뜻함'과 비슷하게 만들려면?</div>
+      <div class="screen-q" data-hint="R 세기 슬라이더를 0으로 옮겨 보세요. 빨강이 빠지면 초록과 파랑만 남아요.|따뜻함은 빨강은 키우고 파랑은 줄였어요. 대각선의 1행 1열은 1보다 크게, 3행 3열은 1보다 작게 해 보세요.">R 세기만 0으로 하면 어떤 색의 사진이 되나요? 2차시의 '따뜻함'과 비슷하게 만들려면?</div>
     </div>
   </section>
 
@@ -174,7 +174,7 @@
           <div class="box small" id="permNote"></div>
         </div>
       </div>
-      <div class="screen-q">빨간 풍선을 파란 풍선으로 바꾸려면 1을 어느 자리에 두어야 할까요?</div>
+      <div class="screen-q" data-hint="빨간 풍선은 R이 크고 B가 작아요. B′가 원래 R 값을 가져오면 어떻게 될까요?|&#x27;R ↔ B&#x27; 버튼을 눌러 보고 1이 어느 자리에 있는지 확인해 보세요.">빨간 풍선을 파란 풍선으로 바꾸려면 1을 어느 자리에 두어야 할까요?</div>
     </div>
   </section>
 
@@ -194,7 +194,7 @@
           <div class="box small" id="famousNote"></div>
         </div>
       </div>
-      <div class="screen-q">세 행이 모두 같으면 왜 회색이 될까요? 각 행의 합이 1보다 크면 어떻게 될까요?</div>
+      <div class="screen-q" data-hint="세 행이 같으면 R′, G′, B′를 계산하는 식이 모두 같아요.|R′ = G′ = B′ 이면 회색이에요(1차시 4번 화면). 행의 합이 1보다 크면 결과 숫자가 원래보다 커져요.">세 행이 모두 같으면 왜 회색이 될까요? 각 행의 합이 1보다 크면 어떻게 될까요?</div>
     </div>
   </section>
 
@@ -213,7 +213,7 @@
           <div class="box small">s = 0 이면 흑백, s = 1 이면 원본, s > 1 이면 더 쨍한 색이 돼요.</div>
         </div>
       </div>
-      <div class="screen-q">2차시에 배운 행렬의 덧셈과 실수배가 '필터 행렬'을 만드는 데도 쓰였어요. s = 0.5 이면 어떤 행렬이 될까요?</div>
+      <div class="screen-q" data-hint="채도 슬라이더를 0.5에 맞추고 행렬을 보세요.|0.5 × E + 0.5 × G 예요. 1행은 0.5 × (1, 0, 0) + 0.5 × (0.3, 0.59, 0.11)을 계산하면 돼요.">2차시에 배운 행렬의 덧셈과 실수배가 '필터 행렬'을 만드는 데도 쓰였어요. s = 0.5 이면 어떤 행렬이 될까요?</div>
     </div>
   </section>
 
@@ -232,7 +232,7 @@
           <div class="combo" id="mixCombo"></div>
         </div>
       </div>
-      <div class="screen-q">강도 0%와 100%일 때 행렬은 각각 무엇인가요?</div>
+      <div class="screen-q" data-hint="강도 슬라이더를 양 끝으로 옮겨 보고 결과 행렬을 보세요.|t = 0이면 (1 − 0)E + 0F, t = 1이면 0E + 1F 예요.">강도 0%와 100%일 때 행렬은 각각 무엇인가요?</div>
     </div>
   </section>
 
@@ -284,10 +284,10 @@
         채도·강도 슬라이더 = 행렬의 <b>실수배와 덧셈</b>으로 두 행렬 섞기.</p>
       </div>
       <ol class="think">
-        <li>단위행렬 E를 곱하면 왜 사진이 바뀌지 않을까요? 픽셀 (R, G, B)로 계산해 설명해 보세요.</li>
-        <li>R과 B를 바꾸는 행렬을 두 번 곱하면 어떻게 될까요? 행렬의 곱셈으로 확인해 보세요.</li>
-        <li>내 색감 행렬과 그 행렬의 각 행이 무슨 역할을 하는지 설명해 보세요.</li>
-        <li>2차시의 밝기(A + k)는 3×3 행렬 곱셈만으로 만들 수 있을까요? 그렇지 않다면 이유는?</li>
+        <li data-hint="E × (R, G, B)를 1행부터 계산해 보세요.|1행: 1×R + 0×G + 0×B = R. 2행과 3행도 계산하면 무엇이 나오나요?">단위행렬 E를 곱하면 왜 사진이 바뀌지 않을까요? 픽셀 (R, G, B)로 계산해 설명해 보세요.</li>
+        <li data-hint="(R, G, B)에 R ↔ B를 한 번 하면 (B, G, R)이에요. 한 번 더 하면?|R ↔ B 행렬을 자기 자신과 곱한 결과를 직접 계산해 보세요. 어떤 특별한 행렬이 나오나요?">R과 B를 바꾸는 행렬을 두 번 곱하면 어떻게 될까요? 행렬의 곱셈으로 확인해 보세요.</li>
+        <li data-hint="1행은 R′, 2행은 G′, 3행은 B′를 만들어요.|각 행에서 가장 큰 숫자가 어느 자리에 있는지, 행의 합이 1보다 큰지 작은지 살펴보세요.">내 색감 행렬과 그 행렬의 각 행이 무슨 역할을 하는지 설명해 보세요.</li>
+        <li data-hint="검정 픽셀 (0, 0, 0)에 아무 3×3 행렬이나 곱해 보세요.|곱셈만으로는 0을 0이 아닌 수로 바꿀 수 없어요. 밝기를 올리면 검정도 k가 되어야 해요.">2차시의 밝기(A + k)는 3×3 행렬 곱셈만으로 만들 수 있을까요? 그렇지 않다면 이유는?</li>
       </ol>
     </div>
   </section>
@@ -299,7 +299,7 @@
   </div>
 </main>
 
-<script src="assets/common.js"></script>
+<script src="assets/common.js?v=202610201416"></script>
 <script>
 (() => {
   /* ===== 공유 상태 ===== */

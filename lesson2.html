@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>2차시 슬라이더 뒤의 수학</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-<link rel="stylesheet" href="assets/common.css">
+<link rel="stylesheet" href="assets/common.css?v=202610201416">
 <style>
   .compare-wrap { position: relative; }
   .compare-badge { position: absolute; left: 10px; top: 10px; background: rgba(0,0,0,.7); color: #fff; font-size: 12px; padding: 3px 10px; border-radius: 999px; pointer-events: none; }
@@ -91,7 +91,7 @@
       </div>
       <div class="guess-opts" id="guessOpts"></div>
       <p id="guessResult" class="small" style="margin-top:10px"></p>
-      <div class="screen-q">슬라이더 하나를 움직이면, 사진 속 수십만 개의 숫자는 어떤 규칙으로 바뀔까요? 오늘 하나씩 밝혀 봐요!</div>
+      <div class="screen-q" data-hint="밝기를 올리면 모든 픽셀이 밝아져요. 숫자로는 어떤 계산을 하면 될까요?|모든 숫자에 같은 수를 더하거나, 같은 수를 곱하는 규칙을 떠올려 보세요.">슬라이더 하나를 움직이면, 사진 속 수십만 개의 숫자는 어떤 규칙으로 바뀔까요? 오늘 하나씩 밝혀 봐요!</div>
     </div>
   </section>
 
@@ -108,7 +108,7 @@
         <p class="small">밝기를 +100 한 다음 다시 −100 하면 원래 사진으로 돌아올까요? 예상해 보고 버튼을 눌러 확인해 보세요.</p>
         <div class="btn-row" style="margin-top:8px"><button class="btn sm" id="undoTest">+100 → −100 해 보기</button><span class="small" id="undoResult"></span></div>
       </div>
-      <div class="screen-q">255를 넘으면 255로 잘려요. 그래프에서 이 부분은 어떻게 보이나요?</div>
+      <div class="screen-q" data-hint="밝기 k를 크게 하고 그래프의 오른쪽 끝을 보세요.|선이 255에 닿은 뒤에는 더 올라가지 못하고 평평해져요. 그 부분의 픽셀은 모두 같은 값(255, 흰색)이 돼요.">255를 넘으면 255로 잘려요. 그래프에서 이 부분은 어떻게 보이나요?</div>
     </div>
   </section>
 
@@ -123,7 +123,7 @@
       <div class="box key" style="margin-top:14px">
         <p>더하기(A + k)는 어두운 곳과 밝은 곳이 <b>똑같이</b> 밝아지지만, 곱하기(kA)는 <b>밝은 곳일수록 더 많이</b> 바뀌어요. 검정(0)은 몇 배를 해도 0이에요.</p>
       </div>
-      <div class="screen-q">2번 화면의 덧셈 그래프와 비교해 보세요. 그래프가 어떻게 다르게 움직이나요?</div>
+      <div class="screen-q" data-hint="덧셈은 선을 위아래로 옮기고, 곱셈은 선의 기울어진 정도를 바꿔요.|곱셈 그래프는 k가 달라져도 항상 (0, 0)을 지나요. 검정(0)은 몇 배를 해도 0이기 때문이에요.">2번 화면의 덧셈 그래프와 비교해 보세요. 그래프가 어떻게 다르게 움직이나요?</div>
     </div>
   </section>
 
@@ -135,7 +135,7 @@
         <div><h2>대비 = 가운데(128)에서 멀어지게</h2><p>대비를 높이면 밝은 곳은 더 밝게, 어두운 곳은 더 어둡게 돼요. 128을 기준으로 거리를 k배 해요.</p></div>
       </div>
       <div class="lab" data-concept="contrast"></div>
-      <div class="screen-q">k가 1보다 작으면 사진이 어떻게 되나요? k = 0이면요?</div>
+      <div class="screen-q" data-hint="k를 0.5로 맞추고 사진과 그래프를 보세요.|k가 작을수록 모든 값이 128 쪽으로 모여 회색처럼 흐려져요. k = 0을 식 k(A − 128) + 128에 넣으면?">k가 1보다 작으면 사진이 어떻게 되나요? k = 0이면요?</div>
     </div>
   </section>
 
@@ -147,7 +147,7 @@
         <div><h2>따뜻함 = 행렬마다 다르게</h2><p>지금까지는 R, G, B 행렬에 같은 계산을 했어요. 따뜻함은 <b>R 행렬에는 더하고, B 행렬에서는 빼요</b>.</p></div>
       </div>
       <div class="lab" data-concept="warm"></div>
-      <div class="screen-q">t를 음수로 하면 어떤 느낌이 되나요? 어떤 사진에 어울릴까요?</div>
+      <div class="screen-q" data-hint="t가 음수이면 R′ = R + t 에서 빨강은 줄고, B′ = B − t 에서 파랑은 늘어요.|파랑이 많아지면 차가운 느낌이 돼요. 겨울, 바다, 새벽 사진을 떠올려 보세요.">t를 음수로 하면 어떤 느낌이 되나요? 어떤 사진에 어울릴까요?</div>
     </div>
   </section>
 
@@ -159,7 +159,7 @@
         <div><h2>페이드 = 검정을 들어 올리기</h2><p>감성 사진에서 자주 보는 '물 빠진' 느낌이에요. 흰색(255)은 그대로 두고, 어두운 곳일수록 많이 밝혀요.</p></div>
       </div>
       <div class="lab" data-concept="fade"></div>
-      <div class="screen-q">그래프에서 왼쪽 끝(검정)은 얼마나 올라갔나요? 오른쪽 끝(흰색)은요?</div>
+      <div class="screen-q" data-hint="그래프에서 원래 값 A = 0일 때 바뀐 값이 얼마인지 읽어 보세요.|A = 0과 A = 255를 식 A + f × (255 − A) ÷ 2 에 각각 넣어 보세요. A = 255이면 (255 − A)는 0이에요.">그래프에서 왼쪽 끝(검정)은 얼마나 올라갔나요? 오른쪽 끝(흰색)은요?</div>
     </div>
   </section>
 
@@ -189,7 +189,7 @@
         <tr data-tool="contrast"><td>대비</td><td class="m">k(A − 128) + 128</td><td class="m">k</td><td class="m">128 − 128k</td><td><button class="btn sm" data-ab="1.5,-64">예: k=1.5</button></td></tr>
         <tr data-tool="fade"><td>페이드</td><td class="m">A + f(255 − A) ÷ 2</td><td class="m">1 − f/2</td><td class="m">127.5f</td><td><button class="btn sm" data-ab="0.8,51">예: f=0.4</button></td></tr>
       </table>
-      <div class="screen-q">a는 그래프의 무엇을, b는 그래프의 무엇을 바꾸나요? (힌트: 일차함수 y = ax + b)</div>
+      <div class="screen-q" data-hint="a만 움직여 보고, 그다음 b만 움직여 보세요.|a를 바꾸면 선이 얼마나 가파른지(기울기)가, b를 바꾸면 선이 위아래로 이동해요(y절편).">a는 그래프의 무엇을, b는 그래프의 무엇을 바꾸나요? (힌트: 일차함수 y = ax + b)</div>
     </div>
   </section>
 
@@ -218,7 +218,7 @@
       <div class="box tip" style="margin-top:14px">
         <p class="small">⚠️ 이 계산은 교과서의 <b>행렬의 곱셈</b>(행과 열을 곱해서 더하기)과 다른 계산이에요. 같은 자리의 성분끼리만 곱해요. 행렬의 곱셈은 3차시에 필터로 만나요!</p>
       </div>
-      <div class="screen-q">마스크 행렬의 가운데 성분과 모서리 성분은 각각 얼마인가요? 그 이유는?</div>
+      <div class="screen-q" data-hint="5×5로 줄인 M에서 가운데 숫자와 네 모서리 숫자를 읽어 보세요.|가운데는 1이라 그대로이고, 모서리는 1 − v라서 v가 클수록 더 어두워져요. 그러면 사진을 볼 때 시선이 어디로 모일까요?">마스크 행렬의 가운데 성분과 모서리 성분은 각각 얼마인가요? 그 이유는?</div>
     </div>
   </section>
 
@@ -248,7 +248,7 @@
         </div>
         <div class="panel" id="panel1"></div>
       </div>
-      <div class="screen-q">어떤 순서로 슬라이더를 맞추는 게 좋았나요? 내 전략을 친구에게 설명해 보세요.</div>
+      <div class="screen-q" data-hint="[힌트] 버튼으로 어떤 슬라이더를 움직였는지 먼저 알아보세요.|색감(따뜻함)처럼 눈에 잘 띄는 것부터 맞추고, 일치도가 오르는지 보며 하나씩 조절하는 전략을 써 보세요.">어떤 순서로 슬라이더를 맞추는 게 좋았나요? 내 전략을 친구에게 설명해 보세요.</div>
     </div>
   </section>
 
@@ -293,10 +293,10 @@
         <p>밝기 = <b>덧셈</b> A + kJ, 노출 = <b>실수배</b> kA, 대비·페이드 = 둘을 섞은 <b>aA + b</b>.<br>따뜻함 = R, G, B 행렬마다 <b>다른 계산</b>, 비네트 = 마스크 행렬과 <b>같은 자리끼리 곱하기</b>.</p>
       </div>
       <ol class="think">
-        <li>밝기 +100 후 −100을 했을 때 원래 사진으로 돌아오지 않은 이유를 설명해 보세요.</li>
-        <li>대비를 k = 0으로 하면 사진이 어떻게 될까요? 식 k(A − 128) + 128에 넣어 설명해 보세요.</li>
-        <li>내 프리셋의 이름과 수학 레시피를 쓰고, 각 단계가 사진을 어떻게 바꾸는지 설명해 보세요.</li>
-        <li>인스타그램 수정 메뉴에서 오늘 배우지 않은 슬라이더(채도, 하이라이트 등)를 하나 골라, 어떤 계산일지 추측해 보세요.</li>
+        <li data-hint="200에 100을 더하면 300이지만, 이미지에서는 얼마로 저장될까요?|255로 잘린 순간 원래 값이 200이었다는 정보가 사라져요. 255 − 100 = ?">밝기 +100 후 −100을 했을 때 원래 사진으로 돌아오지 않은 이유를 설명해 보세요.</li>
+        <li data-hint="k = 0이면 k(A − 128) 부분은 얼마가 될까요?|0 × (A − 128) = 0 이므로 A′ = 128 이에요. 모든 픽셀이 같은 값이 되면 사진은 어떻게 보일까요?">대비를 k = 0으로 하면 사진이 어떻게 될까요? 식 k(A − 128) + 128에 넣어 설명해 보세요.</li>
+        <li data-hint="10번 화면의 &#x27;수학 레시피&#x27;를 그대로 옮겨 적고 시작하세요.|레시피 한 줄마다 덧셈, 실수배, aA + b, 마스크 중 무엇인지와 사진이 어떻게 변했는지를 한 문장씩 써 보세요.">내 프리셋의 이름과 수학 레시피를 쓰고, 각 단계가 사진을 어떻게 바꾸는지 설명해 보세요.</li>
+        <li data-hint="채도는 색이 얼마나 진한지예요. 흑백(R = G = B)과 원본의 차이를 키우거나 줄이면 어떻게 될까요?|하이라이트는 밝은 부분만 조절해요. 그래프에서 오른쪽(큰 값) 부분만 바뀌는 선을 떠올려 보세요.">인스타그램 수정 메뉴에서 오늘 배우지 않은 슬라이더(채도, 하이라이트 등)를 하나 골라, 어떤 계산일지 추측해 보세요.</li>
       </ol>
     </div>
   </section>
@@ -308,7 +308,7 @@
   </div>
 </main>
 
-<script src="assets/common.js"></script>
+<script src="assets/common.js?v=202610201416"></script>
 <script>
 (() => {
   /* ===== 공유 상태 ===== */

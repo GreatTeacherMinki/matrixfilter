@@ -462,13 +462,37 @@
     };
     const screens = [...document.querySelectorAll('.screen')], last = screens[screens.length - 1];
 
-    // 화면별 질문 아래 메모 칸 (선택)
+    // 질문의 data-hint="힌트1|힌트2" 를 단계별로 하나씩 열어 보는 힌트 버튼
+    const hintFor = hint => {
+      const steps = hint.split('|').map(s => s.trim()).filter(Boolean);
+      const wrap = document.createElement('div');
+      wrap.className = 'ws-hint';
+      wrap.innerHTML = `<button type="button" class="btn sm ws-hint-btn">💡 힌트 보기</button><div class="ws-hint-list"></div>`;
+      const btn = wrap.querySelector('button'), list = wrap.querySelector('.ws-hint-list');
+      let shown = 0;
+      btn.addEventListener('click', () => {
+        const p = document.createElement('p');
+        p.innerHTML = `<b>힌트 ${shown + 1}</b> ${esc(steps[shown])}`;
+        list.append(p); shown++;
+        if (shown < steps.length) btn.textContent = `💡 힌트 ${shown + 1} 더 보기`;
+        else { btn.textContent = '힌트를 모두 봤어요'; btn.disabled = true; }
+      });
+      return wrap;
+    };
+
+    // 화면별 질문 아래 메모 칸 (선택)과 힌트
     screens.forEach((sc, i) => {
       const q = sc.querySelector('.screen-q');
-      if (q) q.after(box('m' + i, 2, '✏️ 내 생각 메모 (선택) · 활동지에 함께 저장돼요', 'ws-memo'));
+      if (!q) return;
+      const memo = box('m' + i, 2, '✏️ 내 생각 메모 (선택) · 활동지에 함께 저장돼요', 'ws-memo');
+      q.after(memo);
+      if (q.dataset.hint) memo.after(hintFor(q.dataset.hint));
     });
-    // 생각해보기 답 칸 (선택)
-    last.querySelectorAll('.think li').forEach((li, j) => li.append(box('t' + j, 2, '답 (선택)', 'ws-memo ws-think')));
+    // 생각해보기 답 칸 (선택)과 힌트
+    last.querySelectorAll('.think li').forEach((li, j) => {
+      li.append(box('t' + j, 2, '답 (선택)', 'ws-memo ws-think'));
+      if (li.dataset.hint) li.append(hintFor(li.dataset.hint));
+    });
 
     // 필수 기록 3문항 + 제출
     const REQ = [

@@ -709,5 +709,32 @@
     return `<div class="matrix"><table>${body}</table></div>`;
   };
 
+  /* ---------- 차시 공개 설정 ----------
+   * 수업을 진행한 차시만 열어 둔다. 다음 차시를 열 때 이 목록에 번호를 추가한다.
+   * 선생님 미리보기: 주소 끝에 ?preview 를 붙이면 모든 차시가 열린다.
+   */
+  MF.OPEN_LESSONS = [1];
+  const lessonNo = href => { const m = /lesson(\d)\.html/.exec(href || ''); return m ? +m[1] : 0; };
+  const isOpen = n => /[?&]preview/.test(location.search) || MF.OPEN_LESSONS.includes(n);
+  const lockLessons = () => {
+    // 메뉴의 닫힌 차시 링크 → 누를 수 없는 '준비 중' 표시
+    document.querySelectorAll('.lesson-nav a').forEach(a => {
+      const n = lessonNo(a.getAttribute('href'));
+      if (n && !isOpen(n)) { const sp = document.createElement('span'); sp.className = 'soon'; sp.title = '아직 열리지 않은 차시예요'; sp.textContent = a.textContent; a.replaceWith(sp); }
+    });
+    // 홈의 차시 카드
+    document.querySelectorAll('a.lesson-card').forEach(a => {
+      const n = lessonNo(a.getAttribute('href'));
+      if (n && !isOpen(n)) { const d = document.createElement('div'); d.className = 'lesson-card soon'; d.append(...a.childNodes); a.replaceWith(d); } // 그려 둔 썸네일이 지워지지 않게 그대로 옮긴다
+    });
+    // 닫힌 차시 페이지에 직접 들어온 경우
+    const here = lessonNo(location.pathname);
+    if (here && !isOpen(here)) {
+      const main = document.querySelector('main');
+      if (main) main.innerHTML = `<div class="step" style="margin:40px 0;text-align:center"><h2 style="font-size:24px">🔒 ${here}차시는 아직 열리지 않았어요</h2><p class="muted" style="margin-top:10px">수업 시간에 선생님이 열어 줄 거예요.</p><p style="margin-top:18px"><a class="btn primary" href="index.html">홈으로</a></p></div>`;
+    }
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', lockLessons); else lockLessons();
+
   window.MF = MF;
 })();

@@ -50,6 +50,7 @@
   .palette button.on { border-color: var(--pink); box-shadow: 0 0 0 3px #fde8ef; }
   .score { font-weight: 800; }
   .mode-tabs { margin-bottom: 14px; }
+  .preset-group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; max-width: 340px; }
   .res-row { grid-template-columns: 80px 1fr 90px; margin: 0; }
   .res-ticks { display: flex; justify-content: space-between; margin: -2px 96px 12px 86px; font-size: 11px; color: var(--muted); }
   .maker-title { font-size: 18px; margin: 22px 0 12px; }
@@ -189,12 +190,24 @@
           <div>
             <div class="pa-grid" id="paGrid"></div>
             <div class="palette" id="palette"></div>
-            <div class="btn-row">
-              <button class="btn sm" data-preset="heart">하트</button>
-              <button class="btn sm" data-preset="smile">스마일</button>
-              <button class="btn sm" data-preset="grad">그라데이션</button>
-              <button class="btn sm" data-preset="clear">지우기</button>
+            <div class="preset-group">
+              <span class="small muted">검정·흰색만:</span>
+              <button class="btn sm" data-preset="heart">❤️ 하트</button>
+              <button class="btn sm" data-preset="smile">🙂 스마일</button>
+              <button class="btn sm" data-preset="star">⭐ 별</button>
+              <button class="btn sm" data-preset="arrow">⬆️ 화살표</button>
+              <button class="btn sm" data-preset="letterA">🔤 글자 A</button>
+              <button class="btn sm" data-preset="check">🏁 체크무늬</button>
             </div>
+            <div class="preset-group">
+              <span class="small muted">회색까지:</span>
+              <button class="btn sm" data-preset="cat">🐱 고양이</button>
+              <button class="btn sm" data-preset="tree">🌳 나무</button>
+              <button class="btn sm" data-preset="moon">🌙 달밤</button>
+              <button class="btn sm" data-preset="ball">⚪ 입체 공</button>
+              <button class="btn sm" data-preset="grad">▤ 그라데이션</button>
+            </div>
+            <div class="btn-row"><button class="btn sm" data-preset="clear">🧽 지우기</button></div>
           </div>
           <div>
             <div class="matrix-label">8×8 행렬 A</div>
@@ -204,6 +217,7 @@
             </div>
           </div>
         </div>
+        <div class="screen-q" data-hint="'검정·흰색만' 그림과 '회색까지' 그림(고양이, 입체 공 등)을 번갈아 눌러 비교해 보세요.|쓸 수 있는 숫자(밝기 단계)가 많을수록 명암이 부드럽게 표현돼요. 실제 흑백 사진은 0부터 255까지 모두 256단계를 써요.">검정(0)과 흰색(255)만 쓸 때와 회색(64, 128, 192)까지 쓸 때, 그림은 어떻게 달라지나요?</div>
       </div>
 
       <div data-ppanel="quiz" class="hidden">
@@ -231,7 +245,6 @@
           </div>
         </div>
       </div>
-      <div class="screen-q" data-hint="'그라데이션' 버튼을 눌러 보고, 하트에 회색 칸을 섞어 그림자를 넣어 보세요.|쓸 수 있는 숫자(밝기 단계)가 많을수록 명암이 부드럽게 표현돼요. 실제 흑백 사진은 0부터 255까지 모두 256단계를 써요.">검정(0)과 흰색(255)만 쓸 때와 회색(64, 128, 192)까지 쓸 때, 그림은 어떻게 달라지나요?</div>
     </div>
   </section>
 
@@ -537,6 +550,19 @@
   const presets = {
     heart: [W,0,0,W,W,0,0,W, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, W,0,0,0,0,0,0,W, W,W,0,0,0,0,W,W, W,W,W,0,0,W,W,W, W,W,W,W,W,W,W,W],
     smile: [W,W,0,0,0,0,W,W, W,0,W,W,W,W,0,W, 0,W,0,W,W,0,W,0, 0,W,W,W,W,W,W,0, 0,W,0,W,W,0,W,0, 0,W,W,0,0,W,W,0, W,0,W,W,W,W,0,W, W,W,0,0,0,0,W,W],
+    star: [W,W,W,0,0,W,W,W, W,W,W,0,0,W,W,W, 0,0,0,0,0,0,0,0, W,0,0,0,0,0,0,W, W,W,0,0,0,0,W,W, W,W,0,0,0,0,W,W, W,0,0,W,W,0,0,W, 0,0,W,W,W,W,0,0],
+    arrow: [W,W,W,0,0,W,W,W, W,W,0,0,0,0,W,W, W,0,0,0,0,0,0,W, 0,0,W,0,0,W,0,0, W,W,W,0,0,W,W,W, W,W,W,0,0,W,W,W, W,W,W,0,0,W,W,W, W,W,W,0,0,W,W,W],
+    letterA: [W,W,W,0,0,W,W,W, W,W,0,0,0,0,W,W, W,0,0,W,W,0,0,W, W,0,0,W,W,0,0,W, W,0,0,0,0,0,0,W, W,0,0,W,W,0,0,W, W,0,0,W,W,0,0,W, W,W,W,W,W,W,W,W],
+    check: Array.from({ length: 64 }, (_, k) => ((k >> 3) + (k & 7)) % 2 ? 0 : W),
+    cat: [128,W,W,W,W,W,W,128, 128,128,W,W,W,W,128,128, 128,128,128,128,128,128,128,128, 128,0,128,128,128,128,0,128, 128,128,128,64,64,128,128,128, 128,128,0,128,128,0,128,128, W,128,128,0,0,128,128,W, W,W,128,128,128,128,W,W],
+    tree: [W,W,W,64,64,W,W,W, W,W,64,64,64,64,W,W, W,64,64,64,64,64,64,W, 64,64,64,64,64,64,64,64, W,W,W,0,0,W,W,W, W,W,W,0,0,W,W,W, 192,192,192,0,0,192,192,192, 192,192,192,192,192,192,192,192],
+    moon: [0,0,0,0,0,0,192,0, 0,0,0,W,W,0,0,0, 0,0,W,W,0,0,0,0, 0,W,W,0,0,0,192,0, 0,W,W,0,0,0,0,0, 0,0,W,W,0,0,0,0, 0,0,0,W,W,0,0,192, 192,0,0,0,0,0,0,0],
+    // 왼쪽 위에서 빛이 비치는 공: 가운데에서 멀수록, 빛에서 멀수록 어둡게
+    ball: Array.from({ length: 64 }, (_, k) => {
+      const i = k >> 3, j = k & 7, d = Math.hypot(i - 3.5, j - 3.5);
+      if (d > 3.7) return W;
+      return Math.round(Math.max(20, 240 - Math.hypot(i - 2, j - 2) * 45));
+    }),
     grad: Array.from({ length: 64 }, (_, k) => Math.round((k % 8) * 255 / 7)),
     clear: Array(64).fill(W)
   };
@@ -552,10 +578,10 @@
     W,W,0,0,0,0,W,W,
     W,0,0,0,0,0,0,W,
     0,0,0,0,0,0,0,0,
-    W,0,128,128,0,0,0,W,
-    W,0,128,128,0,W,0,W,
-    W,0,0,0,0,W,0,W,
-    W,0,0,0,0,W,0,W
+    W,0,W,W,0,0,0,W,
+    W,0,W,W,0,128,0,W,
+    W,0,0,0,0,128,0,W,
+    W,0,0,0,0,128,0,W
   ];
   const board2 = pixelBoard(document.getElementById('paGrid2'), document.getElementById('palette2'));
   // 정답 그림이 미리 보이지 않도록 숫자만 보여준다
@@ -572,7 +598,7 @@
     const el = document.getElementById('mysteryGuessResult');
     if (!g) { el.textContent = '정답을 입력해 주세요.'; return; }
     el.innerHTML = /집|주택|house|home/.test(g)
-      ? '<b style="color:var(--ok)">🎉 정답! 집이에요.</b> 회색(128) 칸은 창문, 흰색(255) 칸은 문이에요.'
+      ? '<b style="color:var(--ok)">🎉 정답! 집이에요.</b> 흰색(255) 칸은 창문, 회색(128) 칸은 문이에요.'
       : '아직 아니에요. 행렬대로 칸을 더 칠한 다음 다시 맞혀 보세요.';
   };
   document.getElementById('mysteryGuessBtn').addEventListener('click', checkGuess);

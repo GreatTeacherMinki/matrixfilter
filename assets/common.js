@@ -512,9 +512,9 @@
     };
 
     // 화면별 질문 아래 메모 칸 (선택)과 힌트
-    screens.forEach((sc, i) => {
-      const q = sc.querySelector('.screen-q');
-      if (!q) return;
+    const memoKey = (i, n) => n ? `m${i}q${n}` : `m${i}`; // 한 화면에 질문이 여러 개일 때
+    screens.forEach((sc, i) => sc.querySelectorAll('.screen-q').forEach((q, n) => {
+      const K = memoKey(i, n);
       let memo;
       if (q.dataset.table) {
         // data-table="행1::설명|행2::설명" data-cols="R|G|B" → 행마다 열 칸에 짧게 기록하는 표
@@ -533,8 +533,8 @@
             const td = document.createElement('td');
             const inp = document.createElement('input');
             inp.type = 'text'; inp.maxLength = 40; inp.placeholder = `${c} 변화`;
-            inp.value = data[`m${i}_${r}_${k}`] || '';
-            inp.addEventListener('input', () => { data[`m${i}_${r}_${k}`] = inp.value; save(); });
+            inp.value = data[`${K}_${r}_${k}`] || '';
+            inp.addEventListener('input', () => { data[`${K}_${r}_${k}`] = inp.value; save(); });
             td.append(inp); tr.append(td);
           });
           tb.append(tr);
@@ -549,13 +549,13 @@
           const row = document.createElement('label');
           row.className = 'ws-field';
           row.innerHTML = `<b>${esc(name)}</b>${ask ? `<span class="ws-field-q">${esc(ask)}</span>` : ''}`;
-          row.append(box(`m${i}_${k}`, 2, '관찰한 숫자와 느낌을 써 보세요', 'ws-memo'));
+          row.append(box(`${K}_${k}`, 2, '관찰한 숫자와 느낌을 써 보세요', 'ws-memo'));
           memo.append(row);
         });
-      } else memo = box('m' + i, 2, '✏️ 내 생각 메모 (선택) · 활동지에 함께 저장돼요', 'ws-memo');
+      } else memo = box(K, 2, '✏️ 내 생각 메모 (선택) · 활동지에 함께 저장돼요', 'ws-memo');
       q.after(memo);
       if (q.dataset.hint) memo.after(hintFor(q.dataset.hint));
-    });
+    }));
     // 생각해보기 답 칸 (선택)과 힌트
     last.querySelectorAll('.think li').forEach((li, j) => {
       li.append(box('t' + j, 2, '답 (선택)', 'ws-memo ws-think'));
@@ -671,20 +671,22 @@
       if (short >= 0) { MF.toast(`필수 ${short + 1}번을 ${MIN}자 이상 써 주세요.`); block.querySelector(`[data-slot="${short}"] textarea`).focus(); return; }
       const s = snapshot(), today = new Date();
       const date = `${today.getFullYear()}.${today.getMonth() + 1}.${today.getDate()}`;
-      const memoOf = (sc, i) => {
-        const q = sc.querySelector('.screen-q');
-        if (q && q.dataset.table) {
+      const memoOf = (q, K) => {
+        if (q.dataset.table) {
           const cols = (q.dataset.cols || 'R|G|B').split('|');
           return q.dataset.table.split('|').map((row, r) => {
-            const vals = cols.map((c, k) => [c, (data[`m${i}_${r}_${k}`] || '').trim()]).filter(([, v]) => v);
+            const vals = cols.map((c, k) => [c, (data[`${K}_${r}_${k}`] || '').trim()]).filter(([, v]) => v);
             return vals.length ? `${row.split('::')[0]} — ${vals.map(([c, v]) => `${c}: ${v}`).join(', ')}` : '';
           }).filter(Boolean).join('\n');
         }
-        if (!q || !q.dataset.fields) return data['m' + i];
-        return q.dataset.fields.split('|').map((f, k) => [f.split('::')[0], (data[`m${i}_${k}`] || '').trim()])
-          .filter(([, v]) => v).map(([n, v]) => `${n}: ${v}`).join('\n');
+        if (q.dataset.fields) {
+          return q.dataset.fields.split('|').map((f, k) => [f.split('::')[0], (data[`${K}_${k}`] || '').trim()])
+            .filter(([, v]) => v).map(([n, v]) => `${n}: ${v}`).join('\n');
+        }
+        return data[K];
       };
-      const memos = screens.map((sc, i) => [sc, memoOf(sc, i)]).filter(([, v]) => v && v.trim());
+      const memos = screens.flatMap((sc, i) => [...sc.querySelectorAll('.screen-q')].map((q, n) => [sc, q, memoOf(q, memoKey(i, n))]))
+        .filter(([, , v]) => v && v.trim());
       const thinks = [...last.querySelectorAll('.think li')].map((li, j) => [li.firstChild.textContent.trim(), data['t' + j]]).filter(([, v]) => v && v.trim());
       let pr = document.getElementById('wsPrint');
       if (!pr) { pr = document.createElement('div'); pr.id = 'wsPrint'; document.body.append(pr); }
@@ -705,7 +707,7 @@
         <h2>생각해보기</h2>
         ${thinks.length ? thinks.map(([q, a]) => `<div class="wp-q"><div class="wp-qt">${esc(q)}</div><div class="wp-a">${esc(a.trim())}</div></div>`).join('') : '<p class="wp-none">작성한 답이 없어요.</p>'}
         <h2>화면별 메모</h2>
-        ${memos.length ? memos.map(([sc, v]) => `<div class="wp-q"><div class="wp-qt">[${esc(sc.dataset.title)}] ${esc(sc.querySelector('.screen-q').textContent.trim())}</div><div class="wp-a">${esc(v.trim())}</div></div>`).join('') : '<p class="wp-none">작성한 메모가 없어요.</p>'}`;
+        ${memos.length ? memos.map(([sc, q, v]) => `<div class="wp-q"><div class="wp-qt">[${esc(sc.dataset.title)}] ${esc(q.textContent.trim())}</div><div class="wp-a">${esc(v.trim())}</div></div>`).join('') : '<p class="wp-none">작성한 메모가 없어요.</p>'}`;
       const oldTitle = document.title;
       document.title = `${lesson}차시_활동지_${no}_${name}`; // PDF 파일 이름으로 쓰인다
       const restore = () => { document.title = oldTitle; window.removeEventListener('afterprint', restore); };

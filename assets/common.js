@@ -469,7 +469,7 @@
     return { show, get current() { return cur; } };
   };
 
-  /* ---------- 활동지: 화면별 메모 + 필수 기록 3문항 + PDF 저장 ----------
+  /* ---------- 활동지: 화면별 메모 + 필수 기록 3문항 + 이미지 저장 ----------
    * 답은 브라우저(localStorage)에 자동 저장돼서 새로고침해도 남는다. (PC 초기화 시에는 지워짐)
    * getResult(): {canvas, name, code} 를 돌려주는 함수 (활동지에 담을 결과 이미지와 필터 코드)
    * 반환값의 refresh를 마지막 화면이 보일 때 호출한다.
@@ -478,6 +478,13 @@
    *   labelKey에 저장된 값(예: 고른 관심 분야)이 label과 함께 표시된다.
    * 반환값의 bind(el, key)로 다른 화면의 입력칸을 같은 기록에 연결할 수 있다.
    */
+  // 활동지를 그림으로 찍는 도구 (처음 저장할 때 한 번만 불러온다)
+  const loadHtml2Canvas = () => window.html2canvas ? Promise.resolve() : new Promise((res, rej) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    sc.onload = () => res(); sc.onerror = () => rej(new Error('html2canvas'));
+    document.head.append(sc);
+  });
   MF.worksheet = function ({ lesson, title, q1hint, q2, getResult, extras = [] }) {
     const KEY = 'mf-ws-' + lesson, ID_KEY = 'mf-ws-id';
     const read = k => { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch (e) { return {}; } };
@@ -574,7 +581,7 @@
     block.className = 'ws-block';
     block.innerHTML = `
       <h3>📄 ${lesson}차시 활동지 제출</h3>
-      <p class="small muted" style="margin:4px 0 12px">필수 기록 3개를 쓰고 PDF로 저장해서 클래스룸 과제에 올려요. 화면별 메모, 생각해보기 답, 결과 이미지, 필터 코드도 자동으로 함께 담겨요.</p>
+      <p class="small muted" style="margin:4px 0 12px">필수 기록 3개를 쓰고 이미지로 저장해서 클래스룸 과제에 올려요. 화면별 메모, 생각해보기 답, 결과 이미지, 필터 코드도 자동으로 함께 담겨요.</p>
       <div class="ws-id">
         <label>학번 <input type="text" data-id="no" maxlength="10" placeholder="예: 10101"></label>
         <label>이름 <input type="text" data-id="name" maxlength="20"></label>
@@ -594,9 +601,9 @@
         </div>`).join('')}
       <div class="matrix-label" style="margin-top:14px">함께 담기는 결과물</div>
       <div class="ws-attach" data-attach></div>
-      <div class="btn-row" style="margin-top:14px"><button class="btn grad" data-pdf>📄 활동지 PDF로 저장</button></div>
+      <div class="btn-row" style="margin-top:14px"><button class="btn grad" data-pdf>📷 활동지 이미지로 저장</button></div>
       <div class="box tip small" style="margin-top:12px">
-        인쇄 창이 열리면 대상(프린터)을 <b>'PDF로 저장'</b>으로 바꾸고 [저장]을 눌러요. 저장한 PDF를 클래스룸 과제에 올리면 제출 끝!<br>
+        버튼을 누르면 활동지가 <b>그림 파일(PNG)</b>로 <b>다운로드 폴더</b>에 저장돼요. 그 파일을 클래스룸 과제에 올리면 제출 끝!<br>
         ⚠️ 작성한 내용은 이 컴퓨터에 임시로 남지만, 컴퓨터실 PC는 껐다 켜면 지워질 수 있어요. 수업이 끝나기 전에 꼭 저장해서 제출해요.
       </div>`;
     last.querySelector('.step').append(block);
@@ -681,7 +688,7 @@
       if (!pr) { pr = document.createElement('div'); pr.id = 'wsPrint'; document.body.append(pr); }
       pr.innerHTML = `
         <div class="wp-head">
-          <div><div class="wp-k">행렬 필터 연구소 · ${lesson}차시 활동지</div><h1>${esc(title)}</h1></div>
+          <div><div class="wp-k">AI 융합캠프(조민기) · ${lesson}차시 활동지</div><h1>${esc(title)}</h1></div>
           <div class="wp-id">학번 <b>${esc(no)}</b> · 이름 <b>${esc(name)}</b><br>${date}</div>
         </div>
         <h2>필수 기록</h2>
@@ -697,13 +704,21 @@
         ${thinks.length ? thinks.map(([q, a]) => `<div class="wp-q"><div class="wp-qt">${esc(q)}</div><div class="wp-a">${esc(a.trim())}</div></div>`).join('') : '<p class="wp-none">작성한 답이 없어요.</p>'}
         <h2>화면별 메모</h2>
         ${memos.length ? memos.map(([sc, q, v]) => `<div class="wp-q"><div class="wp-qt">[${esc(sc.dataset.title)}] ${esc(q.textContent.trim())}</div><div class="wp-a">${esc(v.trim())}</div></div>`).join('') : '<p class="wp-none">작성한 메모가 없어요.</p>'}`;
-      const oldTitle = document.title;
-      document.title = `${lesson}차시_활동지_${no}_${name}`; // PDF 파일 이름으로 쓰인다
-      const restore = () => { document.title = oldTitle; window.removeEventListener('afterprint', restore); };
-      window.addEventListener('afterprint', restore);
-      // 이미지가 다 그려진 다음 인쇄 창을 연다
+      const fileName = `${lesson}차시_활동지_${no}_${name}`;
+      const btn = block.querySelector('[data-pdf]'), label = btn.textContent;
+      btn.disabled = true; btn.textContent = '⏳ 이미지 만드는 중…';
       const imgs = [...pr.querySelectorAll('img')];
-      Promise.all(imgs.map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; }))).then(() => window.print());
+      Promise.all(imgs.map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })))
+        .then(loadHtml2Canvas)
+        .then(() => { pr.classList.add('ws-render'); return window.html2canvas(pr, { scale: 2, backgroundColor: '#ffffff', logging: false }); })
+        .then(canvas => { MF.download(canvas, fileName + '.png'); MF.toast('활동지 이미지를 다운로드 폴더에 저장했어요!'); })
+        .catch(() => {
+          // 이미지 도구를 못 불러오면(인터넷 끊김 등) 예전처럼 인쇄 창으로 PDF 저장
+          MF.toast('이미지 저장이 안 돼서 인쇄 창을 열어요. 대상을 \'PDF로 저장\'으로 골라 주세요.');
+          const oldTitle = document.title; document.title = fileName;
+          setTimeout(() => { window.print(); document.title = oldTitle; }, 300);
+        })
+        .finally(() => { pr.classList.remove('ws-render'); btn.disabled = false; btn.textContent = label; });
     });
 
     return {

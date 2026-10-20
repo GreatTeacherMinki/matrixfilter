@@ -292,25 +292,28 @@ textarea.code, input.code { font-family: var(--mono); }
 .ws-missing { aspect-ratio: 3 / 2; display: grid; place-items: center; background: var(--soft); border-radius: 8px; color: var(--muted); font-size: 13px; }
 @media (max-width: 600px) { .ws-attach { grid-template-columns: 1fr; } }
 
-/* 인쇄(PDF 저장) 화면: 활동지만 보인다 */
+/* 활동지 이미지(와 인쇄)용 화면: 평소에는 숨겨 두고, 저장할 때만 화면 밖에 그려서 이미지로 찍는다 */
 #wsPrint { display: none; }
+#wsPrint.ws-render { display: block; position: absolute; left: -10000px; top: 0; width: 820px; padding: 40px 44px; background: #fff; }
+#wsPrint { color: #111; font-size: 15px; line-height: 1.65; }
+#wsPrint .wp-head { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #6d4aff; padding-bottom: 10px; margin-bottom: 8px; }
+#wsPrint .wp-k { font-size: 13px; color: #e1306c; font-weight: 700; }
+#wsPrint h1 { font-size: 28px; margin: 2px 0 0; }
+#wsPrint .wp-id { text-align: right; font-size: 14px; }
+#wsPrint h2 { font-size: 18px; margin: 22px 0 8px; padding: 4px 12px; background: #f1eefb; border-radius: 6px; }
+#wsPrint .wp-q { margin: 0 0 12px; }
+#wsPrint .wp-qt { font-weight: 700; }
+#wsPrint .wp-a { white-space: pre-wrap; border-left: 3px solid #d9cffd; padding: 2px 0 2px 12px; margin-top: 3px; }
+#wsPrint .wp-filter { display: grid; grid-template-columns: 62% 1fr; gap: 14px; align-items: start; }
+#wsPrint .wp-filter img { width: 100%; border-radius: 6px; }
+#wsPrint .wp-code { font-family: Consolas, monospace; font-size: 11px; word-break: break-all; color: #444; margin-top: 4px; }
+#wsPrint .wp-none { color: #888; margin: 0; }
 @media print {
   @page { size: A4; margin: 14mm 14mm 16mm; }
   body { background: #fff; }
   body > *:not(#wsPrint) { display: none !important; }
-  #wsPrint { display: block; color: #111; font-size: 10.5pt; line-height: 1.6; }
-  #wsPrint .wp-head { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #6d4aff; padding-bottom: 8px; margin-bottom: 6px; }
-  #wsPrint .wp-k { font-size: 9pt; color: #e1306c; font-weight: 700; }
-  #wsPrint h1 { font-size: 20pt; margin: 2px 0 0; }
-  #wsPrint .wp-id { text-align: right; font-size: 10pt; }
-  #wsPrint h2 { font-size: 12.5pt; margin: 16px 0 6px; padding: 3px 10px; background: #f1eefb; border-radius: 6px; break-after: avoid; }
-  #wsPrint .wp-q { margin: 0 0 9px; break-inside: avoid; }
-  #wsPrint .wp-qt { font-weight: 700; }
-  #wsPrint .wp-a { white-space: pre-wrap; border-left: 3px solid #d9cffd; padding: 2px 0 2px 10px; margin-top: 2px; }
-  #wsPrint .wp-filter { display: grid; grid-template-columns: 62% 1fr; gap: 12px; align-items: start; break-inside: avoid; }
-  #wsPrint .wp-filter img { width: 100%; border-radius: 6px; }
-  #wsPrint .wp-code { font-family: Consolas, monospace; font-size: 7.5pt; word-break: break-all; color: #444; margin-top: 4px; }
-  #wsPrint .wp-none { color: #888; margin: 0; }
+  #wsPrint { display: block; position: static; width: auto; padding: 0; font-size: 10.5pt; }
+}
 }
 
 footer { padding: 40px 0 60px; color: var(--muted); font-size: 14px; text-align: center; }

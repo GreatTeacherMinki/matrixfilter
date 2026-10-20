@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>1차시 RGB 필터 만들기</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-<link rel="stylesheet" href="assets/common.css?v=202610201958">
+<link rel="stylesheet" href="assets/common.css?v=202610202026">
 <style>
   /* 도입 */
   .rgb-intro { margin-bottom: 14px; }
@@ -89,6 +89,18 @@
   .ch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
   @media (max-width: 760px) { .ch-grid { grid-template-columns: 1fr; } }
   .ch-grid h3 { font-size: 16px; margin-bottom: 6px; }
+  .ch-grid.ch4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 860px) { .ch-grid.ch4 { grid-template-columns: 1fr 1fr; } }
+  .ch-pick { position: relative; }
+  .ch-pick canvas { cursor: crosshair; }
+  .pick-dot { position: absolute; display: none; width: 14px; height: 14px; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 2px #e1306c; transform: translate(-50%, -50%); pointer-events: none; }
+  #labPix { display: block; background: var(--soft); border-radius: 12px; padding: 10px 14px; margin-top: 12px; }
+  .pc-title { font-weight: 700; font-family: inherit; margin-bottom: 6px; }
+  .pc-swatches { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; text-align: center; }
+  .pc-swatches small { color: var(--muted); }
+  .sw.big { width: 46px; height: 46px; border-radius: 10px; display: inline-block; margin: 0 0 2px; }
+  .pc-arrow { font-size: 22px; color: var(--muted); }
+  .pc-row { font-size: 14px; }
 
   /* 색 섞기 실험실 */
   .lab-sliders .slider-row { grid-template-columns: 120px 1fr 60px; }
@@ -301,7 +313,7 @@
         </div>
         <div class="swatch" id="mixSwatch"></div>
       </div>
-      <div class="screen-q" data-fields="노랑 만들기::::성공했을 때의 (R, G, B)|보라 만들기::::성공했을 때의 (R, G, B)|하늘색 만들기::::성공했을 때의 (R, G, B)|흰색 만들기::::성공했을 때의 (R, G, B)|회색 만들기::::성공했을 때의 (R, G, B)" data-hint="슬라이더를 움직여 미션 색을 만들면 칸이 자동으로 채워져요. 직접 고쳐 써도 돼요.|노랑은 빨강+초록, 보라는 빨강+파랑, 하늘색은 초록+파랑을 섞어요. 흰색은 세 빛을 모두 가장 밝게!">🎯 아래의 미션을 완수해보세요!</div>
+      <div class="screen-q" data-fields="노랑 만들기::::성공했을 때의 (R, G, B)|보라 만들기::::성공했을 때의 (R, G, B)|하늘색 만들기::::성공했을 때의 (R, G, B)|흰색 만들기::::성공했을 때의 (R, G, B)|회색 만들기::::성공했을 때의 (R, G, B)" data-hint="노랑은 빨강+초록, 보라는 빨강+파랑, 하늘색은 초록+파랑을 섞어요. 흰색은 세 빛을 모두 가장 밝게!">🎯 아래의 미션을 완수해보세요!</div>
     </div>
   </section>
 
@@ -316,13 +328,15 @@
         <button class="btn sm on" data-chmode="color">색으로 보기</button>
         <button class="btn sm" data-chmode="gray">숫자 크기(밝기)로 보기</button>
       </div>
-      <div class="ch-grid">
-        <div><h3 style="color:#d32f2f">R 행렬</h3><div class="canvas-frame"><canvas id="chR"></canvas></div></div>
-        <div><h3 style="color:#2e7d32">G 행렬</h3><div class="canvas-frame"><canvas id="chG"></canvas></div></div>
-        <div><h3 style="color:#1565c0">B 행렬</h3><div class="canvas-frame"><canvas id="chB"></canvas></div></div>
+      <p class="small" style="margin:0 0 8px">📍 네 사진 중 <b>아무 곳이나 클릭</b>하면 그 위치 주변 5×5 픽셀의 숫자가 아래 표에 나와요.</p>
+      <div class="ch-grid ch4">
+        <div><h3>원본 사진</h3><div class="canvas-frame ch-pick"><canvas id="chO"></canvas><span class="pick-dot"></span></div></div>
+        <div><h3 style="color:#d32f2f">R 행렬</h3><div class="canvas-frame ch-pick"><canvas id="chR"></canvas><span class="pick-dot"></span></div></div>
+        <div><h3 style="color:#2e7d32">G 행렬</h3><div class="canvas-frame ch-pick"><canvas id="chG"></canvas><span class="pick-dot"></span></div></div>
+        <div><h3 style="color:#1565c0">B 행렬</h3><div class="canvas-frame ch-pick"><canvas id="chB"></canvas><span class="pick-dot"></span></div></div>
       </div>
+      <div class="px-info" id="chPxInfo" style="margin-top:12px"></div>
       <div class="rgb-tables" id="rgbTables"></div>
-      <p class="small muted" style="margin-top:6px">위 표는 3번 화면에서 고른 위치(없으면 기본 위치) 주변 5×5 픽셀의 숫자예요.</p>
       <div class="screen-q" data-hint="빨간색을 (R, G, B)로 쓰면 어느 숫자가 가장 클까요?|숫자 크기로 보기에서는 숫자가 클수록 밝게 보여요. 그렇다면 파란 풍선은 어느 행렬에서 밝게 보일까요?">'숫자 크기로 보기'에서 빨간 풍선은 어느 행렬에서 가장 밝게 보이나요? 왜 그럴까요?</div>
     </div>
   </section>
@@ -336,7 +350,8 @@
       </div>
       <div class="cols wide-left">
         <div>
-          <div class="canvas-frame compare-wrap"><canvas id="labCanvas"></canvas><span class="compare-badge" id="labBadge">결과</span></div>
+          <div class="canvas-frame compare-wrap ch-pick" id="labFrame"><canvas id="labCanvas"></canvas><span class="compare-badge" id="labBadge">결과</span><span class="pick-dot"></span></div>
+          <p class="small muted" style="margin:6px 0 0">📍 사진을 클릭하면 그 픽셀의 숫자와 색이 어떻게 바뀌는지 오른쪽에 나와요.</p>
           <div class="btn-row" style="margin-top:10px">
             <button class="btn sm" id="labHold">👆 누르고 있으면 원본</button>
             <button class="btn sm" id="labReset">↺ 처음으로</button>
@@ -466,7 +481,7 @@
   </div>
 </main>
 
-<script src="assets/common.js?v=202610201958"></script>
+<script src="assets/common.js?v=202610202026"></script>
 <script>
 (() => {
   /* ===== 공유 상태 ===== */
@@ -766,12 +781,33 @@
       }
       ctx.putImageData(out, 0, 0);
     });
-    const nb = neighborhood(picked || defaultPoint());
+    MF.draw(document.getElementById('chO'), photo);
+    const p = picked || defaultPoint(), nb = neighborhood(p), [pr, pg, pb] = pixelAt(p.x, p.y);
+    placeDots(document.querySelectorAll('.ch4 .ch-pick'), p);
+    document.getElementById('chPxInfo').innerHTML =
+      `<span class="sw" style="background:rgb(${pr},${pg},${pb})"></span>고른 위치 (${p.x}, ${p.y}) → <b style="color:#d32f2f">R ${pr}</b>, <b style="color:#2e7d32">G ${pg}</b>, <b style="color:#1565c0">B ${pb}</b>`;
     document.getElementById('rgbTables').innerHTML =
       `<div><div class="matrix-label" style="color:#d32f2f">R 행렬 (일부)</div>${MF.matrixHTML(nb.R, 'r', [2, 2])}</div>` +
       `<div><div class="matrix-label" style="color:#2e7d32">G 행렬 (일부)</div>${MF.matrixHTML(nb.G, 'g', [2, 2])}</div>` +
       `<div><div class="matrix-label" style="color:#1565c0">B 행렬 (일부)</div>${MF.matrixHTML(nb.B, 'b', [2, 2])}</div>`;
   };
+  // 사진을 클릭한 위치를 원본 좌표로 바꿔 고른 픽셀로 쓴다 (3·5·6번 화면이 함께 씀)
+  const pickFrom = (cv, e) => {
+    const r = cv.getBoundingClientRect();
+    return {
+      x: Math.min(photo.width - 1, Math.max(0, Math.floor((e.clientX - r.left) / r.width * photo.width))),
+      y: Math.min(photo.height - 1, Math.max(0, Math.floor((e.clientY - r.top) / r.height * photo.height)))
+    };
+  };
+  function placeDots(frames, p) {
+    frames.forEach(fr => {
+      const cv = fr.querySelector('canvas'), dot = fr.querySelector('.pick-dot');
+      dot.style.left = (p.x / photo.width * cv.offsetWidth) + 'px';
+      dot.style.top = (p.y / photo.height * cv.offsetHeight) + 'px';
+      dot.style.display = 'block';
+    });
+  }
+  document.querySelectorAll('.ch4 .ch-pick canvas').forEach(cv => cv.addEventListener('click', e => { picked = pickFrom(cv, e); renderers[I_CH](); }));
   document.querySelectorAll('[data-chmode]').forEach(b => b.addEventListener('click', () => {
     chMode = b.dataset.chmode;
     document.querySelectorAll('[data-chmode]').forEach(x => x.classList.toggle('on', x === b));
@@ -798,11 +834,16 @@
       `R' = R<span class="hl">${sg(dr)}</span><br>G' = G<span class="hl">${sg(dg)}</span><br>B' = B<span class="hl">${sg(db)}</span>`;
     const p = picked || defaultPoint(), [r, g, b] = pixelAt(p.x, p.y);
     const a = [MF.clamp(r + dr), MF.clamp(g + dg), MF.clamp(b + db)];
+    placeDots([document.getElementById('labFrame')], p);
+    const ch = (n, col, v0, v1, d) => `<div class="pc-row"><b style="color:${col}">${n}</b> ${v0} ${d < 0 ? '−' : '+'} ${Math.abs(d)} = <b>${v1}</b>${v0 + d !== v1 ? ' <span class="muted">(잘림)</span>' : ''}</div>`;
     document.getElementById('labPix').innerHTML =
-      `<span>한 픽셀:</span><span class="sw" style="background:rgb(${r},${g},${b})"></span>(${r}, ${g}, ${b})` +
-      `<span>→</span><span class="sw" style="background:rgb(${a})"></span>(${a.join(', ')})`;
+      `<div class="pc-title">📍 고른 픽셀 (${p.x}, ${p.y})</div>` +
+      `<div class="pc-swatches"><div><span class="sw big" style="background:rgb(${r},${g},${b})"></span><small>원래 색</small><br>(${r}, ${g}, ${b})</div>` +
+      `<span class="pc-arrow">→</span><div><span class="sw big" style="background:rgb(${a})"></span><small>바뀐 색</small><br>(${a.join(', ')})</div></div>` +
+      ch('R', '#d32f2f', r, a[0], dr) + ch('G', '#2e7d32', g, a[1], dg) + ch('B', '#1565c0', b, a[2], db);
   };
   [labR, labG, labB].forEach(s => s.addEventListener('input', () => renderers[I_LAB]()));
+  labCanvas.addEventListener('click', e => { picked = pickFrom(labCanvas, e); renderers[I_LAB](); });
   document.getElementById('labReset').addEventListener('click', () => { labR.value = labG.value = labB.value = 0; renderers[I_LAB](); });
   // 숫자를 직접 입력하면 슬라이더도 따라 움직인다 (-150 ~ 150)
   [labR, labG, labB].forEach(sl => {

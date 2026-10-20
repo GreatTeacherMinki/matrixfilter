@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3차시 색을 바꾸는 행렬 곱</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="assets/common.css">
+<style>
+  .compare-wrap { position: relative; }
+  .compare-badge { position: absolute; left: 10px; top: 10px; background: rgba(0,0,0,.7); color: #fff; font-size: 12px; padding: 3px 10px; border-radius: 999px; pointer-events: none; }
+  .side .slider-row { grid-template-columns: 110px 1fr 56px; }
+  .side > * + * { margin-top: 12px; }
+
+  /* 도입 */
+  .hook-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .hook-grid figure { margin: 0; position: relative; }
+  .hook-grid canvas { width: 100%; display: block; border-radius: 10px; cursor: pointer; }
+  .hook-grid figcaption { text-align: center; font-weight: 700; font-size: 14px; margin-top: 6px; }
+  .hook-grid .px { position: absolute; left: 6px; top: 6px; background: rgba(0,0,0,.75); color: #fff; font-family: var(--mono); font-size: 12px; padding: 2px 7px; border-radius: 6px; display: none; }
+  .hook-grid .dot { position: absolute; width: 14px; height: 14px; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 2px #000; transform: translate(-50%, -50%); display: none; pointer-events: none; }
+  .hook-grid.reveal .px, .hook-grid.reveal .dot { display: block; }
+  @media (max-width: 860px) { .hook-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  /* 식 3개 = 행렬 하나 */
+  .eq-lines { display: grid; gap: 8px; }
+  .eq-line { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 17px; font-weight: 700; flex-wrap: wrap; padding: 6px 8px; border-radius: 10px; }
+  .eq-line.on { background: #fff7e8; }
+  .eq-line input { width: 64px; font-family: var(--mono); font-size: 16px; font-weight: 700; text-align: center; border: 1px solid var(--line); border-radius: 6px; padding: 5px 2px; }
+  .matrix.m3 tr.on td { background: #fff1c9; }
+
+  /* 손계산 */
+  .probs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .hand { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .hand .op { font-size: 22px; font-weight: 800; color: var(--muted); }
+  .ans { display: grid; gap: 4px; }
+  .ans input { width: 76px; font-family: var(--mono); font-size: 17px; font-weight: 700; text-align: center; border: 2px solid var(--line); border-radius: 8px; padding: 6px 2px; }
+  .ans input.right { border-color: var(--ok); background: #effaf3; }
+  .ans input.wrong { border-color: #e53935; background: #fff5f5; }
+  .row-hint { margin-top: 14px; font-size: 15px; }
+  .row-hint b.rc { background: #fff1c9; padding: 0 4px; border-radius: 4px; }
+
+  .choice { display: flex; gap: 8px; flex-wrap: wrap; }
+  .mat-sum { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+  .mat-sum b { color: var(--ink); }
+  .combo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-family: var(--mono); font-weight: 700; }
+  .combo .matrix.m3 td { min-width: 40px; height: 26px; font-size: 13px; }
+  .combo .lbl { font-size: 12px; color: var(--muted); text-align: center; display: block; font-family: inherit; }
+
+  .ideas { display: flex; gap: 6px; flex-wrap: wrap; }
+  .save-box { margin-top: 14px; display: grid; gap: 8px; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">M</span>행렬 필터 연구소</a>
+    <nav class="lesson-nav">
+      <a href="index.html">홈</a>
+      <a href="lesson1.html">1차시</a>
+      <a href="lesson2.html">2차시</a>
+      <a href="lesson3.html" class="on">3차시</a>
+      <a href="lesson4.html">4차시</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="lesson-head">
+    <span class="eyebrow">3차시</span>
+    <h1>색을 바꾸는 <span class="grad-text">행렬 곱</span></h1>
+  </div>
+  <ol class="stepper" id="stepper"></ol>
+  <div class="photo-bar" id="photoBar"><div id="picker"></div></div>
+
+  <!-- 1. 도입 -->
+  <section class="screen" data-title="색감 필터의 비밀" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">1</div>
+        <div><h2>색감 필터의 비밀</h2><p>2차시의 슬라이더는 R은 R끼리, B는 B끼리 계산했어요. 그런데 세피아 같은 색감 필터는 조금 달라요.</p></div>
+      </div>
+      <div class="hook-grid" id="hookGrid"></div>
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn grad" id="hookReveal">🔍 숫자로 들여다보기</button>
+        <span class="muted small">버튼을 누르고 사진을 클릭해 보세요.</span>
+      </div>
+      <div class="box key hidden" id="hookKey" style="margin-top:14px">
+        <p>세피아의 R'는 원래 R만으로 만들 수 없어요. <b>R' = 0.39R + 0.77G + 0.19B</b> 처럼 <b>R, G, B를 모두 섞어서</b> 만들어요. 이런 식 3개를 깔끔하게 정리하는 도구가 바로 <b>행렬의 곱셈</b>이에요.</p>
+      </div>
+      <div class="screen-q">흑백 사진에서는 R', G', B'가 모두 같아요. 세피아는 R', G', B'의 크기가 어떤 순서인가요?</div>
+    </div>
+  </section>
+
+  <!-- 2. 식 3개 = 행렬 하나 -->
+  <section class="screen" data-title="식 3개 = 행렬" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">2</div>
+        <div><h2>식 3개 = 행렬 하나</h2><p>R', G', B'를 만드는 식 3개의 <b>계수(곱하는 수)만 모으면 3×3 행렬</b>이 돼요. 왼쪽 식의 숫자를 바꾸면 오른쪽 행렬도 함께 바뀌어요.</p></div>
+      </div>
+      <div class="cols">
+        <div>
+          <div class="eq-lines" id="eqLines"></div>
+          <div class="btn-row" style="margin-top:12px">
+            <button class="btn sm" data-eq="id">아무것도 안 바꾸기</button>
+            <button class="btn sm" data-eq="gray">1차시 흑백 식</button>
+            <button class="btn sm" data-eq="swap">1차시 색 바꾸기 식</button>
+          </div>
+        </div>
+        <div>
+          <div class="matrix-label">행렬로 쓰면</div>
+          <div class="mv" id="eqMatrix"></div>
+          <p class="small muted" style="margin-top:8px">행렬의 1행 → R' 식, 2행 → G' 식, 3행 → B' 식<br>픽셀 (R, G, B)는 3×1 행렬(세로로 세운 행렬)로 써요.</p>
+          <div class="canvas-frame" style="margin-top:10px;max-width:360px"><canvas id="eqCanvas"></canvas></div>
+        </div>
+      </div>
+      <div class="screen-q">1행 1열 성분이 0이면, R'를 만들 때 원래 R은 쓰일까요?</div>
+    </div>
+  </section>
+
+  <!-- 3. 손계산 -->
+  <section class="screen" data-title="직접 곱해 보기">
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">3</div>
+        <div><h2>직접 곱해 보기</h2><p>행렬의 곱셈 규칙: <b>i행의 성분과 픽셀의 성분을 차례로 곱해서 더하면</b> 결과의 i번째 성분이에요. 빈칸을 채워 보세요.</p></div>
+      </div>
+      <div class="probs" id="probs"></div>
+      <div class="hand" id="hand"></div>
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn primary" id="handCheck">채점하기</button>
+        <button class="btn" id="handHint">💡 1행 계산 보기</button>
+        <span id="handResult" class="small"></span>
+      </div>
+      <div class="row-hint hidden" id="rowHint"></div>
+      <div class="screen-q">문제 1의 행렬은 어떤 필터일까요? 결과 픽셀의 색을 원래 색과 비교해 보세요.</div>
+    </div>
+  </section>
+
+  <!-- 4. 대각선 -->
+  <section class="screen" data-title="대각선 = 색 세기" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">4</div>
+        <div><h2>대각선 성분 = 각 색의 세기</h2><p>왼쪽 위에서 오른쪽 아래로 이어진 <b>대각선</b>만 1이고 나머지가 0이면 <b>단위행렬 E</b>예요. 사진이 그대로예요. 대각선 숫자를 바꿔 보세요.</p></div>
+      </div>
+      <div class="cols wide-left">
+        <div class="lab-photo" data-lab="diag"></div>
+        <div class="side">
+          <div class="slider-row"><label style="color:#d32f2f">R 세기 (1행 1열)</label><input type="range" min="0" max="2" step="0.05" value="1.2" id="dR"><output id="dRo"></output></div>
+          <div class="slider-row"><label style="color:#2e7d32">G 세기 (2행 2열)</label><input type="range" min="0" max="2" step="0.05" value="1" id="dG"><output id="dGo"></output></div>
+          <div class="slider-row"><label style="color:#1565c0">B 세기 (3행 3열)</label><input type="range" min="0" max="2" step="0.05" value="0.8" id="dB"><output id="dBo"></output></div>
+          <button class="btn sm" id="diagReset">단위행렬 E로 되돌리기</button>
+          <div id="diagMV"></div>
+        </div>
+      </div>
+      <div class="screen-q">R 세기만 0으로 하면 어떤 색의 사진이 되나요? 2차시의 '따뜻함'과 비슷하게 만들려면?</div>
+    </div>
+  </section>
+
+  <!-- 5. 색 이사 -->
+  <section class="screen" data-title="색 이사하기" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">5</div>
+        <div><h2>1의 자리를 옮기면 색이 이사 가요</h2><p>대각선이 아닌 자리에 1을 두면 다른 색의 값을 가져와요. 예를 들어 1행 3열이 1이면 R' = B가 돼요.</p></div>
+      </div>
+      <div class="cols wide-left">
+        <div class="lab-photo" data-lab="perm"></div>
+        <div class="side">
+          <div class="choice" id="permChoice"></div>
+          <div id="permMV"></div>
+          <div class="box small" id="permNote"></div>
+        </div>
+      </div>
+      <div class="screen-q">빨간 풍선을 파란 풍선으로 바꾸려면 1을 어느 자리에 두어야 할까요?</div>
+    </div>
+  </section>
+
+  <!-- 6. 흑백·세피아 -->
+  <section class="screen" data-title="흑백·세피아 행렬" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">6</div>
+        <div><h2>흑백 행렬과 세피아 행렬</h2><p>유명한 필터 행렬을 살펴봐요. 행렬의 <b>세 행이 어떤 관계</b>인지에 주목하세요.</p></div>
+      </div>
+      <div class="cols wide-left">
+        <div class="lab-photo" data-lab="famous"></div>
+        <div class="side">
+          <div class="choice" id="famousChoice"></div>
+          <div id="famousMV"></div>
+          <div class="mat-sum" id="famousSum"></div>
+          <div class="box small" id="famousNote"></div>
+        </div>
+      </div>
+      <div class="screen-q">세 행이 모두 같으면 왜 회색이 될까요? 각 행의 합이 1보다 크면 어떻게 될까요?</div>
+    </div>
+  </section>
+
+  <!-- 7. 채도 -->
+  <section class="screen" data-title="채도 = 행렬 섞기" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">7</div>
+        <div><h2>채도 = 단위행렬과 흑백 행렬 섞기</h2><p>인스타그램의 '채도' 슬라이더예요. 단위행렬 E(원본)와 흑백 행렬 G를 <b>실수배해서 더하면</b> 채도 행렬이 돼요.</p></div>
+      </div>
+      <div class="cols wide-left">
+        <div class="lab-photo" data-lab="sat"></div>
+        <div class="side">
+          <div class="slider-row"><label>채도 s</label><input type="range" min="0" max="2.5" step="0.05" value="1.6" id="satS"><output id="satSo"></output></div>
+          <div class="combo" id="satCombo"></div>
+          <div class="box small">s = 0 이면 흑백, s = 1 이면 원본, s > 1 이면 더 쨍한 색이 돼요.</div>
+        </div>
+      </div>
+      <div class="screen-q">2차시에 배운 행렬의 덧셈과 실수배가 '필터 행렬'을 만드는 데도 쓰였어요. s = 0.5 이면 어떤 행렬이 될까요?</div>
+    </div>
+  </section>
+
+  <!-- 8. 강도 -->
+  <section class="screen" data-title="필터 강도" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">8</div>
+        <div><h2>필터 강도 슬라이더의 정체</h2><p>인스타그램에서 필터를 한 번 더 누르면 나오는 <b>강도 슬라이더</b>도 같은 원리예요. 단위행렬 E와 필터 행렬 F를 섞어요.</p></div>
+      </div>
+      <div class="cols wide-left">
+        <div class="lab-photo" data-lab="mix"></div>
+        <div class="side">
+          <div class="choice" id="mixChoice"></div>
+          <div class="slider-row"><label>강도 t</label><input type="range" min="0" max="100" step="5" value="50" id="mixT"><output id="mixTo"></output></div>
+          <div class="combo" id="mixCombo"></div>
+        </div>
+      </div>
+      <div class="screen-q">강도 0%와 100%일 때 행렬은 각각 무엇인가요?</div>
+    </div>
+  </section>
+
+  <!-- 9. 나만의 색감 행렬 -->
+  <section class="screen" data-title="나만의 색감 행렬" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">9</div>
+        <div><h2>나만의 색감 행렬 만들기</h2><p>3×3 행렬의 숫자 9개를 직접 정해서 나만의 색감 필터를 만들어 보세요. 강도 슬라이더로 마지막 조절도 할 수 있어요.</p></div>
+      </div>
+      <div class="cols wide-left">
+        <div>
+          <div class="lab-photo" data-lab="mine"></div>
+        </div>
+        <div class="side">
+          <input type="text" id="mineName" placeholder="필터 이름 (예: 민트초코)" maxlength="20" style="font-weight:700;font-size:16px">
+          <div>
+            <div class="matrix-label">내 행렬 F</div>
+            <div class="matrix m3" id="mineEditor"></div>
+            <div class="mat-sum" id="mineSum" style="margin-top:6px"></div>
+          </div>
+          <div class="slider-row"><label>강도 t</label><input type="range" min="0" max="100" step="5" value="100" id="mineT"><output id="mineTo"></output></div>
+          <div>
+            <div class="matrix-label">💡 출발점 고르기</div>
+            <div class="ideas" id="mineIdeas"></div>
+          </div>
+        </div>
+      </div>
+      <div id="mineMV" style="margin-top:14px"></div>
+      <div class="box save-box">
+        <h3>🔑 필터 코드로 저장하기</h3>
+        <p class="small">코드를 복사해 클래스룸에 제출하거나 메모장에 붙여넣어 두세요. 4차시에 다시 불러와서 쓸 수 있어요.</p>
+        <div class="btn-row"><input type="text" class="code" id="codeOut" readonly style="flex:1;min-width:200px"><button class="btn sm primary" id="copyCode">복사</button></div>
+        <div class="btn-row"><input type="text" class="code" id="codeIn" placeholder="저장해 둔 필터 코드를 붙여넣으세요 (MF-...)" style="flex:1;min-width:200px"><button class="btn sm" id="loadCode">불러오기</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. 정리 -->
+  <section class="screen" data-title="정리">
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">✓</div>
+        <div><h2>오늘 배운 것</h2><p>생각해보기 질문에 답하고, 내 색감 행렬을 제출해요.</p></div>
+      </div>
+      <div class="box key" style="margin-bottom:16px">
+        <p>색감 필터 = <b>3×3 행렬 × 픽셀(3×1 행렬)</b>. i행 × 픽셀 = 결과의 i번째 성분.<br>
+        단위행렬 E = 그대로, 대각선 = 색 세기, 1의 위치 = 색 이사, 세 행이 같음 = 흑백.<br>
+        채도·강도 슬라이더 = 행렬의 <b>실수배와 덧셈</b>으로 두 행렬 섞기.</p>
+      </div>
+      <ol class="think">
+        <li>단위행렬 E를 곱하면 왜 사진이 바뀌지 않을까요? 픽셀 (R, G, B)로 계산해 설명해 보세요.</li>
+        <li>R과 B를 바꾸는 행렬을 두 번 곱하면 어떻게 될까요? 행렬의 곱셈으로 확인해 보세요.</li>
+        <li>내 색감 행렬과 그 행렬의 각 행이 무슨 역할을 하는지 설명해 보세요.</li>
+        <li>2차시의 밝기(A + k)는 3×3 행렬 곱셈만으로 만들 수 있을까요? 그렇지 않다면 이유는?</li>
+      </ol>
+    </div>
+  </section>
+
+  <div class="pager">
+    <button class="btn" id="prevBtn">← 이전</button>
+    <span class="count" id="pageCount"></span>
+    <button class="btn primary" id="nextBtn">다음 →</button>
+  </div>
+</main>
+
+<script src="assets/common.js"></script>
+<script>
+(() => {
+  /* ===== 공유 상태 ===== */
+  let photo = MF.sampleCanvas(), photoData = null, wiz;
+  const renderers = {};
+  const $ = id => document.getElementById(id);
+  const pixelAt = (x, y) => { const i = (y * photoData.width + x) * 4, d = photoData.data; return [d[i], d[i + 1], d[i + 2]]; };
+  const samplePx = () => { const p = MF.defaultPoint(photo); return pixelAt(p.x, p.y); };
+  const setPhoto = c => {
+    photo = c;
+    photoData = MF.ctx(photo).getImageData(0, 0, photo.width, photo.height);
+    if (wiz) renderers[wiz.current]?.();
+  };
+  const applyM = m => MF.applySteps(photo, [{ t: 'matrix', m }]);
+  const SAT = s => MF.mixMat(MF.GRAY3, MF.I3, s); // s·E + (1−s)·G
+  const ROWC = ['#d32f2f', '#2e7d32', '#1565c0'];
+
+  // 사진 결과 칸 (누르고 있으면 원본, 이미지 저장)
+  const labs = {};
+  document.querySelectorAll('[data-lab]').forEach(el => {
+    const key = el.dataset.lab;
+    el.innerHTML = `
+      <div class="canvas-frame compare-wrap"><canvas></canvas><span class="compare-badge">결과</span></div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn sm" data-hold>👆 누르고 있으면 원본</button>
+        ${key === 'mine' ? '<button class="btn sm" data-dl>💾 이미지 저장</button>' : ''}
+      </div>`;
+    const lab = { canvas: el.querySelector('canvas'), result: null };
+    lab.show = m => { lab.result = applyM(m); MF.draw(lab.canvas, lab.result); el.querySelector('.compare-badge').textContent = '결과'; };
+    MF.holdToCompare(el.querySelector('[data-hold]'), lab.canvas, el.querySelector('.compare-badge'), () => photo, () => lab.result);
+    labs[key] = lab;
+  });
+
+  /* ===== 1. 도입 ===== */
+  const hookList = [['원본', MF.I3], ['세피아', MF.SEPIA3], ['흑백', MF.GRAY3], ['쨍하게', SAT(1.8)], ['색 바꾸기', [0, 0, 1, 0, 1, 0, 1, 0, 0]]];
+  const hookGrid = $('hookGrid');
+  let hookData = [], hookPoint = null;
+  renderers[0] = () => {
+    hookGrid.innerHTML = ''; hookData = [];
+    hookList.forEach(([name, m]) => {
+      const c = applyM(m);
+      hookData.push(MF.ctx(c).getImageData(0, 0, c.width, c.height));
+      const fig = document.createElement('figure');
+      fig.innerHTML = `<span class="px"></span><span class="dot"></span><figcaption>${name}</figcaption>`;
+      fig.prepend(c);
+      c.addEventListener('click', e => {
+        if (!hookGrid.classList.contains('reveal')) return;
+        const r = c.getBoundingClientRect();
+        hookPoint = [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height];
+        showHook();
+      });
+      hookGrid.append(fig);
+    });
+    if (hookGrid.classList.contains('reveal')) showHook();
+  };
+  function showHook() {
+    const [fx, fy] = hookPoint || [0.15, 0.25], w = photo.width, h = photo.height;
+    const x = Math.min(w - 1, Math.floor(fx * w)), y = Math.min(h - 1, Math.floor(fy * h));
+    hookGrid.querySelectorAll('figure').forEach((fig, k) => {
+      const d = hookData[k].data, i = (y * w + x) * 4;
+      fig.querySelector('.px').textContent = `${d[i]}, ${d[i + 1]}, ${d[i + 2]}`;
+      const dot = fig.querySelector('.dot'), cv = fig.querySelector('canvas');
+      dot.style.left = (fx * cv.offsetWidth) + 'px'; dot.style.top = (fy * cv.offsetHeight) + 'px';
+    });
+    $('hookKey').classList.remove('hidden');
+  }
+  $('hookReveal').addEventListener('click', () => { hookGrid.classList.add('reveal'); showHook(); });
+
+  /* ===== 2. 식 3개 = 행렬 하나 ===== */
+  let eqM = [1.2, 0, 0, 0, 1, 0, 0, 0.2, 0.8];
+  const eqPresets = { id: MF.I3, gray: [0.33, 0.33, 0.33, 0.33, 0.33, 0.33, 0.33, 0.33, 0.33], swap: [0, 0, 1, 0, 1, 0, 1, 0, 0] };
+  $('eqLines').innerHTML = ["R'", "G'", "B'"].map((n, r) =>
+    `<div class="eq-line" data-row="${r}"><span style="color:${ROWC[r]}">${n}</span> = ` +
+    ['R', 'G', 'B'].map((v, c) => `<input type="number" step="0.1" data-k="${r * 3 + c}"> ${v}`).join(' + ') + '</div>').join('');
+  const eqSync = () => $('eqLines').querySelectorAll('input').forEach(inp => inp.value = MF.num(eqM[+inp.dataset.k]));
+  renderers[1] = () => {
+    const px = samplePx();
+    $('eqMatrix').innerHTML = `${MF.mat3HTML(eqM, { rowColors: ROWC })}<span class="op">×</span>${MF.vecHTML(['R', 'G', 'B'])}`;
+    const c = applyM(eqM), small = $('eqCanvas');
+    MF.draw(small, c);
+  };
+  $('eqLines').addEventListener('input', e => {
+    const k = e.target.dataset.k; if (k === undefined) return;
+    const v = parseFloat(e.target.value); if (isNaN(v)) return;
+    eqM[+k] = v; renderers[1]();
+  });
+  // 식의 한 줄과 행렬의 한 행을 함께 강조
+  $('eqLines').addEventListener('focusin', e => {
+    const line = e.target.closest('.eq-line'); if (!line) return;
+    const r = +line.dataset.row;
+    $('eqLines').querySelectorAll('.eq-line').forEach(l => l.classList.toggle('on', l === line));
+    $('eqMatrix').querySelectorAll('.m3:first-child tr').forEach((tr, i) => tr.classList.toggle('on', i === r));
+  });
+  document.querySelectorAll('[data-eq]').forEach(b => b.addEventListener('click', () => { eqM = eqPresets[b.dataset.eq].slice(); eqSync(); renderers[1](); }));
+  eqSync();
+
+  /* ===== 3. 손계산 ===== */
+  const PROBS = [
+    { m: [1, 0, 0, 0, 0, 1, 0, 1, 0], v: [200, 120, 40] },
+    { m: [0.5, 0.5, 0, 0, 1, 0, 0, 0.5, 0.5], v: [200, 100, 40] },
+    { m: [0.2, 0.3, 0.5, 0.2, 0.3, 0.5, 0.2, 0.3, 0.5], v: [100, 150, 200] }
+  ];
+  let pIdx = 0;
+  $('probs').innerHTML = PROBS.map((_, i) => `<button class="btn sm${i ? '' : ' on'}" data-p="${i}">문제 ${i + 1}</button>`).join('');
+  function renderProb() {
+    const { m, v } = PROBS[pIdx];
+    $('hand').innerHTML = `${MF.mat3HTML(m, { rowColors: ROWC })}<span class="op">×</span>${MF.vecHTML(v)}<span class="op">=</span>` +
+      `<div class="matrix m3 vec"><table>${[0, 1, 2].map(r => `<tr><td style="padding:2px"><input class="ans-in" data-r="${r}" inputmode="numeric" style="width:70px;font-family:var(--mono);font-size:16px;font-weight:700;text-align:center;border:2px solid var(--line);border-radius:6px;padding:4px 2px"></td></tr>`).join('')}</table></div>` +
+      `<span class="small muted" style="margin-left:6px">← 위에서부터 R', G', B'</span>`;
+    $('handResult').textContent = ''; $('rowHint').classList.add('hidden');
+  }
+  $('probs').addEventListener('click', e => {
+    const b = e.target.closest('[data-p]'); if (!b) return;
+    pIdx = +b.dataset.p; $('probs').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderProb();
+  });
+  $('handCheck').addEventListener('click', () => {
+    const { m, v } = PROBS[pIdx], ans = MF.mulMV(m, v);
+    let ok = 0;
+    $('hand').querySelectorAll('.ans-in').forEach(inp => {
+      const r = +inp.dataset.r, val = parseFloat(inp.value);
+      const right = !isNaN(val) && Math.abs(val - ans[r]) <= 1;
+      inp.style.borderColor = right ? 'var(--ok)' : '#e53935';
+      inp.style.background = right ? '#effaf3' : '#fff5f5';
+      if (right) ok++;
+    });
+    $('handResult').innerHTML = ok === 3
+      ? `<b style="color:var(--ok)">🎉 3개 모두 정답!</b> <span class="sw" style="display:inline-block;width:18px;height:18px;border-radius:4px;vertical-align:-4px;background:rgb(${v})"></span> → <span class="sw" style="display:inline-block;width:18px;height:18px;border-radius:4px;vertical-align:-4px;background:rgb(${ans.map(Math.round)})"></span>`
+      : `<b>${ok} / 3</b> 정답. 틀린 칸을 다시 계산해 보세요.`;
+  });
+  $('handHint').addEventListener('click', () => {
+    const { m, v } = PROBS[pIdx];
+    $('rowHint').classList.remove('hidden');
+    $('rowHint').innerHTML = `1행 (<b class="rc">${m.slice(0, 3).map(MF.num).join(', ')}</b>) 과 픽셀 (<b class="rc">${v.join(', ')}</b>) 을 차례로 곱해서 더해요.<br>` +
+      `<span style="font-family:var(--mono)">R' = ${MF.num(m[0])}×${v[0]} + ${MF.num(m[1])}×${v[1]} + ${MF.num(m[2])}×${v[2]} = <b>${MF.num(MF.mulMV(m, v)[0])}</b></span><br>2행, 3행도 같은 방법으로 계산해 보세요!`;
+  });
+  renderProb();
+
+  /* ===== 4. 대각선 ===== */
+  const diagM = () => [+dR.value, 0, 0, 0, +dG.value, 0, 0, 0, +dB.value];
+  renderers[3] = () => {
+    const m = diagM();
+    dRo.textContent = (+dR.value).toFixed(2); dGo.textContent = (+dG.value).toFixed(2); dBo.textContent = (+dB.value).toFixed(2);
+    labs.diag.show(m);
+    $('diagMV').innerHTML = MF.mvHTML(m, samplePx());
+    $('diagMV').querySelectorAll('.m3:first-child td').forEach((td, k) => td.classList.toggle('hl', k % 4 === 0));
+  };
+  [dR, dG, dB].forEach(s => s.addEventListener('input', () => renderers[3]()));
+  $('diagReset').addEventListener('click', () => { dR.value = dG.value = dB.value = 1; renderers[3](); });
+
+  /* ===== 5. 색 이사 ===== */
+  const PERMS = [
+    ['그대로 (E)', MF.I3, "대각선이 모두 1인 단위행렬이에요. R' = R, G' = G, B' = B."],
+    ['R ↔ B', [0, 0, 1, 0, 1, 0, 1, 0, 0], "R' = B, B' = R. 빨강과 파랑이 자리를 바꿔요."],
+    ['R ↔ G', [0, 1, 0, 1, 0, 0, 0, 0, 1], "R' = G, G' = R. 빨강과 초록이 자리를 바꿔요."],
+    ['G ↔ B', [1, 0, 0, 0, 0, 1, 0, 1, 0], "G' = B, B' = G. 초록과 파랑이 자리를 바꿔요."],
+    ['한 칸씩 돌리기', [0, 0, 1, 1, 0, 0, 0, 1, 0], "R' = B, G' = R, B' = G. 세 색이 한 칸씩 이사 가요."],
+    ['빨강만 남기기', [1, 0, 0, 0, 0, 0, 0, 0, 0], "R' = R, G' = 0, B' = 0. R 행렬만 남아요 (1차시의 R 행렬 사진!)."]
+  ];
+  let permIdx = 1;
+  $('permChoice').innerHTML = PERMS.map(([n], i) => `<button class="btn sm${i === permIdx ? ' on' : ''}" data-perm="${i}">${n}</button>`).join('');
+  renderers[4] = () => {
+    const [, m, note] = PERMS[permIdx];
+    labs.perm.show(m);
+    $('permMV').innerHTML = MF.mvHTML(m, samplePx());
+    $('permMV').querySelectorAll('.m3:first-child td').forEach((td, k) => td.classList.toggle('hl', m[k] === 1));
+    $('permNote').textContent = note;
+  };
+  $('permChoice').addEventListener('click', e => {
+    const b = e.target.closest('[data-perm]'); if (!b) return;
+    permIdx = +b.dataset.perm; $('permChoice').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderers[4]();
+  });
+
+  /* ===== 6. 흑백·세피아 ===== */
+  const FAMOUS = [
+    ['흑백 (평균)', [1 / 3, 1 / 3, 1 / 3, 1 / 3, 1 / 3, 1 / 3, 1 / 3, 1 / 3, 1 / 3], '세 행이 <b>모두 같아요</b>. 그래서 R\' = G\' = B\' → 회색! 각 행의 합은 1이라 밝기도 그대로예요.'],
+    ['흑백 (눈 맞춤)', MF.GRAY3, '역시 세 행이 같아요. 사람 눈은 초록에 가장 민감해서 G의 계수(0.59)가 가장 커요.'],
+    ['세피아', MF.SEPIA3, '세 행이 <b>비슷하지만</b> 위에서부터 조금씩 작아요. 그래서 거의 흑백인데 R\' > G\' > B\' 인 갈색빛이 돼요. 1행의 합이 1보다 커서 조금 밝아져요.']
+  ];
+  let famIdx = 2;
+  $('famousChoice').innerHTML = FAMOUS.map(([n], i) => `<button class="btn sm${i === famIdx ? ' on' : ''}" data-fam="${i}">${n}</button>`).join('');
+  const rowSums = m => [0, 1, 2].map(r => MF.num(m[r * 3] + m[r * 3 + 1] + m[r * 3 + 2]));
+  renderers[5] = () => {
+    const [, m, note] = FAMOUS[famIdx];
+    labs.famous.show(m);
+    $('famousMV').innerHTML = MF.mvHTML(m, samplePx());
+    const s = rowSums(m);
+    $('famousSum').innerHTML = `각 행의 합: 1행 <b>${s[0]}</b>, 2행 <b>${s[1]}</b>, 3행 <b>${s[2]}</b>`;
+    $('famousNote').innerHTML = note;
+  };
+  $('famousChoice').addEventListener('click', e => {
+    const b = e.target.closest('[data-fam]'); if (!b) return;
+    famIdx = +b.dataset.fam; $('famousChoice').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderers[5]();
+  });
+
+  /* ===== 7. 채도 ===== */
+  const comboHTML = (aLbl, A, bLbl, B, t, outLbl) =>
+    `<div><span class="lbl">${outLbl}</span>${MF.mat3HTML(MF.mixMat(A, B, t))}</div><span>=</span>` +
+    `<span>${MF.num(1 - t)}×</span><div><span class="lbl">${aLbl}</span>${MF.mat3HTML(A)}</div>` +
+    `<span>${t < 0 ? '−' : '+'}</span><span>${MF.num(Math.abs(t))}×</span><div><span class="lbl">${bLbl}</span>${MF.mat3HTML(B)}</div>`;
+  renderers[6] = () => {
+    const s = +satS.value; satSo.textContent = s.toFixed(2);
+    labs.sat.show(SAT(s));
+    // s·E + (1 − s)·G 순서로 보여준다
+    $('satCombo').innerHTML = comboHTML('단위 E', MF.I3, '흑백 G', MF.GRAY3, 1 - s, '채도 행렬');
+  };
+  satS.addEventListener('input', () => renderers[6]());
+
+  /* ===== 8. 강도 ===== */
+  const MIXF = [['세피아', MF.SEPIA3], ['흑백', MF.GRAY3], ['R ↔ B', [0, 0, 1, 0, 1, 0, 1, 0, 0]], ['쨍하게', SAT(2)]];
+  let mixIdx = 0;
+  $('mixChoice').innerHTML = MIXF.map(([n], i) => `<button class="btn sm${i ? '' : ' on'}" data-mix="${i}">${n}</button>`).join('');
+  renderers[7] = () => {
+    const t = +mixT.value / 100; mixTo.textContent = mixT.value + '%';
+    const F = MIXF[mixIdx][1];
+    labs.mix.show(MF.mixMat(MF.I3, F, t));
+    $('mixCombo').innerHTML = comboHTML('단위 E', MF.I3, '필터 F', F, t, '결과 행렬');
+  };
+  mixT.addEventListener('input', () => renderers[7]());
+  $('mixChoice').addEventListener('click', e => {
+    const b = e.target.closest('[data-mix]'); if (!b) return;
+    mixIdx = +b.dataset.mix; $('mixChoice').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderers[7]();
+  });
+
+  /* ===== 9. 나만의 색감 행렬 ===== */
+  const IDEAS = [
+    ['단위행렬', MF.I3], ['세피아', MF.SEPIA3], ['🧊 쿨톤', [0.9, 0, 0, 0, 1, 0.1, 0, 0.1, 1.2]],
+    ['🍃 숲속', [0.8, 0.2, 0, 0.1, 1, 0.1, 0, 0.2, 0.8]], ['🌸 핑크 무드', [1.1, 0.1, 0, 0, 0.85, 0.1, 0.1, 0.1, 1]],
+    ['📷 빛바랜 사진', [0.7, 0.3, 0.1, 0.2, 0.7, 0.1, 0.2, 0.2, 0.6]], ['🎨 팝아트', SAT(2.2).map(x => Math.round(x * 100) / 100)]
+  ];
+  let mineM = MF.SEPIA3.slice();
+  $('mineEditor').innerHTML = `<table>${[0, 1, 2].map(r => '<tr>' + [0, 1, 2].map(c =>
+    `<td style="padding:2px;border:0;background:none"><input type="number" step="0.05" data-k="${r * 3 + c}" style="color:${ROWC[r]}"></td>`).join('') + '</tr>').join('')}</table>`;
+  const mineSync = () => $('mineEditor').querySelectorAll('input').forEach(inp => { inp.value = MF.num(mineM[+inp.dataset.k]); inp.classList.remove('bad'); });
+  $('mineIdeas').innerHTML = IDEAS.map(([n], i) => `<button class="btn sm" data-idea="${i}">${n}</button>`).join('');
+  const mineFinal = () => MF.mixMat(MF.I3, mineM, +mineT.value / 100).map(x => Math.round(x * 1000) / 1000);
+  renderers[8] = () => {
+    mineTo.textContent = mineT.value + '%';
+    const m = mineFinal();
+    labs.mine.show(m);
+    const s = rowSums(mineM);
+    $('mineSum').innerHTML = `각 행의 합: <b>${s.join(', ')}</b> (1보다 크면 밝아지고, 작으면 어두워져요)`;
+    $('mineMV').innerHTML = `<div class="matrix-label">한 픽셀로 확인 (강도 ${mineT.value}% 적용된 행렬)</div>` + MF.mvHTML(m, samplePx());
+    $('codeOut').value = MF.encode({ v: 1, lesson: 3, name: $('mineName').value.trim(), steps: [{ t: 'matrix', m }], f: mineM, s: +mineT.value });
+  };
+  $('mineEditor').addEventListener('input', e => {
+    const k = e.target.dataset.k; if (k === undefined) return;
+    const v = parseFloat(e.target.value);
+    const bad = isNaN(v) || v < -3 || v > 3;
+    e.target.classList.toggle('bad', bad);
+    if (bad) { MF.toast('-3부터 3 사이의 숫자를 넣어 주세요.'); return; }
+    mineM[+k] = v; renderers[8]();
+  });
+  $('mineIdeas').addEventListener('click', e => {
+    const b = e.target.closest('[data-idea]'); if (!b) return;
+    mineM = IDEAS[+b.dataset.idea][1].slice(); mineSync(); renderers[8]();
+    MF.toast('숫자를 조금씩 바꿔서 나만의 행렬로 만들어 보세요!');
+  });
+  mineT.addEventListener('input', () => renderers[8]());
+  $('mineName').addEventListener('input', () => renderers[8]());
+  document.querySelector('[data-lab="mine"] [data-dl]').addEventListener('click', () =>
+    labs.mine.result && MF.download(labs.mine.result, ($('mineName').value.trim() || '내색감행렬') + '.png'));
+  $('copyCode').addEventListener('click', () => {
+    if (!$('mineName').value.trim()) { MF.toast('필터 이름을 먼저 지어 주세요!'); $('mineName').focus(); return; }
+    MF.copy($('codeOut').value);
+  });
+  $('loadCode').addEventListener('click', () => {
+    try {
+      const obj = MF.decode($('codeIn').value);
+      const s = (obj.steps || []).find(x => x.t === 'matrix');
+      if (!s) throw new Error('3차시 색감 행렬 코드가 아니에요.');
+      mineM = (obj.f || s.m).map(Number); mineT.value = obj.s ?? 100;
+      $('mineName').value = obj.name || ''; mineSync(); renderers[8]();
+      MF.toast(`'${obj.name || '이름 없는 필터'}'를 불러왔어요!`);
+    } catch (e) { MF.toast(e.message); }
+  });
+  mineSync();
+
+  /* ===== 활동지 ===== */
+  const ws = MF.worksheet({
+    lesson: 3, title: '색을 바꾸는 행렬 곱',
+    q1hint: '예: 식 3개를 행렬 하나로 쓸 수 있다는 것, 단위행렬, 세 행이 같으면 흑백이 되는 이유, 채도와 강도가 행렬 섞기라는 것 등. 왜 인상 깊었는지도 써 주세요.',
+    q2: '9번 화면에서 만든 색감 행렬의 이름을 쓰고, 숫자를 어떻게 정했는지와 각 행이 하는 역할을 설명해 주세요.',
+    getResult: () => { if (!labs.mine.result) renderers[8](); return { canvas: labs.mine.result, name: $('mineName').value.trim(), code: $('codeOut').value }; }
+  });
+  renderers[9] = ws.refresh;
+
+  /* ===== 시작 ===== */
+  MF.photoPicker($('picker'), setPhoto);
+  setPhoto(photo);
+  wiz = MF.wizard({ onShow: i => renderers[i]?.() });
+})();
+</script>
+</body>
+</html>

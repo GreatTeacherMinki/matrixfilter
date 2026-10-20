@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1차시 사진은 숫자다</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="assets/common.css">
+<style>
+  /* 도입 */
+  .hook-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .hook-grid figure { margin: 0; position: relative; }
+  .hook-grid canvas { width: 100%; display: block; border-radius: 10px; cursor: pointer; }
+  .hook-grid figcaption { text-align: center; font-weight: 700; font-size: 14px; margin-top: 6px; }
+  .hook-grid figcaption small { display: block; font-weight: 500; color: var(--muted); font-size: 12px; }
+  .hook-grid .px {
+    position: absolute; left: 6px; top: 6px; background: rgba(0,0,0,.75); color: #fff;
+    font-family: var(--mono); font-size: 12px; padding: 2px 7px; border-radius: 6px; display: none;
+  }
+  .hook-grid .dot { position: absolute; width: 14px; height: 14px; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 2px #000; transform: translate(-50%, -50%); display: none; pointer-events: none; }
+  .hook-grid.reveal .px, .hook-grid.reveal .dot { display: block; }
+  @media (max-width: 860px) { .hook-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  /* 픽셀아트 */
+  .pa-wrap { display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: start; }
+  @media (max-width: 860px) { .pa-wrap { grid-template-columns: 1fr; } }
+  .pa-grid {
+    display: grid; grid-template-columns: repeat(8, 40px); gap: 2px; background: #cfcadf;
+    padding: 2px; border-radius: 8px; touch-action: none; user-select: none; width: max-content;
+  }
+  .pa-grid div { width: 40px; height: 40px; border-radius: 3px; cursor: pointer; }
+  .palette { display: flex; gap: 6px; margin: 12px 0; flex-wrap: wrap; }
+  .palette button {
+    width: 54px; height: 40px; border-radius: 10px; border: 2px solid var(--line); cursor: pointer;
+    font-family: var(--mono); font-size: 12px; font-weight: 700;
+  }
+  .palette button.on { border-color: var(--pink); box-shadow: 0 0 0 3px #fde8ef; }
+  .score { font-weight: 800; }
+  .matrix.plain td { background: #fff; color: #111; border: 1px solid var(--line); }
+
+  /* 확대경 */
+  .mag { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; width: 100%; max-width: 220px; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: #000; padding: 2px; }
+  .mag div.center { outline: 3px solid #fff; outline-offset: -3px; }
+  .rgb-tables { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 14px; }
+  .px-info { font-family: var(--mono); font-size: 15px; margin: 10px 0; }
+  .sw { display: inline-block; width: 18px; height: 18px; border-radius: 4px; vertical-align: -3px; border: 1px solid #0002; margin-right: 6px; }
+  #exploreCanvas { cursor: crosshair; }
+
+  /* 색 = 숫자 3개 */
+  .mixer { display: grid; grid-template-columns: 1fr 220px; gap: 28px; align-items: center; }
+  .mixer .swatch { width: 220px; height: 220px; border-radius: 24px; border: 1px solid var(--line); display: grid; place-items: center; font-family: var(--mono); font-weight: 700; }
+  .missions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .mission { border: 1px dashed #cfc7ee; border-radius: 999px; padding: 6px 12px; font-size: 14px; background: #fff; }
+  .mission.done { border-style: solid; border-color: var(--ok); color: var(--ok); font-weight: 700; }
+  @media (max-width: 760px) { .mixer { grid-template-columns: 1fr; } .mixer .swatch { width: 100%; height: 120px; } }
+
+  /* 채널 */
+  .ch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 760px) { .ch-grid { grid-template-columns: 1fr; } }
+  .ch-grid h3 { font-size: 16px; margin-bottom: 6px; }
+
+  /* 색 섞기 실험실 */
+  .lab-sliders .slider-row { grid-template-columns: 120px 1fr 60px; }
+  .pix-compare { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 14px; margin-top: 10px; flex-wrap: wrap; }
+  .pix-compare .sw { width: 28px; height: 28px; vertical-align: middle; }
+
+  /* 필터 소개 */
+  .intro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 760px) { .intro-grid { grid-template-columns: 1fr; } }
+  .intro-card { border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+  .intro-card .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0; }
+  .intro-card canvas { width: 100%; border-radius: 8px; display: block; }
+  .intro-card h3 { font-size: 18px; }
+
+  /* 나만의 필터 */
+  .maker { display: grid; grid-template-columns: 1.1fr 1fr; gap: 22px; align-items: start; }
+  @media (max-width: 860px) { .maker { grid-template-columns: 1fr; } }
+  .rule { display: grid; grid-template-columns: 44px 1fr; gap: 8px; align-items: center; margin: 8px 0; }
+  .rule label { font-family: var(--mono); font-weight: 800; font-size: 18px; text-align: right; }
+  .rule input { font-family: var(--mono); font-size: 17px; padding: 10px 12px; }
+  .rule input.bad { border-color: #e53935; background: #fff5f5; }
+  .rule-err { grid-column: 2; color: #c62828; font-size: 13px; min-height: 0; }
+  .ideas { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .idea { text-align: left; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; cursor: pointer; font: inherit; font-size: 14px; }
+  .idea:hover { background: var(--soft); }
+  .idea b { display: block; font-size: 14px; }
+  .idea span { color: var(--muted); font-size: 13px; }
+  .keypad { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+  .keypad button { font-family: var(--mono); min-width: 38px; }
+  .calc { font-family: var(--mono); font-size: 14px; background: var(--soft); border-radius: 10px; padding: 10px 12px; margin-top: 12px; line-height: 1.8; overflow-x: auto; }
+  .compare-wrap { position: relative; }
+  .compare-badge { position: absolute; left: 10px; top: 10px; background: rgba(0,0,0,.7); color: #fff; font-size: 12px; padding: 3px 10px; border-radius: 999px; pointer-events: none; }
+  .save-box { margin-top: 14px; display: grid; gap: 8px; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">M</span>행렬 필터 연구소</a>
+    <nav class="lesson-nav">
+      <a href="index.html">홈</a>
+      <a href="lesson1.html" class="on">1차시</a>
+      <a href="lesson2.html">2차시</a>
+      <a href="lesson3.html">3차시</a>
+      <a href="lesson4.html">4차시</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="lesson-head">
+    <span class="eyebrow">1차시</span>
+    <h1>사진은 <span class="grad-text">숫자</span>다</h1>
+  </div>
+  <ol class="stepper" id="stepper"></ol>
+  <div class="photo-bar" id="photoBar"><div id="picker"></div></div>
+
+  <!-- 1. 도입 -->
+  <section class="screen" data-title="같은 사진, 다른 필터" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">1</div>
+        <div><h2>같은 사진, 다른 필터</h2><p>인스타그램에서 필터를 고르면 사진의 무엇이 바뀌는 걸까요?</p></div>
+      </div>
+      <div class="hook-grid" id="hookGrid"></div>
+      <p class="small muted" style="margin:8px 0 0">* 인스타그램 필터의 실제 계산식은 공개되어 있지 않아서, 널리 알려진 재현값을 참고해 비슷하게 만든 필터예요.</p>
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn grad" id="hookReveal">🔍 숫자로 들여다보기</button>
+        <span class="muted small">버튼을 누르고 아무 사진이나 클릭해 보세요.</span>
+      </div>
+      <div class="box key hidden" id="hookKey" style="margin-top:14px">
+        <p>다섯 사진 모두 <b>같은 위치</b>의 점인데 숫자가 달라요. 필터는 <b>사진 속 숫자를 규칙에 따라 계산해 바꾸는 것</b>이에요.</p>
+      </div>
+      <div class="screen-q">사진이 숫자로 되어 있다면, 그 숫자들은 어떻게 정리되어 있을까요?</div>
+    </div>
+  </section>
+
+  <!-- 2. 픽셀아트 -->
+  <section class="screen" data-title="픽셀 = 숫자">
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">2</div>
+        <div><h2>픽셀 하나 = 숫자 하나</h2><p>칸을 칠하면 오른쪽 행렬의 숫자가 바뀌어요. <b>0은 검정, 255는 흰색</b>, 그 사이는 회색이에요.</p></div>
+      </div>
+      <div class="pa-wrap">
+        <div>
+          <div class="pa-grid" id="paGrid"></div>
+          <div class="palette" id="palette"></div>
+          <div class="btn-row">
+            <button class="btn sm" data-preset="heart">하트</button>
+            <button class="btn sm" data-preset="smile">스마일</button>
+            <button class="btn sm" data-preset="grad">그라데이션</button>
+            <button class="btn sm" data-preset="clear">지우기</button>
+          </div>
+        </div>
+        <div>
+          <div class="matrix-label">8×8 행렬 A</div>
+          <div class="matrix-scroll" id="paMatrix"></div>
+          <div class="box key" style="margin-top:14px">
+            <p>흑백 이미지는 <b>행렬</b>이에요. (i, j) 성분은 위에서 i번째 줄, 왼쪽에서 j번째 칸의 밝기예요.</p>
+          </div>
+        </div>
+      </div>
+      <div class="screen-q">이 그림은 8×8 행렬이에요. 휴대폰 사진은 몇 × 몇 행렬일까요?</div>
+    </div>
+  </section>
+
+  <!-- 3. 행렬 → 그림 -->
+  <section class="screen" data-title="행렬 → 그림">
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">3</div>
+        <div><h2>도전! 행렬을 보고 그림 그리기</h2><p>반대로도 해 볼까요? 아래 행렬대로 칸을 칠하면 무슨 그림이 나올까요?</p></div>
+      </div>
+      <div class="pa-wrap">
+        <div>
+          <div class="pa-grid" id="paGrid2"></div>
+          <div class="palette" id="palette2"></div>
+          <div class="btn-row">
+            <button class="btn primary sm" id="mysteryCheck">정답 확인</button>
+            <button class="btn sm" id="mysteryClear">지우기</button>
+          </div>
+          <p id="mysteryResult" class="small" style="margin-top:8px"></p>
+        </div>
+        <div>
+          <div class="matrix-label">이 행렬을 그림으로!</div>
+          <div class="matrix-scroll" id="mysteryMatrix"></div>
+        </div>
+      </div>
+      <div class="screen-q">컴퓨터는 이렇게 숫자만 보고도 그림을 화면에 그려 낼 수 있어요.</div>
+    </div>
+  </section>
+
+  <!-- 4. 사진 속 숫자 -->
+  <section class="screen" data-title="사진 속 숫자" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">4</div>
+        <div><h2>진짜 사진 속 숫자 들여다보기</h2><p>사진 위에 마우스를 올리면 그 부분이 확대돼요. 클릭하면 위치가 고정돼요.</p></div>
+      </div>
+      <div class="cols wide-left">
+        <div>
+          <div class="canvas-frame"><canvas id="exploreCanvas"></canvas></div>
+          <p class="small" id="sizeInfo" style="margin-top:8px"></p>
+        </div>
+        <div>
+          <div class="matrix-label">확대경 (5×5 픽셀)</div>
+          <div class="mag" id="mag"></div>
+          <div class="px-info" id="pxInfo"></div>
+        </div>
+      </div>
+      <div class="screen-q">흑백 그림은 칸마다 숫자가 1개였는데, 컬러 사진은 칸마다 숫자가 몇 개인가요?</div>
+    </div>
+  </section>
+
+  <!-- 5. 색 = 숫자 3개 -->
+  <section class="screen" data-title="색 = 숫자 3개">
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">5</div>
+        <div><h2>색 하나 = 숫자 3개 (R, G, B)</h2><p>화면의 모든 색은 빨강(R), 초록(G), 파랑(B) 빛을 섞어 만들어요. 각각 0~255의 숫자예요.</p></div>
+      </div>
+      <div class="mixer">
+        <div>
+          <div class="slider-row"><label style="color:#d32f2f">R 빨강</label><input type="range" min="0" max="255" value="255" id="mixR"><output id="mixRo"></output></div>
+          <div class="slider-row"><label style="color:#2e7d32">G 초록</label><input type="range" min="0" max="255" value="180" id="mixG"><output id="mixGo"></output></div>
+          <div class="slider-row"><label style="color:#1565c0">B 파랑</label><input type="range" min="0" max="255" value="0" id="mixB"><output id="mixBo"></output></div>
+          <div class="missions" id="missions"></div>
+        </div>
+        <div class="swatch" id="mixSwatch"></div>
+      </div>
+      <div class="screen-q">회색을 만드는 규칙을 찾았나요? R, G, B가 어떤 관계일 때 회색이 되나요?</div>
+    </div>
+  </section>
+
+  <!-- 6. 행렬 3장 -->
+  <section class="screen" data-title="행렬 3장" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">6</div>
+        <div><h2>컬러 사진 = 행렬 3장</h2><p>사진의 모든 픽셀에서 R 숫자만 모으면 R 행렬, G만 모으면 G 행렬, B만 모으면 B 행렬이 돼요.</p></div>
+      </div>
+      <div class="btn-row" style="margin-bottom:12px">
+        <button class="btn sm on" data-chmode="color">색으로 보기</button>
+        <button class="btn sm" data-chmode="gray">숫자 크기(밝기)로 보기</button>
+      </div>
+      <div class="ch-grid">
+        <div><h3 style="color:#d32f2f">R 행렬</h3><div class="canvas-frame"><canvas id="chR"></canvas></div></div>
+        <div><h3 style="color:#2e7d32">G 행렬</h3><div class="canvas-frame"><canvas id="chG"></canvas></div></div>
+        <div><h3 style="color:#1565c0">B 행렬</h3><div class="canvas-frame"><canvas id="chB"></canvas></div></div>
+      </div>
+      <div class="rgb-tables" id="rgbTables"></div>
+      <p class="small muted" style="margin-top:6px">위 표는 4번 화면에서 고른 위치(없으면 기본 위치) 주변 5×5 픽셀의 숫자예요.</p>
+      <div class="screen-q">'숫자 크기로 보기'에서 빨간 풍선은 어느 행렬에서 가장 밝게 보이나요? 왜 그럴까요?</div>
+    </div>
+  </section>
+
+  <!-- 7. 색 섞기 실험실 -->
+  <section class="screen" data-title="색 섞기 실험실" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">7</div>
+        <div><h2>색 섞기 실험실: 행렬을 바꾸면 사진은?</h2><p>슬라이더로 R, G, B 행렬의 <b>모든 숫자에 같은 수를 더하거나 빼 보세요</b>. 사진이 바로 바뀌어요.</p></div>
+      </div>
+      <div class="cols wide-left">
+        <div>
+          <div class="canvas-frame compare-wrap"><canvas id="labCanvas"></canvas><span class="compare-badge" id="labBadge">결과</span></div>
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn sm" id="labHold">👆 누르고 있으면 원본</button>
+            <button class="btn sm" id="labReset">↺ 처음으로</button>
+          </div>
+        </div>
+        <div class="lab-sliders">
+          <div class="slider-row"><label style="color:#d32f2f">R 행렬에 +</label><input type="range" min="-150" max="150" value="0" id="labR"><output id="labRo"></output></div>
+          <div class="slider-row"><label style="color:#2e7d32">G 행렬에 +</label><input type="range" min="-150" max="150" value="0" id="labG"><output id="labGo"></output></div>
+          <div class="slider-row"><label style="color:#1565c0">B 행렬에 +</label><input type="range" min="-150" max="150" value="0" id="labB"><output id="labBo"></output></div>
+          <div class="formula" id="labFormula" style="margin-top:10px"></div>
+          <div class="pix-compare" id="labPix"></div>
+          <div class="box tip" style="margin-top:14px">
+            <h3>실험해 보기</h3>
+            <p class="small">① R만 +100 하면? ② 세 개 모두 +100 하면? ③ B만 −100 하면?<br>④ 내 마음에 드는 색감을 찾아보세요.</p>
+          </div>
+        </div>
+      </div>
+      <div class="screen-q">세 행렬에 모두 같은 수를 더하면 어떻게 되나요? 하나에만 더하면요?</div>
+    </div>
+  </section>
+
+  <!-- 8. 필터의 정체 -->
+  <section class="screen" data-title="필터의 정체" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">8</div>
+        <div><h2>필터의 정체: 모든 픽셀에 같은 규칙</h2><p>필터는 <b>새로운 R', G', B'를 원래 R, G, B로 계산하는 규칙</b>이에요. 대표적인 두 가지를 볼까요?</p></div>
+      </div>
+      <div class="intro-grid">
+        <div class="intro-card">
+          <h3>🔄 반전 필터</h3>
+          <div class="pair"><canvas id="introOrig1"></canvas><canvas id="introInv"></canvas></div>
+          <div class="formula">R' = <span class="hl">255 − R</span><br>G' = <span class="hl">255 − G</span><br>B' = <span class="hl">255 − B</span></div>
+          <p class="small" style="margin:8px 0 0">밝은 곳(큰 수)은 어둡게, 어두운 곳(작은 수)은 밝게. 모든 성분이 255인 행렬에서 빼는 <b>행렬의 뺄셈</b>이에요.</p>
+        </div>
+        <div class="intro-card">
+          <h3>⚫ 흑백 필터 <span class="chip">Moon 필터의 기본</span></h3>
+          <div class="pair"><canvas id="introOrig2"></canvas><canvas id="introGray"></canvas></div>
+          <div class="formula">R' = G' = B' = <span class="hl">(R + G + B) ÷ 3</span></div>
+          <p class="small" style="margin:8px 0 0">세 숫자를 <b>같게</b> 만들면 회색이 돼요 (5번 화면에서 찾은 규칙!).</p>
+        </div>
+      </div>
+      <div class="screen-q">다음 화면에서는 여러분이 이런 규칙을 직접 만들어요!</div>
+    </div>
+  </section>
+
+  <!-- 9. 나만의 필터 -->
+  <section class="screen" data-title="나만의 필터" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">9</div>
+        <div><h2>나만의 필터 만들기</h2><p>R', G', B'를 계산하는 식을 직접 써서 필터를 만들어 보세요. R, G, B, 숫자, + − × ÷ ( ) 를 쓸 수 있어요.</p></div>
+      </div>
+      <div class="maker">
+        <div>
+          <div class="canvas-frame compare-wrap"><canvas id="makerCanvas"></canvas><span class="compare-badge" id="makerBadge">결과</span></div>
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn sm" id="makerHold">👆 누르고 있으면 원본</button>
+            <button class="btn sm" id="makerDownload">💾 이미지 저장</button>
+          </div>
+          <div class="calc" id="makerCalc"></div>
+        </div>
+        <div>
+          <input type="text" id="filterName" placeholder="필터 이름 (예: 우리반 노을)" maxlength="20" style="font-weight:700;font-size:16px">
+          <div class="rule"><label style="color:#d32f2f">R'=</label><input type="text" id="fR" value="R" autocomplete="off"><div class="rule-err" id="eR"></div></div>
+          <div class="rule"><label style="color:#2e7d32">G'=</label><input type="text" id="fG" value="G" autocomplete="off"><div class="rule-err" id="eG"></div></div>
+          <div class="rule"><label style="color:#1565c0">B'=</label><input type="text" id="fB" value="B" autocomplete="off"><div class="rule-err" id="eB"></div></div>
+          <div class="keypad" id="keypad"></div>
+          <p class="small muted" style="margin:8px 0 0">계산 결과가 0보다 작으면 0, 255보다 크면 255가 돼요.</p>
+
+          <div class="matrix-label" style="margin-top:14px">💡 아이디어가 필요하면 눌러 보세요</div>
+          <div class="ideas" id="ideas"></div>
+        </div>
+      </div>
+      <div class="box save-box">
+        <h3>🔑 필터 코드로 저장하기</h3>
+        <p class="small">이 코드를 복사해 클래스룸에 제출하거나 메모장에 붙여넣어 두세요. 다른 컴퓨터에서 코드를 붙여넣으면 내 필터가 그대로 돌아와요.</p>
+        <div class="btn-row"><input type="text" class="code" id="codeOut" readonly style="flex:1;min-width:200px"><button class="btn sm primary" id="copyCode">복사</button></div>
+        <div class="btn-row"><input type="text" class="code" id="codeIn" placeholder="저장해 둔 필터 코드를 붙여넣으세요 (MF-...)" style="flex:1;min-width:200px"><button class="btn sm" id="loadCode">불러오기</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. 정리 -->
+  <section class="screen" data-title="정리">
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">✓</div>
+        <div><h2>오늘 배운 것</h2><p>생각해보기 질문에 답하고, 내 필터를 제출해요.</p></div>
+      </div>
+      <div class="box key" style="margin-bottom:16px">
+        <p>흑백 이미지 = 행렬 <b>1개</b>, 컬러 사진 = R·G·B 행렬 <b>3개</b>.<br>필터 = 행렬의 모든 성분에 <b>같은 규칙</b>을 적용해 새로운 행렬을 만드는 것.</p>
+      </div>
+      <ol class="think">
+        <li>가로 1080, 세로 1080 픽셀인 인스타그램 컬러 사진은 숫자 몇 개로 이루어져 있을까요?</li>
+        <li>반전 필터를 두 번 적용하면 어떻게 될까요? 식으로 설명해 보세요.</li>
+        <li>내가 만든 필터의 이름과 식을 쓰고, 그 식이 사진을 어떻게 바꾸는지 설명해 보세요.</li>
+        <li>친구의 필터 코드를 받아 불러와 보고, 그 필터의 식이 어떤 효과를 내는지 분석해 보세요.</li>
+      </ol>
+    </div>
+  </section>
+
+  <div class="pager">
+    <button class="btn" id="prevBtn">← 이전</button>
+    <span class="count" id="pageCount"></span>
+    <button class="btn primary" id="nextBtn">다음 →</button>
+  </div>
+</main>
+
+<script src="assets/common.js"></script>
+<script>
+(() => {
+  /* ===== 공유 상태 ===== */
+  let photo = MF.sampleCanvas();
+  let photoData = null;
+  let picked = null; // 4번 화면에서 고정한 픽셀
+  const defaultPoint = () => photo.isSample
+    ? { x: Math.round(photo.width * 0.15 + photo.height * 0.058), y: Math.round(photo.height * 0.25) }
+    : { x: Math.floor(photo.width / 2), y: Math.floor(photo.height / 2) };
+  const pixelAt = (x, y) => {
+    const i = (y * photoData.width + x) * 4, d = photoData.data;
+    return [d[i], d[i + 1], d[i + 2]];
+  };
+  const renderers = {}; // 화면 번호 → 그 화면을 다시 그리는 함수
+  let wiz;
+  function setPhoto(c) {
+    photo = c;
+    photoData = MF.ctx(photo).getImageData(0, 0, photo.width, photo.height);
+    picked = null;
+    labCache = null;
+    if (wiz) renderers[wiz.current]?.();
+  }
+  const holdToCompare = (btn, canvas, badge, getResult) => {
+    const show = on => { MF.draw(canvas, on ? photo : getResult()); badge.textContent = on ? '원본' : '결과'; };
+    btn.addEventListener('pointerdown', () => show(true));
+    ['pointerup', 'pointerleave'].forEach(ev => btn.addEventListener(ev, () => show(false)));
+  };
+
+  /* ===== 1. 도입: 인스타그램 스타일 필터 ===== */
+  const hookList = [['원본', null], ['Clarendon', '선명·시원'], ['Juno', '따뜻·쨍함'], ['Gingham', '빈티지·흐릿'], ['Moon', '흑백']];
+  const hookGrid = document.getElementById('hookGrid');
+  let hookData = [], hookPoint = null;
+  renderers[0] = () => {
+    hookGrid.innerHTML = ''; hookData = [];
+    hookList.forEach(([name, desc]) => {
+      const c = desc ? MF.applyInsta(photo, name) : MF.copyCanvas(photo);
+      hookData.push(MF.ctx(c).getImageData(0, 0, c.width, c.height));
+      const fig = document.createElement('figure');
+      fig.innerHTML = `<span class="px"></span><span class="dot"></span><figcaption>${name}${desc ? `<small>${desc}</small>` : '<small>필터 없음</small>'}</figcaption>`;
+      fig.prepend(c);
+      c.addEventListener('click', e => {
+        if (!hookGrid.classList.contains('reveal')) return;
+        const r = c.getBoundingClientRect();
+        hookPoint = [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height];
+        showHookPixel();
+      });
+      hookGrid.append(fig);
+    });
+    if (hookGrid.classList.contains('reveal')) showHookPixel();
+  };
+  function showHookPixel() {
+    const [fx, fy] = hookPoint || [0.15, 0.25];
+    const w = photo.width, h = photo.height;
+    const x = Math.min(w - 1, Math.floor(fx * w)), y = Math.min(h - 1, Math.floor(fy * h));
+    hookGrid.querySelectorAll('figure').forEach((fig, k) => {
+      const d = hookData[k].data, i = (y * w + x) * 4;
+      fig.querySelector('.px').textContent = `${d[i]}, ${d[i + 1]}, ${d[i + 2]}`;
+      const dot = fig.querySelector('.dot'), cv = fig.querySelector('canvas');
+      dot.style.left = (fx * cv.offsetWidth) + 'px'; dot.style.top = (fy * cv.offsetHeight) + 'px';
+    });
+    document.getElementById('hookKey').classList.remove('hidden');
+  }
+  document.getElementById('hookReveal').addEventListener('click', () => { hookGrid.classList.add('reveal'); showHookPixel(); });
+
+  /* ===== 2·3. 픽셀아트 ===== */
+  const N = 8, W = 255;
+  const to2D = arr => Array.from({ length: N }, (_, i) => arr.slice(i * N, i * N + N));
+  function pixelBoard(gridEl, paletteEl, onChange) {
+    const board = { cells: Array(N * N).fill(W), brush: 0 };
+    for (let k = 0; k < N * N; k++) { const c = document.createElement('div'); c.dataset.k = k; gridEl.append(c); }
+    let painting = false;
+    const paint = k => { board.cells[k] = board.brush; board.render(); };
+    gridEl.addEventListener('pointerdown', e => {
+      const k = e.target.dataset.k; if (k === undefined) return;
+      painting = true;
+      try { e.target.releasePointerCapture(e.pointerId); } catch (_) {} // 터치로 끌면서 칠할 수 있게
+      paint(+k);
+    });
+    gridEl.addEventListener('pointerover', e => { if (painting && e.target.dataset.k !== undefined) paint(+e.target.dataset.k); });
+    window.addEventListener('pointerup', () => painting = false);
+    [0, 64, 128, 192, 255].forEach(v => {
+      const b = document.createElement('button');
+      b.textContent = v; b.style.background = MF.tint(v); b.style.color = v > 130 ? '#111' : '#fff';
+      if (v === 0) b.classList.add('on');
+      b.addEventListener('click', () => { board.brush = v; paletteEl.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); });
+      paletteEl.append(b);
+    });
+    board.render = () => { [...gridEl.children].forEach((c, k) => c.style.background = MF.tint(board.cells[k])); onChange && onChange(board.cells); };
+    board.render();
+    return board;
+  }
+  const presets = {
+    heart: [W,0,0,W,W,0,0,W, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, W,0,0,0,0,0,0,W, W,W,0,0,0,0,W,W, W,W,W,0,0,W,W,W, W,W,W,W,W,W,W,W],
+    smile: [W,W,0,0,0,0,W,W, W,0,W,W,W,W,0,W, 0,W,0,W,W,0,W,0, 0,W,W,W,W,W,W,0, 0,W,0,W,W,0,W,0, 0,W,W,0,0,W,W,0, W,0,W,W,W,W,0,W, W,W,0,0,0,0,W,W],
+    grad: Array.from({ length: 64 }, (_, k) => Math.round((k % 8) * 255 / 7)),
+    clear: Array(64).fill(W)
+  };
+  const paMatrix = document.getElementById('paMatrix');
+  const board1 = pixelBoard(document.getElementById('paGrid'), document.getElementById('palette'),
+    cells => paMatrix.innerHTML = MF.matrixHTML(to2D(cells)));
+  document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => {
+    board1.cells = presets[b.dataset.preset].slice(); board1.render();
+  }));
+
+  const mystery = [
+    W,W,W,0,0,W,W,W,
+    W,W,0,0,0,0,W,W,
+    W,0,0,0,0,0,0,W,
+    0,0,0,0,0,0,0,0,
+    W,0,128,128,0,0,0,W,
+    W,0,128,128,0,W,0,W,
+    W,0,0,0,0,W,0,W,
+    W,0,0,0,0,W,0,W
+  ];
+  const board2 = pixelBoard(document.getElementById('paGrid2'), document.getElementById('palette2'));
+  // 정답 그림이 미리 보이지 않도록 숫자만 보여준다
+  document.getElementById('mysteryMatrix').innerHTML =
+    `<div class="matrix plain"><table>${to2D(mystery).map(r => '<tr>' + r.map(v => `<td>${v}</td>`).join('') + '</tr>').join('')}</table></div>`;
+  document.getElementById('mysteryCheck').addEventListener('click', () => {
+    const ok = board2.cells.filter((v, k) => v === mystery[k]).length;
+    document.getElementById('mysteryResult').innerHTML = ok === 64
+      ? '<span class="score" style="color:var(--ok)">🎉 64칸 모두 정답! 무슨 그림인가요?</span>'
+      : `<span class="score">${ok} / 64칸</span> 일치해요. 틀린 칸을 찾아보세요.`;
+  });
+  document.getElementById('mysteryClear').addEventListener('click', () => { board2.cells.fill(W); board2.render(); });
+
+  /* ===== 4. 사진 속 숫자 ===== */
+  const ex = document.getElementById('exploreCanvas');
+  const mag = document.getElementById('mag');
+  for (let k = 0; k < 25; k++) mag.append(document.createElement('div'));
+  const neighborhood = p => {
+    const w = photo.width, h = photo.height, R = [], G = [], B = [], C = [];
+    for (let i = 0; i < 5; i++) for (let j = 0; j < 5; j++) {
+      const x = Math.min(w - 1, Math.max(0, p.x - 2 + j)), y = Math.min(h - 1, Math.max(0, p.y - 2 + i));
+      const [r, g, b] = pixelAt(x, y);
+      (R[i] ||= []).push(r); (G[i] ||= []).push(g); (B[i] ||= []).push(b); C.push(`rgb(${r},${g},${b})`);
+    }
+    return { R, G, B, C };
+  };
+  function renderExplore(hover) {
+    const ctx = ex.getContext('2d');
+    ex.width = photo.width; ex.height = photo.height;
+    ctx.drawImage(photo, 0, 0);
+    const p = hover || picked || defaultPoint();
+    const s = Math.max(1.5, photo.width / (ex.getBoundingClientRect().width || photo.width) * 2);
+    ctx.lineWidth = s; ctx.strokeStyle = '#fff';
+    ctx.strokeRect(p.x - 2.5 - s, p.y - 2.5 - s, 5 + s * 2, 5 + s * 2);
+    ctx.strokeStyle = '#e1306c';
+    ctx.strokeRect(p.x - 2.5 - s * 2, p.y - 2.5 - s * 2, 5 + s * 4, 5 + s * 4);
+    const w = photo.width, h = photo.height;
+    document.getElementById('sizeInfo').innerHTML =
+      `이 사진은 가로 <b>${w}</b> × 세로 <b>${h}</b> = <b>${(w * h).toLocaleString()}</b>개의 픽셀로 이루어져 있어요.`;
+    const nb = neighborhood(p);
+    [...mag.children].forEach((cell, k) => { cell.style.background = nb.C[k]; cell.classList.toggle('center', k === 12); });
+    const [r, g, b] = pixelAt(p.x, p.y);
+    document.getElementById('pxInfo').innerHTML =
+      `<span class="sw" style="background:rgb(${r},${g},${b})"></span>(${p.x}, ${p.y})<br>` +
+      `→ <b style="color:#d32f2f">R ${r}</b>, <b style="color:#2e7d32">G ${g}</b>, <b style="color:#1565c0">B ${b}</b>` +
+      (picked ? ' <span class="chip">고정됨</span>' : '');
+  }
+  renderers[3] = () => renderExplore();
+  const exPos = e => {
+    const r = ex.getBoundingClientRect();
+    return {
+      x: Math.min(photo.width - 1, Math.max(0, Math.floor((e.clientX - r.left) / r.width * photo.width))),
+      y: Math.min(photo.height - 1, Math.max(0, Math.floor((e.clientY - r.top) / r.height * photo.height)))
+    };
+  };
+  ex.addEventListener('mousemove', e => { if (!picked) renderExplore(exPos(e)); });
+  ex.addEventListener('click', e => {
+    picked = picked ? null : exPos(e);
+    renderExplore(picked ? null : exPos(e));
+    MF.toast(picked ? '이 위치를 고정했어요. 다시 클릭하면 풀려요.' : '고정을 풀었어요.');
+  });
+
+  /* ===== 5. 색 = 숫자 3개 ===== */
+  const missionList = [
+    ['노랑', (r, g, b) => r > 200 && g > 200 && b < 80],
+    ['보라', (r, g, b) => r > 100 && b > 120 && g < 80],
+    ['하늘색', (r, g, b) => b > 200 && g > 150 && r < 150],
+    ['흰색', (r, g, b) => r > 245 && g > 245 && b > 245],
+    ['회색', (r, g, b) => Math.max(r, g, b) - Math.min(r, g, b) < 8 && r > 40 && r < 215]
+  ];
+  const missionsEl = document.getElementById('missions');
+  missionsEl.innerHTML = '<span class="small muted" style="align-self:center">미션:</span>' +
+    missionList.map(([n]) => `<span class="mission" data-m="${n}">${n} 만들기</span>`).join('');
+  const mix = () => {
+    const r = +mixR.value, g = +mixG.value, b = +mixB.value;
+    mixRo.textContent = r; mixGo.textContent = g; mixBo.textContent = b;
+    mixSwatch.style.background = `rgb(${r},${g},${b})`;
+    mixSwatch.style.color = (0.299 * r + 0.587 * g + 0.114 * b) > 140 ? '#111' : '#fff';
+    mixSwatch.textContent = `(${r}, ${g}, ${b})`;
+    missionList.forEach(([n, test]) => {
+      const el = missionsEl.querySelector(`[data-m="${n}"]`);
+      if (test(r, g, b) && !el.classList.contains('done')) { el.classList.add('done'); el.textContent = `✓ ${n}`; MF.toast(`${n} 성공!`); }
+    });
+  };
+  [mixR, mixG, mixB].forEach(s => s.addEventListener('input', mix)); mix();
+
+  /* ===== 6. 행렬 3장 ===== */
+  let chMode = 'color';
+  renderers[5] = () => {
+    const w = photo.width, h = photo.height, d = photoData.data;
+    ['R', 'G', 'B'].forEach((name, ch) => {
+      const cv = document.getElementById('ch' + name);
+      cv.width = w; cv.height = h;
+      const ctx = cv.getContext('2d'), out = ctx.createImageData(w, h), o = out.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const v = d[i + ch];
+        if (chMode === 'gray') { o[i] = o[i + 1] = o[i + 2] = v; }
+        else { o[i] = ch === 0 ? v : 0; o[i + 1] = ch === 1 ? v : 0; o[i + 2] = ch === 2 ? v : 0; }
+        o[i + 3] = 255;
+      }
+      ctx.putImageData(out, 0, 0);
+    });
+    const nb = neighborhood(picked || defaultPoint());
+    document.getElementById('rgbTables').innerHTML =
+      `<div><div class="matrix-label" style="color:#d32f2f">R 행렬 (일부)</div>${MF.matrixHTML(nb.R, 'r', [2, 2])}</div>` +
+      `<div><div class="matrix-label" style="color:#2e7d32">G 행렬 (일부)</div>${MF.matrixHTML(nb.G, 'g', [2, 2])}</div>` +
+      `<div><div class="matrix-label" style="color:#1565c0">B 행렬 (일부)</div>${MF.matrixHTML(nb.B, 'b', [2, 2])}</div>`;
+  };
+  document.querySelectorAll('[data-chmode]').forEach(b => b.addEventListener('click', () => {
+    chMode = b.dataset.chmode;
+    document.querySelectorAll('[data-chmode]').forEach(x => x.classList.toggle('on', x === b));
+    renderers[5]();
+  }));
+
+  /* ===== 7. 색 섞기 실험실 ===== */
+  const labCanvas = document.getElementById('labCanvas');
+  let labCache = null, labResult = null;
+  const labVals = () => [+labR.value, +labG.value, +labB.value];
+  renderers[6] = () => {
+    const [dr, dg, db] = labVals();
+    [['labRo', dr], ['labGo', dg], ['labBo', db]].forEach(([id, v]) => document.getElementById(id).textContent = (v > 0 ? '+' : '') + v);
+    if (!labCache) { labResult = MF.copyCanvas(photo); labCache = MF.ctx(labResult).createImageData(photo.width, photo.height); }
+    const s = photoData.data, o = labCache.data;
+    for (let i = 0; i < s.length; i += 4) {
+      o[i] = MF.clamp(s[i] + dr); o[i + 1] = MF.clamp(s[i + 1] + dg); o[i + 2] = MF.clamp(s[i + 2] + db); o[i + 3] = 255;
+    }
+    MF.ctx(labResult).putImageData(labCache, 0, 0);
+    MF.draw(labCanvas, labResult);
+    const sg = v => (v < 0 ? ' − ' + -v : ' + ' + v);
+    document.getElementById('labFormula').innerHTML =
+      `R' = R<span class="hl">${sg(dr)}</span><br>G' = G<span class="hl">${sg(dg)}</span><br>B' = B<span class="hl">${sg(db)}</span>`;
+    const p = picked || defaultPoint(), [r, g, b] = pixelAt(p.x, p.y);
+    const a = [MF.clamp(r + dr), MF.clamp(g + dg), MF.clamp(b + db)];
+    document.getElementById('labPix').innerHTML =
+      `<span>한 픽셀:</span><span class="sw" style="background:rgb(${r},${g},${b})"></span>(${r}, ${g}, ${b})` +
+      `<span>→</span><span class="sw" style="background:rgb(${a})"></span>(${a.join(', ')})`;
+  };
+  [labR, labG, labB].forEach(s => s.addEventListener('input', () => renderers[6]()));
+  document.getElementById('labReset').addEventListener('click', () => { labR.value = labG.value = labB.value = 0; renderers[6](); });
+  holdToCompare(document.getElementById('labHold'), labCanvas, document.getElementById('labBadge'), () => labResult);
+
+  /* ===== 8. 필터의 정체 ===== */
+  renderers[7] = () => {
+    MF.draw(document.getElementById('introOrig1'), photo);
+    MF.draw(document.getElementById('introOrig2'), photo);
+    MF.draw(document.getElementById('introInv'), MF.applySteps(photo, [{ t: 'invert' }]));
+    MF.draw(document.getElementById('introGray'), MF.applySteps(photo, [{ t: 'gray', w: [1 / 3, 1 / 3, 1 / 3] }]));
+  };
+
+  /* ===== 9. 나만의 필터 ===== */
+  const fIn = { R: document.getElementById('fR'), G: document.getElementById('fG'), B: document.getElementById('fB') };
+  const nameIn = document.getElementById('filterName');
+  const makerCanvas = document.getElementById('makerCanvas');
+  let makerResult = null, lastFocus = fIn.R;
+  const ideas = [
+    ['🔄 반전', '255 − R', '255 − G', '255 − B', '8번 화면의 반전 필터'],
+    ['🌙 흑백', '(R + G + B) ÷ 3', '(R + G + B) ÷ 3', '(R + G + B) ÷ 3', '세 식을 똑같이'],
+    ['🔀 색 바꾸기', 'B', 'G', 'R', 'R과 B 자리를 바꿔요'],
+    ['🌅 노을빛', 'R × 1.2 + 20', 'G', 'B × 0.7', '빨강↑ 파랑↓'],
+    ['🧊 차가운 겨울', 'R × 0.85', 'G', 'B + 40', '파랑을 더해요'],
+    ['☁️ 흐릿한 필름', 'R × 0.7 + 60', 'G × 0.7 + 60', 'G × 0.7 + 70', '대비를 줄여요']
+  ];
+  document.getElementById('ideas').innerHTML = ideas.map(([n, , , , d], i) =>
+    `<button class="idea" data-idea="${i}"><b>${n}</b><span>${d}</span></button>`).join('');
+  document.getElementById('ideas').addEventListener('click', e => {
+    const b = e.target.closest('[data-idea]'); if (!b) return;
+    const [n, r, g, bb] = ideas[b.dataset.idea];
+    fIn.R.value = r; fIn.G.value = g; fIn.B.value = bb;
+    renderers[8]();
+    MF.toast('식을 조금씩 바꿔서 나만의 필터로 만들어 보세요!');
+  });
+  const keys = ['R', 'G', 'B', '+', '−', '×', '÷', '(', ')', '255'];
+  document.getElementById('keypad').innerHTML = keys.map(k => `<button class="btn sm" data-key="${k}">${k}</button>`).join('');
+  Object.values(fIn).forEach(inp => inp.addEventListener('focus', () => lastFocus = inp));
+  document.getElementById('keypad').addEventListener('mousedown', e => e.preventDefault()); // 입력칸 포커스 유지
+  document.getElementById('keypad').addEventListener('click', e => {
+    const b = e.target.closest('[data-key]'); if (!b) return;
+    const inp = lastFocus, s = inp.selectionStart ?? inp.value.length, en = inp.selectionEnd ?? s;
+    const k = /^[RGB0-9]/.test(b.dataset.key) ? b.dataset.key : ` ${b.dataset.key} `;
+    inp.value = inp.value.slice(0, s) + k + inp.value.slice(en);
+    inp.focus(); inp.setSelectionRange(s + k.length, s + k.length);
+    renderers[8]();
+  });
+
+  const makerStep = () => ({ t: 'formula', f: [fIn.R.value, fIn.G.value, fIn.B.value] });
+  renderers[8] = () => {
+    let ok = true;
+    const fns = {};
+    ['R', 'G', 'B'].forEach(k => {
+      const err = document.getElementById('e' + k);
+      try { fns[k] = MF.compileExpr(fIn[k].value); fIn[k].classList.remove('bad'); err.textContent = ''; }
+      catch (e) { ok = false; fIn[k].classList.add('bad'); err.textContent = e.message; }
+    });
+    if (!ok) return; // 식이 틀리면 직전 결과를 그대로 둔다
+    makerResult = MF.applySteps(photo, [makerStep()]);
+    MF.draw(makerCanvas, makerResult);
+    const p = picked || defaultPoint(), [R, G, B] = pixelAt(p.x, p.y);
+    const line = (k, label, color) => {
+      const raw = fns[k](R, G, B), v = MF.clamp(Math.round(raw) || 0);
+      return `<b style="color:${color}">${label}</b> = ${fIn[k].value.trim()} = ${MF.round(raw, 1)}${raw !== v ? ` → <b>${v}</b>` : ''}`;
+    };
+    document.getElementById('makerCalc').innerHTML =
+      `한 픽셀로 확인: R=${R}, G=${G}, B=${B}<br>` + line('R', "R'", '#d32f2f') + '<br>' + line('G', "G'", '#2e7d32') + '<br>' + line('B', "B'", '#1565c0');
+    document.getElementById('codeOut').value = MF.encode({ v: 1, lesson: 1, name: nameIn.value.trim(), steps: [makerStep()] });
+  };
+  Object.values(fIn).forEach(inp => inp.addEventListener('input', () => renderers[8]()));
+  nameIn.addEventListener('input', () => renderers[8]());
+  holdToCompare(document.getElementById('makerHold'), makerCanvas, document.getElementById('makerBadge'), () => makerResult);
+  document.getElementById('makerDownload').addEventListener('click', () =>
+    makerResult && MF.download(makerResult, (nameIn.value.trim() || '나만의필터') + '.png'));
+  document.getElementById('copyCode').addEventListener('click', () => {
+    if (!nameIn.value.trim()) { MF.toast('필터 이름을 먼저 지어 주세요!'); nameIn.focus(); return; }
+    MF.copy(document.getElementById('codeOut').value);
+  });
+  document.getElementById('loadCode').addEventListener('click', () => {
+    try {
+      const obj = MF.decode(document.getElementById('codeIn').value);
+      const s = (obj.steps || []).find(x => x.t === 'formula');
+      if (!s) throw new Error('1차시 나만의 필터 코드가 아니에요.');
+      fIn.R.value = s.f[0]; fIn.G.value = s.f[1]; fIn.B.value = s.f[2];
+      nameIn.value = obj.name || '';
+      renderers[8]();
+      MF.toast(`'${obj.name || '이름 없는 필터'}' 필터를 불러왔어요!`);
+    } catch (e) { MF.toast(e.message); }
+  });
+
+  /* ===== 활동지 ===== */
+  const ws = MF.worksheet({
+    lesson: 1, title: '사진은 숫자다',
+    q1hint: '예: 사진이 행렬이라는 것, 컬러 사진은 행렬 3장이라는 것, 필터는 모든 성분에 같은 규칙을 적용하는 것 등. 왜 인상 깊었는지도 써 주세요.',
+    q2: '9번 화면에서 만든 필터의 이름과 R′, G′, B′ 식을 쓰고, 그 식이 사진을 어떻게 바꾸는지 설명해 주세요.',
+    getResult: () => { if (!makerResult) renderers[8](); return { canvas: makerResult, name: nameIn.value.trim(), code: document.getElementById('codeOut').value }; }
+  });
+  renderers[9] = ws.refresh;
+
+  /* ===== 시작 ===== */
+  MF.photoPicker(document.getElementById('picker'), setPhoto);
+  setPhoto(photo);
+  wiz = MF.wizard({ onShow: i => renderers[i]?.() });
+  window.addEventListener('resize', () => { if (wiz.current === 3) renderExplore(); });
+})();
+</script>
+</body>
+</html>

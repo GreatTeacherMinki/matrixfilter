@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>행렬 필터 연구소</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="assets/common.css">
+<style>
+  .lesson-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin: 10px 0 30px; }
+  .lesson-card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); overflow: hidden; text-decoration: none; color: var(--ink);
+    display: flex; flex-direction: column; transition: transform .15s, box-shadow .15s;
+  }
+  a.lesson-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(31,29,46,.12); }
+  .lesson-card .thumb { aspect-ratio: 16 / 10; background: #ddd; position: relative; }
+  .lesson-card .thumb canvas { width: 100%; height: 100%; display: block; object-fit: cover; }
+  .lesson-card .thumb .no {
+    position: absolute; left: 12px; top: 12px; background: rgba(255,255,255,.92);
+    padding: 3px 10px; border-radius: 999px; font-weight: 800; font-size: 13px;
+  }
+  .lesson-card .body { padding: 16px 18px 18px; flex: 1; display: flex; flex-direction: column; }
+  .lesson-card h3 { font-size: 19px; margin-bottom: 6px; }
+  .lesson-card p { margin: 0 0 12px; color: var(--muted); font-size: 15px; }
+  .lesson-card .tags { margin-top: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+  .lesson-card.soon { opacity: .6; }
+  .lesson-card.soon .thumb::after {
+    content: "준비 중"; position: absolute; right: 12px; top: 12px; background: var(--ink); color: #fff;
+    padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  }
+  .info-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .info { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px; }
+  .info h3 { font-size: 17px; margin-bottom: 8px; }
+  .info p, .info li { color: var(--muted); font-size: 15px; }
+  .info ol { padding-left: 20px; margin: 0; }
+  .code-sample { font-family: var(--mono); font-size: 13px; background: var(--soft); padding: 6px 10px; border-radius: 8px; color: var(--accent); display: inline-block; margin-top: 6px; }
+  .hero-split { display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px; align-items: center; }
+  .hero-demo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .hero-demo canvas { width: 100%; border-radius: 10px; display: block; }
+  .hero-demo div { position: relative; }
+  .hero-demo span { position: absolute; left: 8px; bottom: 8px; background: rgba(0,0,0,.6); color: #fff; font-size: 12px; padding: 2px 8px; border-radius: 999px; }
+  @media (max-width: 860px) { .hero-split { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">M</span>행렬 필터 연구소</a>
+    <nav class="lesson-nav">
+      <a href="index.html" class="on">홈</a>
+      <a href="lesson1.html">1차시</a>
+      <a href="lesson2.html">2차시</a>
+      <a href="lesson3.html">3차시</a>
+      <a href="lesson4.html">4차시</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero hero-split">
+    <div>
+      <span class="eyebrow">인공지능 선도학교 · 수학 프로그램</span>
+      <h1>인스타 필터 속에는<br><span class="grad-text">행렬</span>이 숨어 있다</h1>
+      <p class="lead">사진은 숫자로 가득 찬 행렬이에요. 행렬의 덧셈, 실수배, 곱셈만으로 우리가 매일 쓰는 필터를 직접 만들어 봐요. 마지막 시간에는 내가 고른 사진에 <b>나만의 필터</b>를 입힙니다.</p>
+    </div>
+    <div class="hero-demo" id="heroDemo"></div>
+  </section>
+
+  <h2 style="font-size:22px;margin:10px 0 14px">수업 순서</h2>
+  <div class="lesson-grid">
+    <a class="lesson-card" href="lesson1.html">
+      <div class="thumb"><canvas data-thumb="1"></canvas><span class="no">1차시</span></div>
+      <div class="body">
+        <h3>사진은 숫자다</h3>
+        <p>픽셀아트로 행렬을 이해하고, 사진이 R·G·B 행렬 3장이라는 걸 확인해요. 마지막엔 식을 직접 써서 첫 필터를 만들어요.</p>
+        <div class="tags"><span class="chip">행렬의 성분</span><span class="chip">RGB</span><span class="chip">나만의 식</span></div>
+      </div>
+    </a>
+    <a class="lesson-card" href="lesson2.html">
+      <div class="thumb"><canvas data-thumb="2"></canvas><span class="no">2차시</span></div>
+      <div class="body">
+        <h3>슬라이더 뒤의 수학</h3>
+        <p>인스타그램 수정 메뉴의 밝기, 대비, 따뜻함, 페이드, 비네트가 어떤 계산인지 밝히고 나만의 프리셋을 만들어요.</p>
+        <div class="tags"><span class="chip">덧셈</span><span class="chip">실수배</span><span class="chip">마스크</span></div>
+      </div>
+    </a>
+    <a class="lesson-card" href="lesson3.html">
+      <div class="thumb"><canvas data-thumb="3"></canvas><span class="no">3차시</span></div>
+      <div class="body">
+        <h3>색을 바꾸는 행렬 곱</h3>
+        <p>세피아, 흑백, 채도, 필터 강도까지. 색감 필터를 3×3 행렬의 곱셈으로 만들고 나만의 색감 행렬을 설계해요.</p>
+        <div class="tags"><span class="chip">행렬의 곱셈</span><span class="chip">세피아</span><span class="chip">색감</span></div>
+      </div>
+    </a>
+    <a class="lesson-card" href="lesson4.html">
+      <div class="thumb"><canvas data-thumb="4"></canvas><span class="no">4차시</span></div>
+      <div class="body">
+        <h3>나만의 필터 만들기</h3>
+        <p>흐림, 선명, 윤곽 필터를 체험하고 지금까지 배운 연산을 조합해 나만의 필터를 완성해요.</p>
+        <div class="tags"><span class="chip">커널</span><span class="chip">진로 연결</span><span class="chip">필터 조합</span><span class="chip">발표</span></div>
+      </div>
+    </a>
+  </div>
+
+  <div class="info-grid">
+    <div class="info">
+      <h3>🔑 필터 코드로 저장해요</h3>
+      <p>컴퓨터실 PC는 껐다 켜면 파일이 사라질 수 있어요. 그래서 내가 만든 필터는 <b>필터 코드</b>로 저장해요.</p>
+      <span class="code-sample">MF-eyJ0Ijoi...</span>
+      <p style="margin-top:8px">코드를 복사해 클래스룸이나 메모장에 붙여넣어 두세요. 집에서 같은 페이지에 코드를 넣으면 필터가 그대로 돌아와요.</p>
+    </div>
+    <div class="info">
+      <h3>🔒 내 사진은 안전해요</h3>
+      <p>사진은 내 컴퓨터의 브라우저 안에서만 계산되고, 서버로 전송되지 않아요. 결과 이미지는 [이미지 저장] 버튼으로 내려받을 수 있어요.</p>
+    </div>
+    <div class="info">
+      <h3>🧭 이렇게 활용해요</h3>
+      <ol>
+        <li>[다음 →] 버튼으로 화면을 하나씩 넘겨요.</li>
+        <li>사진은 샘플을 쓰거나 내 사진을 불러와요.</li>
+        <li>화면마다 질문 아래 메모 칸에 내 생각을 적어요.</li>
+        <li>마지막 화면에서 활동지를 PDF로 저장해 클래스룸에 제출해요.</li>
+      </ol>
+    </div>
+  </div>
+</main>
+
+<footer>행렬 필터 연구소 · 고1 행렬 단원 연계 인공지능 수학 탐구 활동</footer>
+
+<script src="assets/common.js"></script>
+<script>
+  // 같은 샘플 사진에 서로 다른 계산을 적용해 썸네일을 만든다
+  const base = MF.sampleCanvas(640, 400);
+  const ops = {
+    1: d => { for (let i = 0; i < d.length; i += 4) { const y = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2]; d[i] = d[i+1] = d[i+2] = y; } },
+    2: d => { for (let i = 0; i < d.length; i += 4) { d[i] = MF.clamp(d[i] * 1.12 + 18); d[i+1] = MF.clamp(d[i+1] * 1.02 + 10); d[i+2] = MF.clamp(d[i+2] * 0.85); } },
+    3: d => { for (let i = 0; i < d.length; i += 4) { const r = d[i], g = d[i+1], b = d[i+2];
+      d[i] = MF.clamp(.393*r + .769*g + .189*b); d[i+1] = MF.clamp(.349*r + .686*g + .168*b); d[i+2] = MF.clamp(.272*r + .534*g + .131*b); } },
+    4: d => { for (let i = 0; i < d.length; i += 4) { d[i] = 255 - d[i]; d[i+1] = 255 - d[i+1]; d[i+2] = 255 - d[i+2]; } }
+  };
+  const filtered = op => {
+    const c = MF.copyCanvas(base), x = MF.ctx(c), img = x.getImageData(0, 0, c.width, c.height);
+    op(img.data); x.putImageData(img, 0, 0); return c;
+  };
+  document.querySelectorAll('[data-thumb]').forEach(cv => MF.draw(cv, cv.dataset.thumb === '4'
+    ? MF.applySteps(base, [{ t: 'kernel', k: MF.KERNELS.sharpen.k, d: 1 }, { t: 'adjust', p: { fade: 0.4, warm: 15, vignette: 0.6 } }])
+    : filtered(ops[cv.dataset.thumb])));
+
+  const demo = document.getElementById('heroDemo');
+  [['원본', null], ['흑백', 1], ['따뜻하게', 2], ['세피아', 3]].forEach(([label, k]) => {
+    const box = document.createElement('div');
+    const cv = document.createElement('canvas');
+    MF.draw(cv, k ? filtered(ops[k]) : base);
+    box.append(cv); box.insertAdjacentHTML('beforeend', `<span>${label}</span>`);
+    demo.append(box);
+  });
+</script>
+</body>
+</html>

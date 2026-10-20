@@ -359,3 +359,4 @@ body.mf-mode-note .mf-hover { outline: 3px solid #e1306c !important; outline-off
 .ws-field b { display: block; font-size: 14px; margin-bottom: 2px; }
 .ws-field .ws-memo { margin-top: 0; }
 @media (max-width: 600px) { .ws-fields { grid-template-columns: 1fr; } }
+.ws-field-q { display: block; font-size: 13px; color: var(--ink); margin-bottom: 4px; line-height: 1.5; }

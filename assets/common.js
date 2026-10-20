@@ -394,15 +394,15 @@
       [r, g, b] = sat(r, g, b, 0.8);
       return [r * 0.8 + 45, g * 0.8 + 42, b * 0.8 + 40];
     },
-    // 밝고 부드럽게: 조금 밝게, 대비를 낮추고 살짝 분홍빛
+    // 밝고 부드럽게: 전체를 밝히고 대비를 낮춘 뒤 분홍빛(R과 B를 G보다 많이)을 더한다
     Paris: (r, g, b) => {
-      [r, g, b] = sat(r * 1.04 + 16, g + 10, b * 1.02 + 14, 0.92);
-      return [contrast(r, 0.9), contrast(g, 0.9), contrast(b, 0.9)];
+      [r, g, b] = sat(r, g, b, 0.8);
+      return [contrast(r, 0.78) + 40, contrast(g, 0.78) + 18, contrast(b, 0.78) + 34];
     },
-    // 깔끔하게 선명: 대비와 채도를 조금씩 올린다
+    // 깔끔하게 선명: 대비와 채도를 크게 올려 진한 색은 더 진하게, 밝고 어두운 차이를 더 크게
     Simple: (r, g, b) => {
-      [r, g, b] = sat(contrast(r, 1.1), contrast(g, 1.1), contrast(b, 1.1), 1.15);
-      return [r + 4, g + 4, b + 4];
+      [r, g, b] = sat(r, g, b, 1.6);
+      return [contrast(r, 1.3), contrast(g, 1.3), contrast(b, 1.3)];
     },
     // 어둡고 푸르게: 전체를 어둡게, 빨강은 줄이고 파랑은 더한다
     Midnight: (r, g, b) => {
@@ -522,11 +522,11 @@
         memo.className = 'ws-fields';
         memo.innerHTML = '<div class="ws-fields-t">✏️ 내 생각 메모 (선택) · 활동지에 함께 저장돼요</div>';
         q.dataset.fields.split('|').forEach((f, k) => {
-          const [name, ph] = f.split('::');
+          const [name, ask] = f.split('::');
           const row = document.createElement('label');
           row.className = 'ws-field';
-          row.innerHTML = `<b>${esc(name)}</b>`;
-          row.append(box(`m${i}_${k}`, 2, ph || '', 'ws-memo'));
+          row.innerHTML = `<b>${esc(name)}</b>${ask ? `<span class="ws-field-q">${esc(ask)}</span>` : ''}`;
+          row.append(box(`m${i}_${k}`, 2, '관찰한 숫자와 느낌을 써 보세요', 'ws-memo'));
           memo.append(row);
         });
       } else memo = box('m' + i, 2, '✏️ 내 생각 메모 (선택) · 활동지에 함께 저장돼요', 'ws-memo');

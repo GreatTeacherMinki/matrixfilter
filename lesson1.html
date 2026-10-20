@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>1차시 RGB 필터 만들기</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-<link rel="stylesheet" href="assets/common.css?v=202610201913">
+<link rel="stylesheet" href="assets/common.css?v=202610201921">
 <style>
   /* 도입 */
   .rgb-intro { margin-bottom: 14px; }
@@ -15,6 +15,7 @@
   .rgb-chip i { width: 24px; height: 24px; border-radius: 50%; border: 1px solid #0002; }
   .rgb-chip code { font-family: var(--mono); font-size: 12px; color: var(--muted); }
   .hook-hint { margin: 0 0 10px; font-size: 15px; }
+  .obs-spots { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 0 0 12px; }
   .hook-wrap { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; align-items: start; }
   .hook-side { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .hook-wrap figure { margin: 0; position: relative; }
@@ -147,6 +148,14 @@
         <div class="rgb-chips" id="rgbChips"></div>
       </div>
       <p class="hook-hint">👆 왼쪽 <b>원본 사진 위에 마우스를 올려 보세요.</b> 그 점의 숫자 3개와, 오른쪽 사진들의 같은 위치 숫자가 함께 나타나요. 클릭하면 위치가 고정돼요.</p>
+      <div class="obs-spots" id="obsSpots">
+        <span class="small muted">📍 관찰 장소 바로 가기:</span>
+        <button class="btn sm" data-spot="0.15,0.25">🎈 빨간 풍선</button>
+        <button class="btn sm" data-spot="0.61,0.422">🏠 흰 벽</button>
+        <button class="btn sm" data-spot="0.546,0.477">🪟 어두운 창문</button>
+        <button class="btn sm" data-spot="0.08,0.08">☁️ 하늘</button>
+        <button class="btn sm" data-spot="0.2,0.62">🌿 잔디</button>
+      </div>
       <div class="hook-wrap">
         <figure class="hook-main" id="hookMain">
           <canvas></canvas><span class="dot"></span><span class="px tip"></span>
@@ -158,7 +167,7 @@
       <div class="box key hidden" id="hookKey" style="margin-top:14px">
         <p>다섯 사진 모두 <b>같은 위치</b>의 점인데 숫자가 달라요. 필터는 <b>사진 속 숫자를 "규칙"에 따라 계산해 바꾸는 것</b>이에요.</p>
       </div>
-      <div class="screen-q" data-fields="Fade (물 빠진 느낌)::어두운 곳(나무 그늘, 창문)의 R, G, B는 어떻게 바뀌었나요?|Paris (밝고 부드럽게)::흰 벽과 풍선의 R, G, B는 어떻게 바뀌었나요?|Simple (깔끔하게 선명)::진한 색(풍선, 지붕, 꽃)의 숫자는 어떻게 바뀌었나요?|Midnight (어둡고 푸르게)::R, G, B 중 무엇이 가장 많이 줄고, 무엇이 남았나요?" data-hint="원본 사진의 여러 곳(빨간 풍선, 하늘, 흰 벽, 나무 그늘)에 마우스를 올려 보세요. 원본과 비교해 각 필터에서 R, G, B 중 어떤 숫자가 커지고 어떤 숫자가 작아졌나요?|예를 들어 Midnight는 R이 크게 줄고 B가 상대적으로 커져서 어둡고 푸르게 보여요. Fade는 어두운 곳의 숫자가 커져서 검정이 회색처럼 흐려져요. Paris와 Simple도 어떤 숫자가 어떻게 바뀌었는지 같은 방법으로 정리해 보세요.">각 필터들의 RGB 값의 특징을 정리해봅시다.</div>
+      <div class="screen-q" data-fields="Fade (물 빠진 느낌)::🪟 어두운 창문을 눌러 보세요. 원본보다 숫자가 커졌나요, 작아졌나요? 그래서 검정이 어떻게 보이나요?|Paris (밝고 부드럽게)::🏠 흰 벽과 🪟 어두운 창문을 눌러 보세요. R, G, B 중 가장 작은 숫자는 무엇인가요? 그래서 사진이 어떤 색빛을 띠나요?|Simple (깔끔하게 선명)::🎈 빨간 풍선과 🌿 잔디를 눌러 보세요. 가장 큰 숫자는 더 커지고 작은 숫자는 더 작아졌나요? 색은 어떻게 보이나요?|Midnight (어둡고 푸르게)::아무 곳이나 세 군데를 눌러 보세요. R과 G는 원본보다 어떻게 바뀌었나요? B는요?" data-hint="숫자가 커지면 그 색의 빛이 강해지고, 작아지면 약해져요. 세 숫자가 모두 커지면 밝아지고, 모두 작아지면 어두워져요.|R과 B가 G보다 크면 분홍·보라빛, B가 가장 크면 푸른빛이에요. 가장 큰 숫자와 가장 작은 숫자의 차이가 커질수록 색이 진해 보여요.">📍 관찰 장소 버튼을 눌러 원본과 필터의 숫자를 비교하고, 필터마다 아래 질문에 답해 보세요.</div>
     </div>
   </section>
 
@@ -403,7 +412,7 @@
   </div>
 </main>
 
-<script src="assets/common.js?v=202610201913"></script>
+<script src="assets/common.js?v=202610201921"></script>
 <script>
 (() => {
   /* ===== 공유 상태 ===== */
@@ -449,6 +458,7 @@
   const rgbHTML = (r, g, b) => `<b class="r">R ${r}</b><b class="g">G ${g}</b><b class="b">B ${b}</b>`;
   renderers[0] = () => {
     MF.draw(hookCanvas, photo);
+    document.getElementById('obsSpots').classList.toggle('hidden', !photo.isSample); // 내 사진에서는 위치가 맞지 않음
     hookData = [MF.ctx(photo).getImageData(0, 0, photo.width, photo.height)];
     hookSide.innerHTML = '';
     hookList.forEach(([name, desc]) => {
@@ -481,6 +491,11 @@
     hookWrap.classList.add('show');
     document.getElementById('hookKey').classList.remove('hidden');
   }
+  document.getElementById('obsSpots').addEventListener('click', e => {
+    const b = e.target.closest('[data-spot]'); if (!b) return;
+    hookPoint = b.dataset.spot.split(',').map(Number); hookLocked = true; showHookPixel();
+    document.querySelectorAll('#obsSpots [data-spot]').forEach(x => x.classList.toggle('on', x === b));
+  });
   const hookPos = e => { const r = hookCanvas.getBoundingClientRect(); return [Math.min(0.999, Math.max(0, (e.clientX - r.left) / r.width)), Math.min(0.999, Math.max(0, (e.clientY - r.top) / r.height))]; };
   hookCanvas.addEventListener('pointermove', e => { if (!hookLocked) { hookPoint = hookPos(e); showHookPixel(); } });
   hookCanvas.addEventListener('pointerdown', e => {

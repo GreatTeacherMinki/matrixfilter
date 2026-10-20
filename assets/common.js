@@ -41,45 +41,71 @@
     img.src = url;
   });
 
-  /* ---------- 샘플 사진: 노을 + 빨강·초록·파랑 풍선 ---------- */
+  /* ---------- 샘플 사진: 맑은 날 공원 + 빨강·초록·파랑 풍선 ----------
+   * 필터 차이가 잘 보이도록 아주 밝은 곳(해, 구름, 흰 벽), 아주 어두운 곳(창문, 나무 그늘),
+   * 진한 색(풍선, 지붕, 꽃), 중간 밝기(하늘, 잔디)를 고루 넣었다.
+   * 풍선 위치는 예전과 같아서 '빨간 풍선 가장자리' 같은 안내가 그대로 맞는다.
+   */
   MF.sampleCanvas = function (w = 640, h = 420) {
     const c = MF.makeCanvas(w, h), x = c.getContext('2d');
-    let g = x.createLinearGradient(0, 0, 0, h * 0.62);
-    g.addColorStop(0, '#2b3a8c'); g.addColorStop(0.5, '#c8579b'); g.addColorStop(1, '#ffb36b');
-    x.fillStyle = g; x.fillRect(0, 0, w, h);
-
-    const sx = w * 0.68, sy = h * 0.5;
-    const rg = x.createRadialGradient(sx, sy, 0, sx, sy, h * 0.32);
-    rg.addColorStop(0, 'rgba(255,246,214,1)');
-    rg.addColorStop(0.2, 'rgba(255,214,120,1)');
-    rg.addColorStop(0.22, 'rgba(255,190,110,.55)');
-    rg.addColorStop(1, 'rgba(255,160,100,0)');
-    x.fillStyle = rg; x.fillRect(0, 0, w, h);
-
-    const ridge = (base, amp, color, seed) => {
-      x.beginPath(); x.moveTo(0, h);
-      for (let i = 0; i <= w; i += 4) {
-        const y = base - amp * (0.5 + 0.5 * Math.sin(i * 0.012 + seed)) * (0.6 + 0.4 * Math.sin(i * 0.031 + seed * 2));
-        x.lineTo(i, y);
-      }
-      x.lineTo(w, h); x.closePath(); x.fillStyle = color; x.fill();
+    const H = h * 0.56; // 지평선
+    // 하늘
+    let g = x.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#3d8fd6'); g.addColorStop(1, '#bfe3fb');
+    x.fillStyle = g; x.fillRect(0, 0, w, H);
+    // 해
+    const sx = w * 0.86, sy = h * 0.13;
+    const rg = x.createRadialGradient(sx, sy, 0, sx, sy, h * 0.2);
+    rg.addColorStop(0, '#ffffff'); rg.addColorStop(0.22, '#fff8d6'); rg.addColorStop(0.3, 'rgba(255,244,190,.6)'); rg.addColorStop(1, 'rgba(255,244,190,0)');
+    x.fillStyle = rg; x.fillRect(0, 0, w, H);
+    // 구름
+    const cloud = (cx, cy, s) => {
+      x.fillStyle = '#ffffff';
+      [[0, 0, 1], [-0.9, 0.25, 0.75], [0.9, 0.25, 0.8], [0.35, -0.35, 0.8], [-0.4, -0.25, 0.7]].forEach(([dx, dy, r]) => {
+        x.beginPath(); x.arc(cx + dx * s, cy + dy * s, r * s, 0, Math.PI * 2); x.fill();
+      });
+      x.fillStyle = 'rgba(160,185,210,.35)'; x.beginPath(); x.ellipse(cx, cy + s * 0.75, s * 1.6, s * 0.28, 0, 0, Math.PI * 2); x.fill();
     };
-    ridge(h * 0.6, h * 0.22, '#6a3f7d', 1);
-    ridge(h * 0.63, h * 0.14, '#3e2a5c', 3);
-
-    g = x.createLinearGradient(0, h * 0.62, 0, h);
-    g.addColorStop(0, '#e98a7a'); g.addColorStop(1, '#1f2a5a');
-    x.fillStyle = g; x.fillRect(0, h * 0.62, w, h * 0.38);
-    x.fillStyle = 'rgba(255,220,150,.55)';
-    for (let i = 0; i < 10; i++) {
-      const yy = h * 0.64 + i * h * 0.03, ww = (70 - i * 5) * w / 640;
-      x.fillRect(sx - ww / 2 + Math.sin(i * 1.7) * 6, yy, ww, 3);
+    cloud(w * 0.6, h * 0.13, h * 0.055);
+    cloud(w * 0.76, h * 0.33, h * 0.04);
+    // 먼 산
+    x.fillStyle = '#7fae9b';
+    x.beginPath(); x.moveTo(0, H);
+    for (let i = 0; i <= w; i += 4) x.lineTo(i, H - h * 0.07 * (0.6 + 0.4 * Math.sin(i * 0.013 + 1)) - h * 0.03 * Math.sin(i * 0.041));
+    x.lineTo(w, H); x.closePath(); x.fill();
+    // 잔디
+    g = x.createLinearGradient(0, H, 0, h);
+    g.addColorStop(0, '#7cc95a'); g.addColorStop(1, '#2f7d2c');
+    x.fillStyle = g; x.fillRect(0, H, w, h - H);
+    // 길
+    x.fillStyle = '#e3d5c0';
+    x.beginPath(); x.moveTo(w * 0.56, H + h * 0.06); x.lineTo(w * 0.66, H + h * 0.06); x.lineTo(w * 0.78, h); x.lineTo(w * 0.36, h); x.closePath(); x.fill();
+    // 집 (흰 벽, 빨간 지붕, 어두운 창문, 갈색 문)
+    const hx = w * 0.5, hy = h * 0.4, hw = w * 0.22, hh = h * 0.22;
+    x.fillStyle = '#f7f5ef'; x.fillRect(hx, hy, hw, hh);
+    x.fillStyle = 'rgba(0,0,0,.12)'; x.fillRect(hx + hw * 0.8, hy, hw * 0.2, hh);
+    x.fillStyle = '#c62828'; x.beginPath(); x.moveTo(hx - hw * 0.08, hy); x.lineTo(hx + hw / 2, hy - hh * 0.62); x.lineTo(hx + hw * 1.08, hy); x.closePath(); x.fill();
+    x.fillStyle = '#1c2530';
+    x.fillRect(hx + hw * 0.1, hy + hh * 0.2, hw * 0.22, hh * 0.3); x.fillRect(hx + hw * 0.68, hy + hh * 0.2, hw * 0.22, hh * 0.3);
+    x.fillStyle = '#6d4c41'; x.fillRect(hx + hw * 0.4, hy + hh * 0.45, hw * 0.2, hh * 0.55);
+    // 나무와 짙은 그늘
+    const tx = w * 0.88, ty = h * 0.62;
+    x.fillStyle = 'rgba(10,30,10,.55)'; x.beginPath(); x.ellipse(tx - w * 0.02, ty + h * 0.15, w * 0.12, h * 0.05, 0, 0, Math.PI * 2); x.fill();
+    x.fillStyle = '#3b2418'; x.fillRect(tx - w * 0.015, ty - h * 0.05, w * 0.03, h * 0.2);
+    [[0, -0.2, 0.13, '#1e5a22'], [-0.06, -0.12, 0.1, '#17491b'], [0.06, -0.1, 0.1, '#236b28'], [0, -0.3, 0.09, '#2d7a31']].forEach(([dx, dy, r, col]) => {
+      x.fillStyle = col; x.beginPath(); x.arc(tx + dx * w, ty + dy * h, r * h, 0, Math.PI * 2); x.fill();
+    });
+    // 꽃밭 (진한 색)
+    const cols = ['#ffd600', '#ff4081', '#ffffff', '#ab47bc', '#ff6d00'];
+    for (let k = 0; k < 70; k++) {
+      const fx = w * (0.03 + 0.3 * ((k * 37) % 70) / 70), fy = h * (0.72 + 0.24 * ((k * 53) % 70) / 70);
+      x.fillStyle = cols[k % cols.length]; x.beginPath(); x.arc(fx, fy, h * 0.012, 0, Math.PI * 2); x.fill();
     }
-
+    // 풍선 (예전과 같은 위치)
     [[w * 0.15, h * 0.25, '#e53935'], [w * 0.27, h * 0.36, '#43a047'], [w * 0.39, h * 0.21, '#1e88e5']]
       .forEach(([bx, by, col]) => {
         const r = h * 0.07;
-        x.strokeStyle = 'rgba(255,255,255,.75)'; x.lineWidth = 1.5;
+        x.strokeStyle = 'rgba(60,60,70,.7)'; x.lineWidth = 1.5;
         x.beginPath(); x.moveTo(bx, by + r); x.quadraticCurveTo(bx + 10, by + r * 2, bx - 2, by + r * 3); x.stroke();
         const bg = x.createRadialGradient(bx - r * 0.35, by - r * 0.4, r * 0.05, bx, by, r * 1.1);
         bg.addColorStop(0, '#ffffff'); bg.addColorStop(0.3, col); bg.addColorStop(1, col);
@@ -489,7 +515,21 @@
     screens.forEach((sc, i) => {
       const q = sc.querySelector('.screen-q');
       if (!q) return;
-      const memo = box('m' + i, 2, '✏️ 내 생각 메모 (선택) · 활동지에 함께 저장돼요', 'ws-memo');
+      let memo;
+      if (q.dataset.fields) {
+        // data-fields="이름::설명|이름::설명" → 항목마다 따로 쓰는 칸
+        memo = document.createElement('div');
+        memo.className = 'ws-fields';
+        memo.innerHTML = '<div class="ws-fields-t">✏️ 내 생각 메모 (선택) · 활동지에 함께 저장돼요</div>';
+        q.dataset.fields.split('|').forEach((f, k) => {
+          const [name, ph] = f.split('::');
+          const row = document.createElement('label');
+          row.className = 'ws-field';
+          row.innerHTML = `<b>${esc(name)}</b>`;
+          row.append(box(`m${i}_${k}`, 2, ph || '', 'ws-memo'));
+          memo.append(row);
+        });
+      } else memo = box('m' + i, 2, '✏️ 내 생각 메모 (선택) · 활동지에 함께 저장돼요', 'ws-memo');
       q.after(memo);
       if (q.dataset.hint) memo.after(hintFor(q.dataset.hint));
     });
@@ -608,7 +648,13 @@
       if (short >= 0) { MF.toast(`필수 ${short + 1}번을 ${MIN}자 이상 써 주세요.`); block.querySelector(`[data-slot="${short}"] textarea`).focus(); return; }
       const s = snapshot(), today = new Date();
       const date = `${today.getFullYear()}.${today.getMonth() + 1}.${today.getDate()}`;
-      const memos = screens.map((sc, i) => [sc, data['m' + i]]).filter(([, v]) => v && v.trim());
+      const memoOf = (sc, i) => {
+        const q = sc.querySelector('.screen-q');
+        if (!q || !q.dataset.fields) return data['m' + i];
+        return q.dataset.fields.split('|').map((f, k) => [f.split('::')[0], (data[`m${i}_${k}`] || '').trim()])
+          .filter(([, v]) => v).map(([n, v]) => `${n}: ${v}`).join('\n');
+      };
+      const memos = screens.map((sc, i) => [sc, memoOf(sc, i)]).filter(([, v]) => v && v.trim());
       const thinks = [...last.querySelectorAll('.think li')].map((li, j) => [li.firstChild.textContent.trim(), data['t' + j]]).filter(([, v]) => v && v.trim());
       let pr = document.getElementById('wsPrint');
       if (!pr) { pr = document.createElement('div'); pr.id = 'wsPrint'; document.body.append(pr); }

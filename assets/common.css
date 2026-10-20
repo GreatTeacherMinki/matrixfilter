@@ -351,3 +351,11 @@ body.mf-mode-note .mf-hover { outline: 3px solid #e1306c !important; outline-off
 .mf-list { width: min(640px, calc(100vw - 40px)); }
 .mf-list pre { white-space: pre-wrap; font-family: inherit; font-size: 13px; max-height: 60vh; overflow: auto; background: #f6f5fb; padding: 10px; border-radius: 8px; }
 @media print { .mf-edit-bar, .mf-pins, .mf-pop { display: none !important; } }
+
+/* 항목별 메모 칸 (예: 필터 4가지) */
+.ws-fields { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+.ws-fields-t { grid-column: 1 / -1; font-size: 13px; color: var(--muted); }
+.ws-field { display: block; }
+.ws-field b { display: block; font-size: 14px; margin-bottom: 2px; }
+.ws-field .ws-memo { margin-top: 0; }
+@media (max-width: 600px) { .ws-fields { grid-template-columns: 1fr; } }

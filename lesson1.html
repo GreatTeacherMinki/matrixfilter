@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>1차시 사진은 숫자다</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-<link rel="stylesheet" href="assets/common.css?v=202610201436">
+<link rel="stylesheet" href="assets/common.css?v=202610201804">
 <style>
   /* 도입 */
   .rgb-intro { margin-bottom: 14px; }
@@ -115,7 +115,7 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="index.html"><span class="brand-mark">M</span>행렬 필터 연구소</a>
+    <a class="brand" href="index.html"><span class="brand-mark">M</span>AI 융합캠프(조민기)</a>
     <nav class="lesson-nav">
       <a href="index.html">홈</a>
       <a href="lesson1.html" class="on">1차시</a>
@@ -154,7 +154,7 @@
         </figure>
         <div class="hook-side" id="hookSide"></div>
       </div>
-      <p class="small muted" style="margin:8px 0 0">* 인스타그램 필터의 실제 계산식은 공개되어 있지 않아서, 널리 알려진 재현값을 참고해 비슷하게 만든 필터예요.</p>
+      <p class="small muted" style="margin:8px 0 0">* 인스타그램 필터의 실제 계산식은 공개되어 있지 않아서, 필터의 느낌을 보고 비슷하게 만든 필터예요.</p>
       <div class="box key hidden" id="hookKey" style="margin-top:14px">
         <p>다섯 사진 모두 <b>같은 위치</b>의 점인데 숫자가 달라요. 필터는 <b>사진 속 숫자를 규칙에 따라 계산해 바꾸는 것</b>이에요.</p>
       </div>
@@ -339,7 +339,7 @@
           <button class="btn sm" data-intro="invert">이 규칙으로 시작하기 ↓</button>
         </div>
         <div class="intro-card">
-          <h3>⚫ 흑백 필터 <span class="chip">Moon 필터의 기본</span></h3>
+          <h3>⚫ 흑백 필터</h3>
           <div class="pair"><canvas id="introOrig2"></canvas><canvas id="introGray"></canvas></div>
           <div class="formula">R′ = G′ = B′ = <span class="hl">(R + G + B) ÷ 3</span></div>
           <p class="small" style="margin:8px 0">세 숫자를 <b>같게</b> 만들면 회색이 돼요 (4번 화면에서 찾은 규칙!).</p>
@@ -403,7 +403,7 @@
   </div>
 </main>
 
-<script src="assets/common.js?v=202610201436"></script>
+<script src="assets/common.js?v=202610201804"></script>
 <script>
 (() => {
   /* ===== 공유 상태 ===== */
@@ -442,7 +442,7 @@
     ['노랑', [255, 255, 0]], ['흰색', [255, 255, 255]], ['검정', [0, 0, 0]]
   ].map(([n, c]) => `<span class="rgb-chip"><i style="background:rgb(${c})"></i>${n} <code>(${c.join(', ')})</code></span>`).join('');
 
-  const hookList = [['Clarendon', '선명·시원'], ['Juno', '따뜻·쨍함'], ['Gingham', '빈티지·흐릿'], ['Moon', '흑백']];
+  const hookList = [['Fade', '물 빠진 느낌'], ['Paris', '밝고 부드럽게'], ['Simple', '깔끔하게 선명'], ['Midnight', '어둡고 푸르게']];
   const hookWrap = document.querySelector('.hook-wrap'), hookMain = document.getElementById('hookMain'), hookSide = document.getElementById('hookSide');
   const hookCanvas = hookMain.querySelector('canvas');
   let hookData = [], hookPoint = null, hookLocked = false;

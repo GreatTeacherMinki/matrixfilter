@@ -356,27 +356,32 @@
     }
   };
 
-  /* ---------- 인스타그램 스타일 필터 (공개된 CSS 재현값을 참고한 근사치) ---------- */
+  /* ---------- 인스타그램 스타일 필터 ----------
+   * 실제 계산식은 공개되어 있지 않아서, 필터의 느낌을 보고 비슷하게 만든 근사치다.
+   */
   const lum = (r, g, b) => 0.299 * r + 0.587 * g + 0.114 * b;
   const contrast = (v, k) => (v - 128) * k + 128;
-  const overlay = (a, b) => (a < 128 ? 2 * a * b / 255 : 255 - 2 * (255 - a) * (255 - b) / 255);
   const sat = (r, g, b, k) => { const y = lum(r, g, b); return [y + (r - y) * k, y + (g - y) * k, y + (b - y) * k]; };
   MF.insta = {
-    Clarendon: (r, g, b) => {
-      [r, g, b] = sat(contrast(r, 1.2), contrast(g, 1.2), contrast(b, 1.2), 1.35);
-      return [r * .8 + overlay(r, 127) * .2, g * .8 + overlay(g, 187) * .2, b * .8 + overlay(b, 227) * .2];
-    },
-    Juno: (r, g, b) => {
-      [r, g, b] = sat(r * 1.06 + 10, g * 1.02 + 4, b * 0.86, 1.4);
-      return [contrast(r, 1.12), contrast(g, 1.12), contrast(b, 1.12)];
-    },
-    Gingham: (r, g, b) => {
+    // 물 빠진 느낌: 검정을 들어 올리고 색을 조금 줄인다
+    Fade: (r, g, b) => {
       [r, g, b] = sat(r, g, b, 0.8);
-      return [r * .82 + 42, g * .82 + 38, b * .82 + 48];
+      return [r * 0.8 + 45, g * 0.8 + 42, b * 0.8 + 40];
     },
-    Moon: (r, g, b) => {
-      const y = Math.max(56, contrast(lum(r, g, b) * 1.1, 1.1));
-      return [y, y, y];
+    // 밝고 부드럽게: 조금 밝게, 대비를 낮추고 살짝 분홍빛
+    Paris: (r, g, b) => {
+      [r, g, b] = sat(r * 1.04 + 16, g + 10, b * 1.02 + 14, 0.92);
+      return [contrast(r, 0.9), contrast(g, 0.9), contrast(b, 0.9)];
+    },
+    // 깔끔하게 선명: 대비와 채도를 조금씩 올린다
+    Simple: (r, g, b) => {
+      [r, g, b] = sat(contrast(r, 1.1), contrast(g, 1.1), contrast(b, 1.1), 1.15);
+      return [r + 4, g + 4, b + 4];
+    },
+    // 어둡고 푸르게: 전체를 어둡게, 빨강은 줄이고 파랑은 더한다
+    Midnight: (r, g, b) => {
+      [r, g, b] = sat(r * 0.75, g * 0.8, b * 0.85 + 30, 0.85);
+      return [contrast(r, 1.1), contrast(g, 1.1), contrast(b, 1.1)];
     }
   };
   MF.applyInsta = (src, name) => {
@@ -715,7 +720,7 @@
    */
   MF.OPEN_LESSONS = [1];
   const lessonNo = href => { const m = /lesson(\d)\.html/.exec(href || ''); return m ? +m[1] : 0; };
-  const isOpen = n => /[?&]preview/.test(location.search) || MF.OPEN_LESSONS.includes(n);
+  const isOpen = n => /[?&](preview|edit)/.test(location.search) || MF.OPEN_LESSONS.includes(n);
   const lockLessons = () => {
     // 메뉴의 닫힌 차시 링크 → 누를 수 없는 '준비 중' 표시
     document.querySelectorAll('.lesson-nav a').forEach(a => {
@@ -735,6 +740,219 @@
     }
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', lockLessons); else lockLessons();
+
+  /* ---------- 선생님용 수정 모드 (주소 끝에 ?edit) ----------
+   * 글자를 그 자리에서 고치고, 상자·이미지에 메모를 붙인 뒤, 수정 요청 파일로 저장한다.
+   * 학생 화면에는 나타나지 않는다. 고친 내용은 이 브라우저에만 저장되며 사이트 원본은 바뀌지 않는다.
+   */
+  if (/[?&]edit/.test(location.search)) (() => {
+    const PAGE = (location.pathname.split('/').pop() || 'index.html').replace(/\?.*/, '');
+    const KEY = 'mf-edit-' + PAGE;
+    const PAGE_NAME = PAGE === 'index.html' ? '홈' : PAGE.replace(/lesson(\d)\.html/, '$1차시');
+    const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || { texts: {}, notes: [] }; } catch (e) { return { texts: {}, notes: [] }; } };
+    const st = load();
+    const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} update(); };
+    const clean = t => String(t || '').replace(/\s+/g, ' ').trim();
+
+    // 1) 페이지가 처음 불러와진 상태(정적 HTML)의 글자 요소만 고칠 수 있게 표시한다
+    //    (차시 스크립트가 나중에 만드는 숫자·행렬 등은 원본 HTML에 없어서 제외)
+    const SKIP = '.pager, .stepper, #photoBar, .ws-block, .mf-edit-bar, script, style, canvas, svg, input, textarea, select, .matrix';
+    const CAND = 'h1, h2, h3, p, li, figcaption, label, .btn, .chip, .eyebrow, .matrix-label, .screen-q, .lbl, td, th, .formula, .goal span, .box h3, .mission';
+    const orig = {};
+    let n = 0;
+    document.querySelectorAll(`main :is(${CAND}), footer`).forEach(el => {
+      if (el.closest(SKIP) || el.parentElement.closest('[data-ed]')) return;
+      const own = [...el.childNodes].some(c => c.nodeType === 3 && c.textContent.trim());
+      if (!own) return;
+      el.dataset.ed = 'e' + (n++);
+      orig[el.dataset.ed] = { html: el.innerHTML.trim(), text: clean(el.textContent) };
+    });
+
+    const screenOf = el => {
+      const sc = el.closest('.screen'); if (!sc) return PAGE_NAME;
+      const all = [...document.querySelectorAll('.screen')];
+      return `화면 ${all.indexOf(sc) + 1}. ${sc.dataset.title.replace(/·제출$/, '')}`;
+    };
+    // 메모를 붙인 요소를 다음에도 찾을 수 있게 main 기준 경로를 만든다
+    const pathOf = el => {
+      const parts = [];
+      for (let e = el; e && e.tagName !== 'MAIN' && e !== document.body; e = e.parentElement) {
+        parts.unshift(`${e.tagName.toLowerCase()}:nth-child(${[...e.parentElement.children].indexOf(e) + 1})`);
+      }
+      return parts.length ? 'main > ' + parts.join(' > ') : 'main';
+    };
+    const describe = el => {
+      if (el.matches('.screen, main')) return '화면 전체';
+      const kind = el.tagName === 'CANVAS' ? '사진/그림' : el.tagName === 'IMG' ? '이미지' : el.matches('.btn, button') ? '버튼' : el.matches('h1,h2,h3') ? '제목' : el.matches('p,li,.screen-q') ? '글' : '상자/영역';
+      const own = clean(el.textContent);
+      if (own && own.length <= 60) return `${kind} "${own}"`;
+      // 글자가 없거나 너무 큰 영역은 이름(id/class)과 가까운 제목으로 설명한다
+      const name = el.id || (el.className && typeof el.className === 'string' ? el.className.split(' ').filter(c => !c.startsWith('mf-'))[0] : '') || el.tagName.toLowerCase();
+      const label = el.closest('div, figure, section');
+      const head = clean((label && label.querySelector('.matrix-label, h3, figcaption')) ? label.querySelector('.matrix-label, h3, figcaption').textContent : '').slice(0, 30);
+      return `${kind} (${name})${head ? ' · ' + head : ''}${own ? ` "${own.slice(0, 30)}…"` : ''}`;
+    };
+
+    // 저장된 글자 수정 되살리기
+    Object.entries(st.texts).forEach(([id, v]) => { const el = document.querySelector(`[data-ed="${id}"]`); if (el && orig[id] && orig[id].text === v.from) el.innerHTML = v.html; });
+
+    // 2) 도구 막대
+    const bar = document.createElement('div');
+    bar.className = 'mf-edit-bar';
+    bar.innerHTML = `
+      <b>✏️ 수정 모드 · ${PAGE_NAME}</b>
+      <div class="mf-edit-modes">
+        <button data-m="text" class="on">글자 고치기</button>
+        <button data-m="note">📌 메모 붙이기</button>
+        <button data-m="off">👆 체험하기</button>
+      </div>
+      <span class="mf-edit-count"></span>
+      <button data-a="screen">이 화면 전체에 메모</button>
+      <button data-a="save" class="mf-edit-save">💾 수정 내용 저장</button>
+      <button data-a="list">목록</button>
+      <button data-a="reset">모두 되돌리기</button>
+      <div class="mf-edit-help"></div>`;
+    document.body.append(bar);
+    document.body.classList.add('mf-editing');
+    const HELP = {
+      text: '글자를 클릭하면 바로 고칠 수 있어요. 점선 테두리가 고칠 수 있는 글자예요. 다 고쳤으면 바깥을 클릭하세요.',
+      note: '바꾸고 싶은 상자, 사진, 버튼을 클릭하면 메모를 남길 수 있어요. 예: "이 상자를 사진 위로", "이미지를 더 크게"',
+      off: '학생처럼 사이트를 눌러 볼 수 있어요. 고치려면 위 버튼으로 모드를 바꾸세요.'
+    };
+    let mode = 'text';
+    const setMode = m => {
+      mode = m;
+      bar.querySelectorAll('[data-m]').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+      document.body.classList.toggle('mf-mode-text', m === 'text');
+      document.body.classList.toggle('mf-mode-note', m === 'note');
+      document.querySelectorAll('[data-ed]').forEach(el => { if (m === 'text') el.setAttribute('contenteditable', 'true'); else el.removeAttribute('contenteditable'); });
+      bar.querySelector('.mf-edit-help').textContent = HELP[m];
+    };
+    bar.querySelectorAll('[data-m]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.m)));
+
+    // 글자 고치기: 버튼·링크가 눌리지 않게 막고, 고친 내용은 바깥을 클릭하면 기록한다
+    document.addEventListener('click', e => {
+      if (e.target.closest('.mf-edit-bar, .mf-pop, .mf-pin')) return;
+      if (mode === 'text' && e.target.closest('[data-ed]')) { e.preventDefault(); e.stopPropagation(); }
+      if (mode === 'note') {
+        const el = e.target.closest('main *, footer');
+        if (!el || el.closest('.pager, .stepper')) return;
+        e.preventDefault(); e.stopPropagation();
+        openPop(el, e.pageX, e.pageY);
+      }
+    }, true);
+    document.addEventListener('focusout', e => {
+      const el = e.target.closest && e.target.closest('[data-ed]'); if (!el) return;
+      const id = el.dataset.ed, now = clean(el.textContent);
+      if (now === orig[id].text) delete st.texts[id];
+      else st.texts[id] = { where: screenOf(el), from: orig[id].text, to: now, html: el.innerHTML.trim(), fromHtml: orig[id].html };
+      save();
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && e.target.closest && e.target.closest('[data-ed]')) { e.preventDefault(); e.target.blur(); } });
+
+    // 메모 붙이기
+    let hoverEl = null;
+    document.addEventListener('mouseover', e => {
+      if (mode !== 'note') return;
+      const el = e.target.closest('main *, footer');
+      if (hoverEl) hoverEl.classList.remove('mf-hover');
+      hoverEl = el && !el.closest('.pager, .stepper, .mf-edit-bar') ? el : null;
+      if (hoverEl) hoverEl.classList.add('mf-hover');
+    });
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    function openPop(el, x, y, editIdx) {
+      document.querySelector('.mf-pop')?.remove();
+      const note = editIdx != null ? st.notes[editIdx] : null;
+      const pop = document.createElement('div');
+      pop.className = 'mf-pop';
+      pop.innerHTML = `<div class="mf-pop-t">📌 ${esc(note ? note.where : screenOf(el))}<br><small>${esc(note ? note.target : describe(el))}</small></div>
+        <textarea rows="4" placeholder="어떻게 바꾸고 싶은지 써 주세요. 예: 이 상자를 사진 위로 옮겨 주세요.">${esc(note ? note.memo : '')}</textarea>
+        <div><button data-p="ok" class="mf-edit-save">저장</button> ${note ? '<button data-p="del">메모 삭제</button>' : ''} <button data-p="x">취소</button></div>`;
+      pop.style.left = Math.min(x, window.scrollX + innerWidth - 340) + 'px';
+      pop.style.top = (y + 12) + 'px';
+      document.body.append(pop);
+      pop.querySelector('textarea').focus();
+      pop.addEventListener('click', ev => {
+        const b = ev.target.closest('[data-p]'); if (!b) return;
+        const memo = pop.querySelector('textarea').value.trim();
+        if (b.dataset.p === 'ok' && memo) {
+          if (note) note.memo = memo;
+          else st.notes.push({ where: screenOf(el), target: describe(el), path: el === document.body ? null : pathOf(el), memo });
+          save();
+        }
+        if (b.dataset.p === 'del') { st.notes.splice(editIdx, 1); save(); }
+        pop.remove();
+      });
+    }
+    // 메모 핀을 지금 보이는 요소 위에 그린다 (화면을 넘길 때마다 위치가 바뀌므로 주기적으로 다시 그림)
+    const pinLayer = document.createElement('div');
+    pinLayer.className = 'mf-pins';
+    document.body.append(pinLayer);
+    const drawPins = () => {
+      pinLayer.innerHTML = '';
+      st.notes.forEach((nt, i) => {
+        const el = nt.path ? document.querySelector(nt.path) : null;
+        if (!el) return;
+        const r = el.getBoundingClientRect(); if (!r.width && !r.height) return;
+        el.classList.add('mf-noted');
+        const pin = document.createElement('button');
+        pin.className = 'mf-pin'; pin.textContent = i + 1; pin.title = nt.memo;
+        pin.style.left = (r.right + scrollX - 12) + 'px'; pin.style.top = (r.top + scrollY - 12) + 'px';
+        pin.addEventListener('click', e => { e.stopPropagation(); openPop(el, e.pageX, e.pageY, i); });
+        pinLayer.append(pin);
+      });
+    };
+    setInterval(drawPins, 600);
+
+    // 화면 전체 메모
+    bar.querySelector('[data-a="screen"]').addEventListener('click', e => {
+      const sc = document.querySelector('.screen.on') || document.querySelector('main');
+      openPop(sc, e.pageX, e.pageY + 20);
+    });
+
+    // 3) 저장: 사람이 읽는 목록 + Claude가 읽는 JSON
+    const report = () => {
+      const d = new Date(), texts = Object.values(st.texts);
+      const lines = [`[행렬 필터 연구소 수정 요청] ${PAGE_NAME} (${PAGE}) · ${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}`, ''];
+      lines.push(`■ 글자 수정 (${texts.length}개)`);
+      texts.forEach((t, i) => lines.push(`${i + 1}. [${t.where}]`, `   전: ${t.from}`, `   후: ${t.to}`, ''));
+      lines.push(`■ 메모 (${st.notes.length}개)`);
+      st.notes.forEach((nt, i) => lines.push(`${i + 1}. [${nt.where}] ${nt.target}`, `   메모: ${nt.memo}`, ''));
+      lines.push('---- 아래는 Claude가 반영할 때 읽는 정보예요 (지우지 마세요) ----');
+      lines.push(JSON.stringify({ page: PAGE, texts, notes: st.notes }));
+      return lines.join('\r\n');
+    };
+    bar.querySelector('[data-a="save"]').addEventListener('click', () => {
+      document.activeElement && document.activeElement.blur && document.activeElement.blur();
+      setTimeout(() => {
+        if (!Object.keys(st.texts).length && !st.notes.length) { MF.toast('아직 수정한 내용이 없어요.'); return; }
+        const blob = new Blob(['﻿' + report()], { type: 'text/plain;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = `수정요청_${PAGE_NAME}.txt`;
+        document.body.append(a); a.click(); a.remove();
+        MF.toast('수정 요청 파일을 저장했어요. 다운로드 폴더를 확인하세요.');
+      }, 50);
+    });
+    bar.querySelector('[data-a="list"]').addEventListener('click', () => {
+      document.querySelector('.mf-list')?.remove();
+      const box = document.createElement('div'); box.className = 'mf-pop mf-list';
+      box.innerHTML = `<div class="mf-pop-t">수정 목록 · ${PAGE_NAME}</div><pre>${esc(report().split('---- 아래는')[0])}</pre><button data-p="x">닫기</button>`;
+      box.style.left = (scrollX + 20) + 'px'; box.style.top = (scrollY + 80) + 'px';
+      box.addEventListener('click', e => { if (e.target.closest('[data-p]')) box.remove(); });
+      document.body.append(box);
+    });
+    bar.querySelector('[data-a="reset"]').addEventListener('click', () => {
+      if (!confirm(`${PAGE_NAME}에서 고친 글자와 메모를 모두 지울까요?`)) return;
+      Object.keys(st.texts).forEach(id => { const el = document.querySelector(`[data-ed="${id}"]`); if (el) el.innerHTML = orig[id].html; });
+      st.texts = {}; st.notes = []; document.querySelectorAll('.mf-noted').forEach(el => el.classList.remove('mf-noted'));
+      save();
+    });
+    function update() {
+      bar.querySelector('.mf-edit-count').textContent = `글자 ${Object.keys(st.texts).length}곳 · 메모 ${st.notes.length}개`;
+      document.querySelectorAll('[data-ed]').forEach(el => el.classList.toggle('mf-changed', !!st.texts[el.dataset.ed]));
+    }
+    setMode('text'); update();
+  })();
 
   window.MF = MF;
 })();

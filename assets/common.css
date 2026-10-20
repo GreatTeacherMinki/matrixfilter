@@ -318,3 +318,36 @@ footer { padding: 40px 0 60px; color: var(--muted); font-size: 14px; text-align:
 
 /* 질문이 아닌 안내 문장 (메모 칸 없음) */
 .screen-next { margin: 18px 0 0; font-weight: 600; color: var(--muted); }
+
+/* ---------- 선생님용 수정 모드 (?edit) ---------- */
+body.mf-editing { padding-bottom: 120px; }
+.mf-edit-bar {
+  position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 100;
+  background: #1f1d2e; color: #fff; border-radius: 14px; padding: 10px 14px;
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center; box-shadow: 0 8px 30px rgba(0,0,0,.25); font-size: 14px;
+}
+.mf-edit-bar button { font: inherit; font-size: 13px; border: 1px solid #4a4763; background: #2c2942; color: #fff; border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+.mf-edit-bar button:hover { background: #3a3656; }
+.mf-edit-modes { display: flex; gap: 4px; background: #2c2942; padding: 3px; border-radius: 10px; }
+.mf-edit-modes button { border: 0; background: none; }
+.mf-edit-modes button.on { background: #6d4aff; }
+.mf-edit-save { background: #e1306c !important; border-color: #e1306c !important; }
+.mf-edit-count { color: #cfc9ea; font-size: 13px; margin-right: auto; }
+.mf-edit-help { flex-basis: 100%; color: #cfc9ea; font-size: 12px; }
+body.mf-mode-text [data-ed] { outline: 1px dashed #b9a8ff; outline-offset: 2px; cursor: text; }
+body.mf-mode-text [data-ed]:hover { background: #f4f0ff; }
+body.mf-mode-text [data-ed]:focus { outline: 2px solid #6d4aff; background: #fff; }
+[data-ed].mf-changed { background: #fff3c4 !important; }
+body.mf-mode-note .mf-hover { outline: 3px solid #e1306c !important; outline-offset: 2px; cursor: copy; }
+.mf-noted { box-shadow: 0 0 0 2px #f77737; }
+.mf-pins { position: absolute; left: 0; top: 0; z-index: 90; }
+.mf-pin { position: absolute; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; background: #f77737; color: #fff; font-weight: 800; font-size: 12px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+.mf-pop { position: absolute; z-index: 110; width: 320px; background: #fff; border: 1px solid #e7e4f0; border-radius: 12px; padding: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.2); font-size: 14px; }
+.mf-pop-t { font-weight: 700; margin-bottom: 8px; }
+.mf-pop-t small { font-weight: 500; color: #6b6880; }
+.mf-pop textarea { margin-bottom: 8px; }
+.mf-pop button { font: inherit; font-size: 13px; border: 1px solid #e7e4f0; background: #fff; border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+.mf-pop .mf-edit-save { color: #fff; }
+.mf-list { width: min(640px, calc(100vw - 40px)); }
+.mf-list pre { white-space: pre-wrap; font-family: inherit; font-size: 13px; max-height: 60vh; overflow: auto; background: #f6f5fb; padding: 10px; border-radius: 8px; }
+@media print { .mf-edit-bar, .mf-pins, .mf-pop { display: none !important; } }

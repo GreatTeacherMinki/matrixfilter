@@ -485,7 +485,7 @@
     sc.onload = () => res(); sc.onerror = () => rej(new Error('html2canvas'));
     document.head.append(sc);
   });
-  MF.worksheet = function ({ lesson, title, q1hint, q2, getResult, extras = [] }) {
+  MF.worksheet = function ({ lesson, title, q1hint, q2, getResult, extras = [], records = () => ({}) }) {
     const KEY = 'mf-ws-' + lesson, ID_KEY = 'mf-ws-id';
     const read = k => { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch (e) { return {}; } };
     const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
@@ -581,7 +581,7 @@
     block.className = 'ws-block';
     block.innerHTML = `
       <h3>📄 ${lesson}차시 활동지 제출</h3>
-      <p class="small muted" style="margin:4px 0 12px">필수 기록 3개를 쓰고 이미지로 저장해서 클래스룸 과제에 올려요. 화면별 메모, 생각해보기 답, 결과 이미지, 필터 코드도 자동으로 함께 담겨요.</p>
+      <p class="small muted" style="margin:4px 0 12px">필수 기록 3개를 쓰고 이미지로 저장해서 카카오톡에 올려요. 모든 화면에서 쓴 답과 기록, 결과 이미지, 필터 코드가 자동으로 함께 담겨요.</p>
       <div class="ws-id">
         <label>학번 <input type="text" data-id="no" maxlength="10" placeholder="예: 10101"></label>
         <label>이름 <input type="text" data-id="name" maxlength="20"></label>
@@ -603,7 +603,7 @@
       <div class="ws-attach" data-attach></div>
       <div class="btn-row" style="margin-top:14px"><button class="btn grad" data-pdf>📷 활동지 이미지로 저장</button></div>
       <div class="box tip small" style="margin-top:12px">
-        버튼을 누르면 활동지가 <b>그림 파일(PNG)</b>로 <b>다운로드 폴더</b>에 저장돼요. 그 파일을 클래스룸 과제에 올리면 제출 끝!<br>
+        버튼을 누르면 활동지가 <b>그림 파일(PNG)</b>로 <b>다운로드 폴더</b>에 저장돼요. 그 파일을 카카오톡에 업로드 하면 끝!<br>
         ⚠️ 작성한 내용은 이 컴퓨터에 임시로 남지만, 컴퓨터실 PC는 껐다 켜면 지워질 수 있어요. 수업이 끝나기 전에 꼭 저장해서 제출해요.
       </div>`;
     last.querySelector('.step').append(block);
@@ -681,8 +681,17 @@
         }
         return data[K];
       };
-      const memos = screens.flatMap((sc, i) => [...sc.querySelectorAll('.screen-q')].map((q, n) => [sc, q, memoOf(q, memoKey(i, n))]))
-        .filter(([, , v]) => v && v.trim());
+      // 화면 순서대로: 그 화면의 입력 기록 + 질문과 답 (답하지 않은 질문도 모두)
+      const recs = records() || {};
+      const screenParts = screens.slice(0, -1).map((sc, i) => {
+        const t = sc.dataset.title;
+        const rec = (recs[t] || []).map(([k, v]) => `<div class="wp-q"><div class="wp-qt">${esc(k)}</div><div class="wp-a">${esc(String(v || '').trim() || '(작성하지 않음)')}</div></div>`);
+        const qs = [...sc.querySelectorAll('.screen-q')].map((q, n) => {
+          const v = memoOf(q, memoKey(i, n));
+          return `<div class="wp-q"><div class="wp-qt">${esc(q.textContent.trim())}</div><div class="wp-a">${esc((v || '').trim() || '(작성하지 않음)')}</div></div>`;
+        });
+        return rec.length || qs.length ? `<h3>${i + 1}. ${esc(t)}</h3>${rec.join('')}${qs.join('')}` : '';
+      }).join('');
       const thinks = [...last.querySelectorAll('.think li')].map((li, j) => [li.firstChild.textContent.trim(), (data['t' + j] || '').trim() || '(작성하지 않음)']);
       let pr = document.getElementById('wsPrint');
       if (!pr) { pr = document.createElement('div'); pr.id = 'wsPrint'; document.body.append(pr); }
@@ -700,10 +709,10 @@
           ${s.img ? `<img src="${s.img}">` : ''}
           <div><div class="wp-qt">${esc(s.name || '(이름 없음)')}</div><div class="wp-code">${esc(s.code)}</div></div>
         </div>
-        <h2>생각해보기</h2>
-        ${thinks.length ? thinks.map(([q, a]) => `<div class="wp-q"><div class="wp-qt">${esc(q)}</div><div class="wp-a">${esc(a.trim())}</div></div>`).join('') : '<p class="wp-none">작성한 답이 없어요.</p>'}
-        <h2>화면별 메모</h2>
-        ${memos.length ? memos.map(([sc, q, v]) => `<div class="wp-q"><div class="wp-qt">[${esc(sc.dataset.title)}] ${esc(q.textContent.trim())}</div><div class="wp-a">${esc(v.trim())}</div></div>`).join('') : '<p class="wp-none">작성한 메모가 없어요.</p>'}`;
+        <h2>화면별 활동 기록</h2>
+        ${screenParts || '<p class="wp-none">기록할 내용이 없어요.</p>'}
+        <h2>정리 질문</h2>
+        ${thinks.length ? thinks.map(([q, a]) => `<div class="wp-q"><div class="wp-qt">${esc(q)}</div><div class="wp-a">${esc(a.trim())}</div></div>`).join('') : '<p class="wp-none">질문이 없어요.</p>'}`;
       const fileName = `${lesson}차시_활동지_${no}_${name}`;
       const btn = block.querySelector('[data-pdf]'), label = btn.textContent;
       btn.disabled = true; btn.textContent = '⏳ 이미지 만드는 중…';
@@ -763,7 +772,7 @@
     }, 'image/png');
   };
   MF.copy = async text => {
-    try { await navigator.clipboard.writeText(text); MF.toast('복사했어요! 메모장이나 클래스룸에 붙여넣어 두세요.'); }
+    try { await navigator.clipboard.writeText(text); MF.toast('복사했어요! 메모장이나 카카오톡에 붙여넣어 두세요.'); }
     catch (e) {
       const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t);
       t.select(); document.execCommand('copy'); t.remove(); MF.toast('복사했어요!');

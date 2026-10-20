@@ -302,6 +302,7 @@ textarea.code, input.code { font-family: var(--mono); }
 #wsPrint .wp-id { text-align: right; font-size: 14px; }
 #wsPrint h2 { font-size: 18px; margin: 22px 0 8px; padding: 4px 12px; background: #f1eefb; border-radius: 6px; }
 #wsPrint .wp-q { margin: 0 0 12px; }
+#wsPrint h3 { font-size: 16px; margin: 16px 0 6px; color: #6d4aff; }
 #wsPrint .wp-qt { font-weight: 700; }
 #wsPrint .wp-a { white-space: pre-wrap; border-left: 3px solid #d9cffd; padding: 2px 0 2px 12px; margin-top: 3px; }
 #wsPrint .wp-filter { display: grid; grid-template-columns: 62% 1fr; gap: 14px; align-items: start; }

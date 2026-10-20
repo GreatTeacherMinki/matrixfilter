@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>1차시 RGB 필터 만들기</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-<link rel="stylesheet" href="assets/common.css?v=202610202026">
+<link rel="stylesheet" href="assets/common.css?v=202610202034">
 <style>
   /* 도입 */
   .rgb-intro { margin-bottom: 14px; }
@@ -378,7 +378,7 @@
     <div class="step">
       <div class="step-head">
         <div class="step-num">7</div>
-        <div><h2>필터의 정체와 나만의 필터</h2><p>필터는 <b>새로운 R′, G′, B′를 원래 R, G, B로 계산하는 규칙</b>이고, 모든 픽셀에 같은 규칙을 적용해요. 대표 규칙 두 가지를 살펴본 뒤, 식을 직접 써서 나만의 필터를 만들어 보세요.</p></div>
+        <div><h2>나만의 필터 만들기</h2><p>필터는 <b>새로운 R′, G′, B′를 원래 R, G, B로 계산하는 규칙</b>이고, 모든 픽셀에 같은 규칙을 적용해요. 대표 규칙 두 가지를 살펴본 뒤, 식을 직접 써서 나만의 필터를 만들어 보세요.</p></div>
       </div>
       <div class="intro-grid">
         <div class="intro-card">
@@ -420,7 +420,7 @@
       </div>
       <div class="box save-box">
         <h3>🔑 필터 코드로 저장하기</h3>
-        <p class="small">이 코드를 복사해 클래스룸에 제출하거나 메모장에 붙여넣어 두세요. 다른 컴퓨터에서 코드를 붙여넣으면 내 필터가 그대로 돌아와요.</p>
+        <p class="small">이 코드를 복사해 카카오톡에 올리거나 메모장에 붙여넣어 두세요. 다른 컴퓨터에서 코드를 붙여넣으면 내 필터가 그대로 돌아와요.</p>
         <div class="btn-row"><input type="text" class="code" id="codeOut" readonly style="flex:1;min-width:200px"><button class="btn sm primary" id="copyCode">복사</button></div>
         <div class="btn-row"><input type="text" class="code" id="codeIn" placeholder="저장해 둔 필터 코드를 붙여넣으세요 (MF-...)" style="flex:1;min-width:200px"><button class="btn sm" id="loadCode">불러오기</button></div>
       </div>
@@ -481,7 +481,7 @@
   </div>
 </main>
 
-<script src="assets/common.js?v=202610202026"></script>
+<script src="assets/common.js?v=202610202034"></script>
 <script>
 (() => {
   /* ===== 공유 상태 ===== */
@@ -998,8 +998,25 @@
     lesson: 1, title: 'RGB 필터 만들기',
     q1hint: '예: 사진이 행렬이라는 것, 컬러 사진은 행렬 3장이라는 것, 필터는 모든 성분에 같은 규칙을 적용하는 것 등. 왜 인상 깊었는지도 써 주세요.',
     q2: '7번 화면에서 만든 필터의 이름과 R′, G′, B′ 식을 쓰고, 그 식이 사진을 어떻게 바꾸는지 설명해 주세요.',
-    getResult: () => { if (!makerResult) renderMaker(); return { canvas: makerResult, name: nameIn.value.trim(), code: document.getElementById('codeOut').value }; }
+    getResult: () => { if (!makerResult) renderMaker(); return { canvas: makerResult, name: nameIn.value.trim(), code: document.getElementById('codeOut').value }; },
+    records: () => {
+      const sg = v => (+v > 0 ? '+' : '') + v;
+      return {
+        '픽셀 = 숫자': [
+          ['도전! 행렬 → 그림: 내가 쓴 정답', document.getElementById('mysteryGuess').value],
+          ['정답 확인 결과', document.getElementById('mysteryGuessResult').textContent],
+          ['칠한 칸 채점 결과', document.getElementById('mysteryResult').textContent]
+        ],
+        '색 섞기 실험실': [['마지막으로 실험한 값', `R 행렬 ${sg(labR.value)}, G 행렬 ${sg(labG.value)}, B 행렬 ${sg(labB.value)}`]],
+        '나만의 필터': [
+          ['필터 이름', nameIn.value],
+          ['필터 식', `R′ = ${fIn.R.value}  /  G′ = ${fIn.G.value}  /  B′ = ${fIn.B.value}`]
+        ],
+        '친구 필터 분석': [['불러온 친구 필터', friendObj ? `${friendObj.name || '이름 없는 필터'}  (${friendSteps.map(MF.describeStep).join(' → ')})` : '']]
+      };
+    }
   });
+  ws.bind(document.getElementById('mysteryGuess'), 'guess'); // 도전 정답도 새로고침해도 남게
   renderers[I_LAST] = ws.refresh;
 
   /* ===== 시작 ===== */

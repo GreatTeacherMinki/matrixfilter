@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>1차시 RGB 필터 만들기</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-<link rel="stylesheet" href="assets/common.css?v=202610201940">
+<link rel="stylesheet" href="assets/common.css?v=202610201947">
 <style>
   /* 도입 */
   .rgb-intro { margin-bottom: 14px; }
@@ -82,6 +82,9 @@
 
   /* 색 섞기 실험실 */
   .lab-sliders .slider-row { grid-template-columns: 120px 1fr 60px; }
+  .lab-sliders .lab-row { grid-template-columns: 104px 1fr 70px 36px; }
+  .lab-num { width: 70px; font-family: var(--mono); font-size: 15px; text-align: right; padding: 6px 6px; border: 1px solid var(--line); border-radius: 8px; }
+  .lab-zero { padding: 5px 8px; justify-content: center; }
   .pix-compare { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 14px; margin-top: 10px; flex-wrap: wrap; }
   .pix-compare .sw { width: 28px; height: 28px; vertical-align: middle; }
 
@@ -289,6 +292,7 @@
         </div>
         <div class="swatch" id="mixSwatch"></div>
       </div>
+      <div class="screen-q" data-fields="노랑 만들기::::성공했을 때의 (R, G, B)|보라 만들기::::성공했을 때의 (R, G, B)|하늘색 만들기::::성공했을 때의 (R, G, B)|흰색 만들기::::성공했을 때의 (R, G, B)|회색 만들기::::성공했을 때의 (R, G, B)" data-hint="슬라이더를 움직여 미션 색을 만들면 칸이 자동으로 채워져요. 직접 고쳐 써도 돼요.|노랑은 빨강+초록, 보라는 빨강+파랑, 하늘색은 초록+파랑을 섞어요. 흰색은 세 빛을 모두 가장 밝게!">🎯 미션에 성공한 색의 (R, G, B)를 기록해 보세요.</div>
       <div class="screen-q" data-hint="슬라이더 세 개를 모두 같은 숫자로 맞춰 보세요.|(0, 0, 0), (128, 128, 128), (255, 255, 255)를 비교해 보세요. 세 숫자가 같으면 어떤 색이 되나요?">회색을 만드는 규칙을 찾았나요? R, G, B가 어떤 관계일 때 회색이 되나요?</div>
     </div>
   </section>
@@ -331,9 +335,9 @@
           </div>
         </div>
         <div class="lab-sliders">
-          <div class="slider-row"><label style="color:#d32f2f">R 행렬에 +</label><input type="range" min="-150" max="150" value="0" id="labR"><output id="labRo"></output></div>
-          <div class="slider-row"><label style="color:#2e7d32">G 행렬에 +</label><input type="range" min="-150" max="150" value="0" id="labG"><output id="labGo"></output></div>
-          <div class="slider-row"><label style="color:#1565c0">B 행렬에 +</label><input type="range" min="-150" max="150" value="0" id="labB"><output id="labBo"></output></div>
+          <div class="slider-row lab-row"><label style="color:#d32f2f">R 행렬에 +</label><input type="range" min="-150" max="150" value="0" id="labR"><input type="number" class="lab-num" id="labRn" min="-150" max="150" step="1" value="0" aria-label="R에 더할 수"><button class="btn sm lab-zero" data-zero="labR" title="0으로 되돌리기">↺</button></div>
+          <div class="slider-row lab-row"><label style="color:#2e7d32">G 행렬에 +</label><input type="range" min="-150" max="150" value="0" id="labG"><input type="number" class="lab-num" id="labGn" min="-150" max="150" step="1" value="0" aria-label="G에 더할 수"><button class="btn sm lab-zero" data-zero="labG" title="0으로 되돌리기">↺</button></div>
+          <div class="slider-row lab-row"><label style="color:#1565c0">B 행렬에 +</label><input type="range" min="-150" max="150" value="0" id="labB"><input type="number" class="lab-num" id="labBn" min="-150" max="150" step="1" value="0" aria-label="B에 더할 수"><button class="btn sm lab-zero" data-zero="labB" title="0으로 되돌리기">↺</button></div>
           <div class="formula" id="labFormula" style="margin-top:10px"></div>
           <div class="pix-compare" id="labPix"></div>
           <div class="box tip" style="margin-top:14px">
@@ -426,7 +430,7 @@
   </div>
 </main>
 
-<script src="assets/common.js?v=202610201940"></script>
+<script src="assets/common.js?v=202610201947"></script>
 <script>
 (() => {
   /* ===== 공유 상태 ===== */
@@ -692,6 +696,12 @@
   const missionsEl = document.getElementById('missions');
   missionsEl.innerHTML = '<span class="small muted" style="align-self:center">미션:</span>' +
     missionList.map(([n]) => `<span class="mission" data-m="${n}">${n} 만들기</span>`).join('');
+  // 미션에 성공하면 그 미션의 기록 칸이 비어 있을 때 (R, G, B)를 채워 준다
+  const fillMission = (n, r, g, b) => {
+    const k = missionList.findIndex(m => m[0] === n);
+    const ta = mixR.closest('.screen').querySelectorAll('.ws-field textarea')[k];
+    if (ta && !ta.value.trim()) { ta.value = `(${r}, ${g}, ${b})`; ta.dispatchEvent(new Event('input')); }
+  };
   const mix = () => {
     const r = +mixR.value, g = +mixG.value, b = +mixB.value;
     mixRo.textContent = r; mixGo.textContent = g; mixBo.textContent = b;
@@ -700,7 +710,7 @@
     mixSwatch.textContent = `(${r}, ${g}, ${b})`;
     missionList.forEach(([n, test]) => {
       const el = missionsEl.querySelector(`[data-m="${n}"]`);
-      if (test(r, g, b) && !el.classList.contains('done')) { el.classList.add('done'); el.textContent = `✓ ${n}`; MF.toast(`${n} 성공!`); }
+      if (test(r, g, b) && !el.classList.contains('done')) { el.classList.add('done'); el.textContent = `✓ ${n}`; MF.toast(`${n} 성공!`); fillMission(n, r, g, b); }
     });
   };
   [mixR, mixG, mixB].forEach(s => s.addEventListener('input', mix)); mix();
@@ -739,7 +749,8 @@
   const labVals = () => [+labR.value, +labG.value, +labB.value];
   renderers[I_LAB] = () => {
     const [dr, dg, db] = labVals();
-    [['labRo', dr], ['labGo', dg], ['labBo', db]].forEach(([id, v]) => document.getElementById(id).textContent = (v > 0 ? '+' : '') + v);
+    // 숫자 칸은 지금 입력 중이 아닐 때만 슬라이더 값으로 맞춘다
+    [['labRn', dr], ['labGn', dg], ['labBn', db]].forEach(([id, v]) => { const el = document.getElementById(id); if (document.activeElement !== el) el.value = v; });
     if (!labCache) { labResult = MF.copyCanvas(photo); labCache = MF.ctx(labResult).createImageData(photo.width, photo.height); }
     const s = photoData.data, o = labCache.data;
     for (let i = 0; i < s.length; i += 4) {
@@ -758,6 +769,19 @@
   };
   [labR, labG, labB].forEach(s => s.addEventListener('input', () => renderers[I_LAB]()));
   document.getElementById('labReset').addEventListener('click', () => { labR.value = labG.value = labB.value = 0; renderers[I_LAB](); });
+  // 숫자를 직접 입력하면 슬라이더도 따라 움직인다 (-150 ~ 150)
+  [labR, labG, labB].forEach(sl => {
+    const num = document.getElementById(sl.id + 'n');
+    num.addEventListener('input', () => {
+      const v = Math.round(parseFloat(num.value));
+      if (isNaN(v)) return;
+      sl.value = Math.max(-150, Math.min(150, v)); renderers[I_LAB]();
+    });
+    num.addEventListener('change', () => { num.value = sl.value; });
+  });
+  document.querySelectorAll('[data-zero]').forEach(b => b.addEventListener('click', () => {
+    document.getElementById(b.dataset.zero).value = 0; renderers[I_LAB]();
+  }));
   holdToCompare(document.getElementById('labHold'), labCanvas, document.getElementById('labBadge'), () => labResult);
 
   /* ===== 7. 필터의 정체 + 나만의 필터 ===== */

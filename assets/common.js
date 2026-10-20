@@ -545,11 +545,11 @@
         memo.className = 'ws-fields';
         memo.innerHTML = '<div class="ws-fields-t">✏️ 내 생각 메모 (선택) · 활동지에 함께 저장돼요</div>';
         q.dataset.fields.split('|').forEach((f, k) => {
-          const [name, ask] = f.split('::');
+          const [name, ask, ph] = f.split('::'); // 이름::안내 문장::입력칸 안의 흐린 글씨
           const row = document.createElement('label');
           row.className = 'ws-field';
           row.innerHTML = `<b>${esc(name)}</b>${ask ? `<span class="ws-field-q">${esc(ask)}</span>` : ''}`;
-          row.append(box(`${K}_${k}`, 2, '관찰한 숫자와 느낌을 써 보세요', 'ws-memo'));
+          row.append(box(`${K}_${k}`, 2, ph || '관찰한 숫자와 느낌을 써 보세요', 'ws-memo'));
           memo.append(row);
         });
       } else memo = box(K, 2, '✏️ 내 생각 메모 (선택) · 활동지에 함께 저장돼요', 'ws-memo');

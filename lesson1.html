@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>1차시 RGB 필터 만들기</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-<link rel="stylesheet" href="assets/common.css?v=202610201947">
+<link rel="stylesheet" href="assets/common.css?v=202610201958">
 <style>
   /* 도입 */
   .rgb-intro { margin-bottom: 14px; }
@@ -50,6 +50,16 @@
   .palette button.on { border-color: var(--pink); box-shadow: 0 0 0 3px #fde8ef; }
   .score { font-weight: 800; }
   .mode-tabs { margin-bottom: 14px; }
+  .friend-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+  .friend-grid figure { margin: 0; }
+  .friend-grid canvas { width: 100%; border-radius: 10px; display: block; }
+  .friend-grid figcaption { text-align: center; font-size: 13px; font-weight: 700; margin-top: 4px; }
+  @media (max-width: 760px) { .friend-grid { grid-template-columns: 1fr; } }
+  .table-wrap { overflow-x: auto; }
+  .friend-table { border-collapse: collapse; font-size: 14px; min-width: 420px; }
+  .friend-table th, .friend-table td { border: 1px solid var(--line); padding: 6px 10px; text-align: center; font-family: var(--mono); }
+  .friend-table th { background: var(--soft); font-family: inherit; }
+  .friend-table .up { color: #c62828; font-weight: 700; } .friend-table .down { color: #1565c0; font-weight: 700; }
   .preset-group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; max-width: 340px; }
   .res-row { grid-template-columns: 80px 1fr 90px; margin: 0; }
   .res-ticks { display: flex; justify-content: space-between; margin: -2px 96px 12px 86px; font-size: 11px; color: var(--muted); }
@@ -338,13 +348,13 @@
           <div class="slider-row lab-row"><label style="color:#1565c0">B 행렬에 +</label><input type="range" min="-150" max="150" value="0" id="labB"><input type="number" class="lab-num" id="labBn" min="-150" max="150" step="1" value="0" aria-label="B에 더할 수"><button class="btn sm lab-zero" data-zero="labB" title="0으로 되돌리기">↺</button></div>
           <div class="formula" id="labFormula" style="margin-top:10px"></div>
           <div class="pix-compare" id="labPix"></div>
-          <div class="box tip" style="margin-top:14px">
-            <h3>실험해 보기</h3>
-            <p class="small">① R만 +100 하면? ② 세 개 모두 +100 하면? ③ B만 −100 하면?<br>④ 내 마음에 드는 색감을 찾아보세요.</p>
-          </div>
         </div>
       </div>
-      <div class="screen-q" data-hint="&#x27;실험해 보기&#x27; ②번처럼 R, G, B 슬라이더를 모두 +100으로 해 보세요.|모두 같은 수를 더하면 색감은 그대로이고 밝기만 변해요. 하나에만 더하면 사진이 어떤 색 쪽으로 바뀌는지 확인해 보세요.">세 행렬에 모두 같은 수를 더하면 어떻게 되나요? 하나에만 더하면요?</div>
+      <div class="screen-q" data-hint="R 칸에 100을 입력해 보세요. 사진 전체가 어떤 색 쪽으로 바뀌나요?|빨간 빛이 강해져서 사진이 붉어져요. 원래 R이 큰 곳(흰 벽, 빨간 풍선)과 작은 곳(하늘, 잔디) 중 어디가 더 많이 달라 보이는지도 비교해 보세요.">① R 행렬에만 +100 하면 사진이 어떻게 바뀌나요?</div>
+      <div class="screen-q" data-hint="R, G, B 칸에 모두 100을 입력해 보세요. ①과 무엇이 다른가요?|세 빛을 똑같이 더하면 색의 비율은 거의 그대로이고 전체가 밝아져요. 그래서 색감보다 밝기가 바뀌어요.">② R, G, B 행렬에 모두 +100 하면 어떻게 되나요? 색감과 밝기 중 무엇이 바뀌나요?</div>
+      <div class="screen-q" data-hint="R과 G는 0으로 두고 B 칸에만 −100을 입력해 보세요.|파란 빛이 약해지면 노란빛이 도는 따뜻한 느낌이 돼요. 저녁 노을, 오래된 사진, 가을 풍경을 떠올려 보세요.">③ B 행렬에서만 −100 하면 어떤 느낌의 사진이 되나요? 어떤 장면에 어울릴까요?</div>
+      <div class="screen-q" data-hint="R 칸에 150을 넣고 아래 &#x27;한 픽셀&#x27;의 결과 숫자를 보세요. 원래 숫자 + 150은 얼마인가요?|컴퓨터는 한 칸에 0부터 255까지만 저장해요. 그래서 255보다 크면 255로, 0보다 작으면 0으로 잘려요.">④ 더해서 255보다 커지거나 빼서 0보다 작아진 숫자는 어떻게 되나요?</div>
+      <div class="screen-q" data-hint="여러 값을 바꿔 보며 가장 마음에 드는 사진을 찾아보세요.|예: R +30, G 0, B −40 → 따뜻하고 포근한 느낌. 그 값을 고른 이유도 함께 써 보세요.">⑤ 내가 찾은 마음에 드는 색감의 R, G, B 값과 그 느낌을 써 보세요.</div>
     </div>
   </section>
 
@@ -402,21 +412,49 @@
     </div>
   </section>
 
-  <!-- 10. 정리 -->
+  <!-- 8. 친구 필터 분석 -->
+  <section class="screen" data-title="친구 필터 분석" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">8</div>
+        <div><h2>친구 필터 분석하기</h2><p>친구가 만든 필터의 코드를 붙여넣어 보세요. 친구의 필터가 사진의 숫자를 어떻게 바꾸는지 내 필터와 비교하며 분석해요.</p></div>
+      </div>
+      <div class="btn-row">
+        <input type="text" class="code" id="friendCode" placeholder="친구의 필터 코드를 붙여넣으세요 (MF-...)" style="flex:1;min-width:220px">
+        <button class="btn primary" id="friendLoad">불러오기</button>
+        <button class="btn sm" id="friendDemo">🧪 예시 코드로 해 보기</button>
+      </div>
+      <div id="friendBody" class="hidden" style="margin-top:16px">
+        <div class="friend-head"><b id="friendName"></b><div class="formula" id="friendRule" style="margin-top:6px"></div></div>
+        <div class="friend-grid">
+          <figure><canvas id="friendOrig"></canvas><figcaption>원본</figcaption></figure>
+          <figure><canvas id="friendOut"></canvas><figcaption>친구 필터</figcaption></figure>
+          <figure><canvas id="friendMine"></canvas><figcaption>내 필터 (7번 화면)</figcaption></figure>
+        </div>
+        <div class="matrix-label" style="margin-top:14px">📍 같은 곳의 숫자 비교 (R, G, B)</div>
+        <div class="table-wrap"><table class="friend-table" id="friendTable"></table></div>
+      </div>
+      <div class="screen-q" data-hint="위의 식과 친구 필터 사진을 함께 보세요. 어떤 색이 강해지고 약해졌나요?|식에서 1보다 큰 수를 곱하거나 수를 더한 색은 강해지고, 1보다 작은 수를 곱하거나 수를 뺀 색은 약해져요.">친구 필터의 이름과 식을 쓰고, 사진이 어떻게 바뀌었는지 써 보세요.</div>
+      <div class="screen-q" data-table="친구 필터::원본과 비교" data-cols="R|G|B" data-hint="표에서 원본과 친구 필터의 숫자를 장소마다 비교해 보세요.|여러 장소에서 늘 같은 방향(↑ 또는 ↓)으로 바뀌는 숫자가 친구 필터의 특징이에요.">표의 숫자를 보고, 친구 필터에서 R, G, B가 각각 어떻게 변했는지 기록해 보세요.</div>
+      <div class="screen-q" data-hint="세 사진(원본, 친구 필터, 내 필터)을 나란히 보며 색감과 밝기를 비교해 보세요.|두 필터의 식을 비교해 보세요. 같은 색을 키웠나요, 다른 색을 키웠나요? 더한 수나 곱한 수의 크기는 어떻게 다른가요?">내 필터와 친구 필터는 무엇이 같고 무엇이 다른가요?</div>
+    </div>
+  </section>
+
+  <!-- 9. 정리 -->
   <section class="screen" data-title="정리">
     <div class="step">
       <div class="step-head">
         <div class="step-num">✓</div>
-        <div><h2>오늘 배운 것</h2><p>생각해보기 질문에 답하고, 내 필터를 제출해요.</p></div>
+        <div><h2>오늘 배운 것</h2><p>오늘 활동을 잘 이해했는지 질문에 답하고, 활동지를 제출해요.</p></div>
       </div>
       <div class="box key" style="margin-bottom:16px">
         <p>흑백 이미지 = 행렬 <b>1개</b>, 컬러 사진 = R·G·B 행렬 <b>3개</b>.<br>필터 = 행렬의 모든 성분에 <b>같은 규칙</b>을 적용해 새로운 행렬을 만드는 것.</p>
       </div>
       <ol class="think">
-        <li data-hint="먼저 픽셀 수를 구해요. 픽셀 수 = 가로 × 세로|컬러 픽셀 하나에는 숫자가 3개 있으니 픽셀 수에 3을 곱해요.">가로 1080, 세로 1080 픽셀인 인스타그램 컬러 사진은 숫자 몇 개로 이루어져 있을까요?</li>
-        <li data-hint="반전을 한 번 하면 R′ = 255 − R 이에요. 이 R′에 반전을 한 번 더 하면?|255 − (255 − R) 을 계산해 보세요. G, B도 똑같아요.">반전 필터를 두 번 적용하면 어떻게 될까요? 식으로 설명해 보세요.</li>
-        <li data-hint="식에서 곱하는 수가 1보다 크면 그 색이 강해지고, 1보다 작으면 약해져요. 더하는 수는 그 색을 밝게 해요.|예: R′ = R × 1.2 + 20 은 빨강을 강하게 해서 따뜻한 느낌을 줘요. 내 식의 세 줄이 각각 무엇을 키우고 줄이는지 써 보세요.">내가 만든 필터의 이름과 식을 쓰고, 그 식이 사진을 어떻게 바꾸는지 설명해 보세요.</li>
-        <li data-hint="7번 화면 아래 필터 코드 칸에 친구의 코드를 붙여넣고 [불러오기]를 눌러요.|불러온 R′, G′, B′ 식을 보고, 어떤 색이 강해지고 약해지는지 원본과 비교해 보세요.">친구의 필터 코드를 받아 불러와 보고, 그 필터의 식이 어떤 효과를 내는지 분석해 보세요.</li>
+        <li data-hint="흑백 픽셀 하나에는 숫자가 몇 개, 컬러 픽셀 하나에는 숫자가 몇 개 들어 있었나요?|컬러 사진에서 R 숫자만 모으면 R 행렬, G만 모으면 G 행렬, B만 모으면 B 행렬이 돼요(5번 화면).">흑백 이미지와 컬러 이미지는 각각 몇 개의 행렬로 나타낼 수 있나요? 그 이유는 무엇인가요?</li>
+        <li data-hint="4번 화면에서 노랑과 회색 미션을 어떻게 성공했는지 떠올려 보세요.|빨강과 초록 빛을 가장 밝게 섞으면 어떤 색이 될까요? 세 빛을 같은 세기로 섞으면 검정, 회색, 흰색 중 하나가 돼요.">(R, G, B) = (255, 255, 0)은 어떤 색인가요? 또 R, G, B 세 숫자가 모두 같으면 어떤 색이 되나요?</li>
+        <li data-hint="픽셀 수 = 가로 × 세로, 컬러 픽셀 하나에는 숫자가 3개예요.|3번 화면에서 슬라이더를 움직였을 때 선명도와 숫자 개수가 어떻게 달라졌는지 떠올려 보세요.">가로 1080, 세로 1080 픽셀인 컬러 사진은 숫자 몇 개로 이루어져 있을까요? 픽셀 수가 늘어나면 무엇이 좋아지고 무엇이 불편해지나요?</li>
+        <li data-hint="반전 필터 R′ = 255 − R 은 행렬의 어떤 성분에, 어떤 규칙을 적용했나요?|&quot;필터는 사진을 나타내는 ___ 의 모든 성분에 같은 ___ 을 적용해서 숫자를 바꾸는 것이다. 예를 들어 ___ &quot; 형식으로 써 보세요.">필터가 무엇인지 '행렬'과 '규칙'이라는 말을 넣어 설명하고, 예를 하나 들어 보세요.</li>
       </ol>
     </div>
   </section>
@@ -428,7 +466,7 @@
   </div>
 </main>
 
-<script src="assets/common.js?v=202610201947"></script>
+<script src="assets/common.js?v=202610201958"></script>
 <script>
 (() => {
   /* ===== 공유 상태 ===== */
@@ -445,7 +483,7 @@
   const renderers = {}; // 화면 번호 → 그 화면을 다시 그리는 함수
   const SCREENS = [...document.querySelectorAll('.screen')];
   const IDX = t => SCREENS.findIndex(sc => sc.dataset.title === t);
-  const I_HOOK = IDX('같은 사진, 다른 필터'), I_EXPLORE = IDX('사진 속 숫자'), I_CH = IDX('행렬 3장'), I_LAB = IDX('색 섞기 실험실'), I_MAKER = IDX('나만의 필터'), I_LAST = SCREENS.length - 1;
+  const I_HOOK = IDX('같은 사진, 다른 필터'), I_EXPLORE = IDX('사진 속 숫자'), I_CH = IDX('행렬 3장'), I_LAB = IDX('색 섞기 실험실'), I_MAKER = IDX('나만의 필터'), I_FRIEND = IDX('친구 필터 분석'), I_LAST = SCREENS.length - 1;
   let wiz;
   function setPhoto(c) {
     photo = c;
@@ -871,6 +909,48 @@
       MF.toast(`'${obj.name || '이름 없는 필터'}' 필터를 불러왔어요!`);
     } catch (e) { MF.toast(e.message); }
   });
+
+
+  /* ===== 8. 친구 필터 분석 ===== */
+  const SPOTS = [['🎈 빨간 풍선', 0.15, 0.25], ['🏠 흰 벽', 0.61, 0.422], ['🪟 어두운 창문', 0.546, 0.477], ['☁️ 하늘', 0.08, 0.08], ['🌿 잔디', 0.2, 0.62]];
+  let friendSteps = null, friendObj = null;
+  const sameSpot = (c, fx, fy) => { const x = Math.min(c.width - 1, Math.floor(fx * c.width)), y = Math.min(c.height - 1, Math.floor(fy * c.height)); return [...MF.ctx(c).getImageData(x, y, 1, 1).data.slice(0, 3)]; };
+  const renderFriend = () => {
+    if (!friendSteps) return;
+    const out = MF.applySteps(photo, friendSteps);
+    if (!makerResult) renderMaker();
+    MF.draw(document.getElementById('friendOrig'), photo);
+    MF.draw(document.getElementById('friendOut'), out);
+    MF.draw(document.getElementById('friendMine'), makerResult || photo);
+    const spots = photo.isSample ? SPOTS : [['사진 가운데', 0.5, 0.5], ['왼쪽 위', 0.15, 0.15], ['오른쪽 아래', 0.85, 0.85]];
+    const arrow = (a, b) => b > a + 2 ? `<span class="up">${b} ↑</span>` : b < a - 2 ? `<span class="down">${b} ↓</span>` : `${b} =`;
+    document.getElementById('friendTable').innerHTML = '<tr><th>장소</th><th>원본</th><th>친구 필터</th></tr>' + spots.map(([n, fx, fy]) => {
+      const a = sameSpot(photo, fx, fy), b = sameSpot(out, fx, fy);
+      return `<tr><th>${n}</th><td>${a.join(', ')}</td><td>${b.map((v, k) => arrow(a[k], v)).join(', ')}</td></tr>`;
+    }).join('');
+  };
+  const loadFriend = code => {
+    try {
+      const obj = MF.decode(code);
+      if (!obj.steps || !obj.steps.length) throw new Error('필터가 들어 있지 않은 코드예요.');
+      obj.steps.forEach(st => { if (!MF.filters[st.t]) throw new Error('알 수 없는 필터 종류예요.'); if (st.t === 'formula') st.f.forEach(MF.compileExpr); });
+      friendSteps = obj.steps; friendObj = obj;
+      document.getElementById('friendName').textContent = `👫 ${obj.name || '이름 없는 필터'}`;
+      const escH = t => String(t).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+      document.getElementById('friendRule').innerHTML = obj.steps.map(st => st.t === 'formula'
+        ? `R′ = ${escH(st.f[0])}<br>G′ = ${escH(st.f[1])}<br>B′ = ${escH(st.f[2])}`
+        : escH(MF.describeStep(st))).join('<br>');
+      document.getElementById('friendBody').classList.remove('hidden');
+      renderFriend();
+      MF.toast(`'${obj.name || '이름 없는 필터'}'를 불러왔어요!`);
+    } catch (e) { MF.toast(e.message); }
+  };
+  document.getElementById('friendLoad').addEventListener('click', () => loadFriend(document.getElementById('friendCode').value));
+  document.getElementById('friendDemo').addEventListener('click', () => {
+    const demo = MF.encode({ v: 1, lesson: 1, name: '예시: 민트 아이스크림', steps: [{ t: 'formula', f: ['R × 0.8', 'G × 1.1 + 15', 'B × 1.1 + 25'] }] });
+    document.getElementById('friendCode').value = demo; loadFriend(demo);
+  });
+  renderers[I_FRIEND] = renderFriend;
 
   /* ===== 활동지 ===== */
   const ws = MF.worksheet({

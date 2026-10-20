@@ -558,7 +558,7 @@
     }));
     // 생각해보기 답 칸 (선택)과 힌트
     last.querySelectorAll('.think li').forEach((li, j) => {
-      li.append(box('t' + j, 2, '답 (선택)', 'ws-memo ws-think'));
+      li.append(box('t' + j, 3, '답을 써 보세요', 'ws-memo ws-think'));
       if (li.dataset.hint) li.append(hintFor(li.dataset.hint));
     });
 
@@ -568,7 +568,7 @@
       ['내가 만든 필터 설명', q2],
       ['새로 궁금해진 점', '오늘 활동을 하며 새로 궁금해진 점이나, 앞으로 더 만들어 보고 싶은 필터를 써 주세요.']
     ];
-    const MIN = 20;
+    const MIN = 1; // 글자 수 기준은 보여주지 않는다 (최소 글자만 채우는 것을 막기 위해)
     last.dataset.title = last.dataset.title + '·제출';
     const block = document.createElement('div');
     block.className = 'ws-block';
@@ -584,7 +584,6 @@
           <div class="ws-req-t">필수 ${k + 1}. ${t}</div>
           <div class="small muted">${h}</div>
           <div data-slot="${k}"></div>
-          <div class="ws-count" data-count="${k}"></div>
         </div>`).join('')}
       ${extras.map(x => `
         <div class="ws-req">
@@ -606,17 +605,7 @@
       inp.value = ident[inp.dataset.id] || '';
       inp.addEventListener('input', () => { ident[inp.dataset.id] = inp.value; write(ID_KEY, ident); });
     });
-    const counter = k => {
-      const n = (data['r' + k] || '').trim().length, el = block.querySelector(`[data-count="${k}"]`);
-      el.textContent = n < MIN ? `${n}자 · ${MIN}자 이상 써 주세요` : `${n}자 ✓`;
-      el.classList.toggle('ok', n >= MIN);
-    };
-    REQ.forEach((_, k) => {
-      const ta = box('r' + k, 3, '', 'ws-req-in');
-      ta.addEventListener('input', () => counter(k));
-      block.querySelector(`[data-slot="${k}"]`).append(ta);
-      counter(k);
-    });
+    REQ.forEach((_, k) => block.querySelector(`[data-slot="${k}"]`).append(box('r' + k, 4, '', 'ws-req-in')));
 
     // 선택 기록: 같은 기록에 연결된 입력칸끼리는 내용을 맞춰 준다
     const bound = {};
@@ -668,7 +657,7 @@
       const no = (ident.no || '').trim(), name = (ident.name || '').trim();
       if (!no || !name) { MF.toast('학번과 이름을 먼저 써 주세요.'); block.querySelector(no ? '[data-id="name"]' : '[data-id="no"]').focus(); return; }
       const short = REQ.findIndex((_, k) => (data['r' + k] || '').trim().length < MIN);
-      if (short >= 0) { MF.toast(`필수 ${short + 1}번을 ${MIN}자 이상 써 주세요.`); block.querySelector(`[data-slot="${short}"] textarea`).focus(); return; }
+      if (short >= 0) { MF.toast(`필수 ${short + 1}번을 써 주세요.`); block.querySelector(`[data-slot="${short}"] textarea`).focus(); return; }
       const s = snapshot(), today = new Date();
       const date = `${today.getFullYear()}.${today.getMonth() + 1}.${today.getDate()}`;
       const memoOf = (q, K) => {
@@ -687,7 +676,7 @@
       };
       const memos = screens.flatMap((sc, i) => [...sc.querySelectorAll('.screen-q')].map((q, n) => [sc, q, memoOf(q, memoKey(i, n))]))
         .filter(([, , v]) => v && v.trim());
-      const thinks = [...last.querySelectorAll('.think li')].map((li, j) => [li.firstChild.textContent.trim(), data['t' + j]]).filter(([, v]) => v && v.trim());
+      const thinks = [...last.querySelectorAll('.think li')].map((li, j) => [li.firstChild.textContent.trim(), (data['t' + j] || '').trim() || '(작성하지 않음)']);
       let pr = document.getElementById('wsPrint');
       if (!pr) { pr = document.createElement('div'); pr.id = 'wsPrint'; document.body.append(pr); }
       pr.innerHTML = `

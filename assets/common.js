@@ -516,7 +516,30 @@
       const q = sc.querySelector('.screen-q');
       if (!q) return;
       let memo;
-      if (q.dataset.fields) {
+      if (q.dataset.table) {
+        // data-table="행1::설명|행2::설명" data-cols="R|G|B" → 행마다 열 칸에 짧게 기록하는 표
+        const rows = q.dataset.table.split('|').map(r => r.split('::'));
+        const cols = (q.dataset.cols || 'R|G|B').split('|');
+        const colColor = { R: '#d32f2f', G: '#2e7d32', B: '#1565c0' };
+        memo = document.createElement('div');
+        memo.className = 'ws-table';
+        memo.innerHTML = `<div class="ws-fields-t">✏️ 원본과 비교한 변화를 기록해요 (예: ↑ 커짐, ↓ 작아짐, = 비슷함) · 활동지에 함께 저장돼요</div>
+          <table><thead><tr><th></th>${cols.map(c => `<th style="color:${colColor[c] || 'inherit'}">${esc(c)}</th>`).join('')}</tr></thead><tbody></tbody></table>`;
+        const tb = memo.querySelector('tbody');
+        rows.forEach(([name, sub], r) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<th><b>${esc(name)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</th>`;
+          cols.forEach((c, k) => {
+            const td = document.createElement('td');
+            const inp = document.createElement('input');
+            inp.type = 'text'; inp.maxLength = 40; inp.placeholder = `${c} 변화`;
+            inp.value = data[`m${i}_${r}_${k}`] || '';
+            inp.addEventListener('input', () => { data[`m${i}_${r}_${k}`] = inp.value; save(); });
+            td.append(inp); tr.append(td);
+          });
+          tb.append(tr);
+        });
+      } else if (q.dataset.fields) {
         // data-fields="이름::설명|이름::설명" → 항목마다 따로 쓰는 칸
         memo = document.createElement('div');
         memo.className = 'ws-fields';
@@ -650,6 +673,13 @@
       const date = `${today.getFullYear()}.${today.getMonth() + 1}.${today.getDate()}`;
       const memoOf = (sc, i) => {
         const q = sc.querySelector('.screen-q');
+        if (q && q.dataset.table) {
+          const cols = (q.dataset.cols || 'R|G|B').split('|');
+          return q.dataset.table.split('|').map((row, r) => {
+            const vals = cols.map((c, k) => [c, (data[`m${i}_${r}_${k}`] || '').trim()]).filter(([, v]) => v);
+            return vals.length ? `${row.split('::')[0]} — ${vals.map(([c, v]) => `${c}: ${v}`).join(', ')}` : '';
+          }).filter(Boolean).join('\n');
+        }
         if (!q || !q.dataset.fields) return data['m' + i];
         return q.dataset.fields.split('|').map((f, k) => [f.split('::')[0], (data[`m${i}_${k}`] || '').trim()])
           .filter(([, v]) => v).map(([n, v]) => `${n}: ${v}`).join('\n');

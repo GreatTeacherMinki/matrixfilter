@@ -360,3 +360,12 @@ body.mf-mode-note .mf-hover { outline: 3px solid #e1306c !important; outline-off
 .ws-field .ws-memo { margin-top: 0; }
 @media (max-width: 600px) { .ws-fields { grid-template-columns: 1fr; } }
 .ws-field-q { display: block; font-size: 13px; color: var(--ink); margin-bottom: 4px; line-height: 1.5; }
+
+/* 표 형식 메모 (예: 필터별 R, G, B 변화) */
+.ws-table { margin-top: 10px; }
+.ws-table table { width: 100%; border-collapse: separate; border-spacing: 6px; margin-left: -6px; }
+.ws-table th { font-size: 14px; text-align: center; }
+.ws-table tbody th { text-align: left; white-space: nowrap; width: 1%; padding-right: 6px; }
+.ws-table tbody th small { display: block; font-weight: 500; color: var(--muted); font-size: 12px; }
+.ws-table td input { width: 100%; font-size: 14px; padding: 8px 10px; background: #fffdf7; border: 1px dashed #e8d9b0; }
+.ws-table td input:focus { border-style: solid; border-color: var(--accent); outline: none; background: #fff; }

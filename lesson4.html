@@ -119,6 +119,18 @@
   .split-label { position: absolute; top: 10px; background: rgba(0,0,0,.65); color: #fff; font-size: 12px; padding: 2px 9px; border-radius: 999px; pointer-events: none; }
 
   .save-box { margin-top: 14px; display: grid; gap: 8px; }
+  /* 최종 필터: 1~4차시 재료 카드 */
+  .parts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+  @media (max-width: 860px) { .parts { grid-template-columns: 1fr; } }
+  .part-card { border: 2px solid var(--line); border-radius: 14px; padding: 12px 14px; background: #fff; display: grid; gap: 10px; align-content: start; }
+  .part-card h4 { margin: 0; font-size: 16px; }
+  .part-card h4 small { display: block; font-weight: 500; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .part-card[data-part="1"] { border-color: #c9b8ff; } .part-card[data-part="2"] { border-color: #ffc2d6; }
+  .part-card[data-part="3"] { border-color: #b8e0c2; } .part-card[data-part="4"] { border-color: #b8d4f5; }
+  .f-in { display: grid; gap: 6px; font-family: var(--mono); font-weight: 700; font-size: 14px; }
+  .f-in label { display: flex; align-items: center; gap: 6px; }
+  .f-in input { flex: 1; min-width: 0; font-family: var(--mono); font-size: 14px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; }
+  .sub-label { font-size: 12.5px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
 </style>
 </head>
 <body>
@@ -175,7 +187,7 @@
         <ol class="how-steps">
           <li><b>겹치기</b>: 3×3 커널을 이미지의 3×3 부분 위에 딱 겹쳐요.</li>
           <li><b>같은 자리끼리 곱하기</b>: 겹친 칸끼리 9번 곱해요. (교과서의 행렬의 곱셈이 아니라, 2차시 비네트 기법처럼 <b>같은 자리끼리</b>!)</li>
-          <li><b>모두 더하기</b>: 곱한 9개를 다 더해요. 커널 옆에 ÷ 9 같은 수가 있으면 나눠요.</li>
+          <li><b>모두 더하기</b>: 곱한 9개를 다 더해요. 커널 옆에 <b>× 1/9</b>가 있으면 더한 값에 1/9을 곱해요. (9로 나누는 것과 같아요)</li>
           <li><b>가운데에 쓰기</b>: 그 값이 겹친 부분 <b>가운데 칸</b>의 새 숫자예요.</li>
           <li><b>한 칸 옮기기</b>: 창을 오른쪽으로 한 칸 옮겨 다시 계산해요. 줄 끝에 닿으면 다음 줄로!</li>
         </ol>
@@ -200,54 +212,15 @@
         <button class="btn" id="slideReset">↺ 처음부터</button>
       </div>
       <div class="slide-calc" id="slideCalc"></div>
-      <div class="screen-q" data-hint="결과 행렬에서 0과 255 사이의 숫자가 생긴 곳을 찾아보세요.|흐리게는 경계에 중간값(28, 57, 85 …)이 생겨 부드러워져요. 윤곽선은 어떤 곳만 밝게 남았나요?">흐리게 커널의 결과에서 검정(0)과 흰색(255)의 경계는 어떻게 바뀌었나요? 윤곽선 커널은요?</div>
     </div>
   </section>
 
-  <!-- 3. 커널 결과 예상하기 -->
-  <section class="screen" data-key="predict" data-title="결과 예상하기">
+  <!-- 3. 커널 갤러리: 대표 커널과 성분 관찰 -->
+  <section class="screen" data-key="why" data-title="커널 갤러리" data-photo>
     <div class="step">
       <div class="step-head">
         <div class="step-num">3</div>
-        <div><h2>커널 결과 예상하기</h2><p>커널의 숫자를 보고 결과를 예상해 보세요. 내 생각을 먼저 쓴 다음 <b>[예시 답안]</b>과 비교해 봐요.</p></div>
-      </div>
-      <div class="ref-kernels" id="refK"></div>
-      <div class="screen-q" data-answer="100이에요. (100 × 9) ÷ 9 = 100. 흐리게 커널은 이웃 9칸의 평균이라서, 모두 같은 숫자인 곳은 평균도 그대로예요. 그래서 흐리게 해도 고르게 칠해진 부분은 변하지 않고, 숫자가 달라지는 경계만 부드러워져요.">모든 칸이 100인 곳(고르게 칠해진 벽)에 흐리게 커널을 쓰면 가운데 값은 얼마가 될까요? 왜 그럴까요?</div>
-      <div class="screen-q" data-answer="0이에요. 8 × 100 − (100 × 8) = 0. 윤곽선 커널은 '나와 이웃의 차이'를 계산하기 때문에, 이웃과 똑같은 곳은 0(검정)이 돼요. 그래서 사진에서는 고른 부분은 까맣게 사라지고, 숫자가 달라지는 경계만 밝게 남아요.">같은 곳에 윤곽선 커널을 쓰면 가운데 값은 얼마가 될까요? 사진에서는 어떻게 보일까요?</div>
-      <div class="screen-q" data-answer="점점 더 흐려져요. 이미 평균을 낸 값끼리 다시 평균을 내니까, 한 점의 숫자가 더 멀리 있는 이웃까지 퍼져서 경계가 더 넓게 번져요. 다음 화면의 커널 실험실에서 반복 횟수를 올려 확인해 볼 수 있어요.">흐리게 커널을 여러 번 반복해서 쓰면 사진은 어떻게 될까요? 그 이유는 무엇일까요?</div>
-    </div>
-  </section>
-
-  <!-- 4. 커널 실험실 (갤러리 + 내 커널) -->
-  <section class="screen" data-key="mykernel" data-title="커널 실험실" data-photo>
-    <div class="step">
-      <div class="step-head">
-        <div class="step-num">4</div>
-        <div><h2>커널 실험실</h2><p>커널의 숫자만 바꾸면 전혀 다른 필터가 돼요. <b>커널 갤러리</b>에서 유명한 커널을 골라 본 뒤, 숫자 9개를 직접 바꿔 <b>나만의 커널</b>을 만들어 보세요.</p></div>
-      </div>
-      <div class="cols wide-left">
-        <div class="lab-photo" data-lab="mykernel"></div>
-        <div class="side">
-          <div><div class="matrix-label">📚 커널 갤러리</div><div class="choice" id="galChoice"></div></div>
-          <div class="box small" id="galNote">갤러리에서 커널을 하나 골라 보세요.</div>
-          <div class="matrix-label">✏️ 커널 (숫자를 바꿔 보세요)</div>
-          <div class="matrix m3 kernel-editor" id="kEditor"></div>
-          <label class="small" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="kNorm" checked> 숫자의 합으로 나누기 (밝기 유지)</label>
-          <div class="kcalc" id="kSum"></div>
-          <div class="slider-row"><label>반복 횟수</label><input type="range" min="1" max="4" step="1" value="1" id="kN"><output id="kNo"></output></div>
-          <div><div class="matrix-label">💡 더 실험해 볼 커널</div><div class="choice" id="kIdeas"></div></div>
-          <button class="btn grad" id="kToStudio">➕ 이 커널을 최종 필터에 추가</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 5. 커널 성분 관찰 -->
-  <section class="screen" data-key="why" data-title="커널 성분 관찰" data-photo>
-    <div class="step">
-      <div class="step-head">
-        <div class="step-num">5</div>
-        <div><h2>대표 커널, 왜 이런 숫자일까?</h2><p>커널 갤러리의 대표 커널을 하나씩 골라 보세요. 숫자의 <b>부호(+, −)</b>와 <b>합</b>을 관찰하고, 왜 그런 효과가 나는지 생각한 다음 설명을 열어 봐요.</p></div>
+        <div><h2>커널 갤러리: 대표 커널, 왜 이런 숫자일까?</h2><p>커널의 숫자만 바꾸면 전혀 다른 필터가 돼요. 대표 커널을 하나씩 골라 사진이 어떻게 바뀌는지 보고, 숫자의 <b>부호(+, −)</b>와 <b>합</b>을 관찰해 왜 그런 효과가 나는지 생각해 봐요.</p></div>
       </div>
       <div class="choice" id="whyChoice" style="margin-bottom:12px"></div>
       <div class="cols wide-left">
@@ -259,6 +232,8 @@
           <div class="box small" id="whyLook"></div>
           <button class="btn sm" id="whyBtn">🔍 왜 그럴까? 설명 보기</button>
           <div class="box key small hidden" id="whyExplain"></div>
+          <div class="slider-row"><label>반복 횟수</label><input type="range" min="1" max="4" step="1" value="1" id="whyN"><output id="whyNo">1번</output></div>
+          <button class="btn grad" id="kToStudio">➕ 이 커널을 최종 필터에 추가</button>
         </div>
       </div>
       <h3 style="margin:20px 0 4px">📋 커널 숫자 읽는 법</h3>
@@ -272,11 +247,11 @@
     </div>
   </section>
 
-  <!-- 6. 이 수학은 어디에 쓰일까? (진로 연계) -->
+  <!-- 4. 이 수학은 어디에 쓰일까? (진로 연계) -->
   <section class="screen" data-key="field" data-title="어디에 쓰일까?" data-photo>
     <div class="step">
       <div class="step-head">
-        <div class="step-num">6</div>
+        <div class="step-num">4</div>
         <div><h2>이 수학은 어디에 쓰일까?</h2><p>지금까지 배운 행렬과 커널은 여러 분야에서 쓰여요. 카드를 눌러 그 분야의 필터를 체험해 보고, <b>나의 관심 분야</b>를 골라 보세요.</p></div>
       </div>
       <div class="cols">
@@ -291,18 +266,18 @@
         <p class="small" style="margin:4px 0 8px">관심 분야: <b id="fieldPicked">아직 고르지 않았어요</b></p>
         <input type="text" id="fieldOwn" maxlength="20" placeholder="목록에 없으면 직접 쓰기 (예: 스포츠 분석, 농업, 패션)">
         <textarea id="careerText" rows="3" style="margin-top:8px" placeholder="예: 의료 영상에서 병변의 경계를 또렷하게 보는 데 오늘 배운 대비 조절과 윤곽선 커널이 쓰일 수 있다. 영상 속 경계를 인공지능이 자동으로 찾는 방법이 궁금하다."></textarea>
-        <p class="small muted" style="margin:6px 0 0">여기 쓴 내용은 활동지와 발표 카드에 함께 담겨요. 관심 분야가 아직 없다면 가장 흥미로운 분야를 골라도 좋아요.</p>
+        <p class="small muted" style="margin:6px 0 0">여기 쓴 내용은 활동지에 함께 담겨요. 관심 분야가 아직 없다면 가장 흥미로운 분야를 골라도 좋아요.</p>
       </div>
       <div class="screen-q" data-hint="분야 카드를 하나씩 눌러 보고 가장 흥미로운 분야를 골라 보세요.|그 분야에서 사진이나 영상의 무엇을 바꾸거나 찾아야 할지 생각한 다음, 지금까지 배운 계산(대비, 색감 행렬, 윤곽선, 모자이크 등) 중 무엇이 도울 수 있을지 연결해 써 보세요.">내 관심 분야에서 이 수학을 쓴다면, 어떤 문제를 해결할 수 있을까요?</div>
     </div>
   </section>
 
-  <!-- 7. 1~4차시 종합: 최종 필터 완성 -->
+  <!-- 5. 1~4차시 종합: 최종 필터 완성 -->
   <section class="screen" data-key="studio" data-title="최종 필터 완성" data-photo>
     <div class="step">
       <div class="step-head">
-        <div class="step-num">7</div>
-        <div><h2>1~4차시 종합: 나만의 최종 필터 완성하기</h2><p>1~4차시에 만든 필터를 <b>층(레이어)</b>처럼 쌓아서 하나의 최종 필터로 완성해요. <b>1차시 식, 2차시 보정 프리셋, 3차시 색감 행렬, 4차시 커널</b>의 필터 코드를 붙여넣거나 빠르게 추가해 보세요. 목표는 <b>3가지 이상의 수학</b>을 담는 거예요! 레이어는 위에서부터 차례로 계산되고, 사진은 내가 고른 사진으로 바꿀 수 있어요.</p></div>
+        <div class="step-num">5</div>
+        <div><h2>1~4차시 종합: 나만의 최종 필터 완성하기</h2><p>아래 <b>재료 카드</b>에서 1~4차시의 필터를 골라 <b>층(레이어)</b>처럼 쌓아서 하나의 최종 필터로 완성해요. 차시마다 저장한 필터 코드를 붙여넣거나, 예시를 누르거나, 직접 만들어 추가할 수 있어요. 목표는 <b>3가지 이상의 수학</b>을 담는 거예요! 레이어는 위에서부터 차례로 계산돼요.</p></div>
       </div>
       <div class="studio">
         <div>
@@ -317,20 +292,39 @@
           <div class="matrix-label">🧱 내 필터의 레이어</div>
           <div class="layers" id="layers"></div>
           <div class="mix-check" id="mixCheck"></div>
-          <div class="add-group">
-            <div class="matrix-label">📋 1~3차시에 저장한 필터 코드 붙여넣기</div>
-            <div class="btn-row"><input type="text" class="code" id="layerCode" placeholder="MF-... (내 코드 또는 친구 코드)" style="flex:1;min-width:160px"><button class="btn sm primary" id="layerCodeAdd">추가</button></div>
+        </div>
+      </div>
+      <h3 style="margin:22px 0 2px">🧩 재료 카드: 1~4차시 필터를 골라 레이어로 쌓아요</h3>
+      <div class="parts">
+        <div class="part-card" data-part="1">
+          <h4>1차시 · 식으로 만든 필터<small>R′, G′, B′를 R, G, B로 계산하는 식</small></h4>
+          <div class="f-in">
+            <label style="color:#d32f2f">R′ = <input id="fR" value="R × 1.2 + 20"></label>
+            <label style="color:#2e7d32">G′ = <input id="fG" value="G"></label>
+            <label style="color:#1565c0">B′ = <input id="fB" value="B × 0.8"></label>
           </div>
-          <div class="add-group" style="margin-top:12px">
-            <div class="matrix-label">🎨 빠르게 추가: 그 밖의 필터 (1~3차시 색 필터, 모자이크)</div>
-            <div class="choice" id="quickColor"></div>
+          <div class="btn-row"><button class="btn sm primary" id="fAdd">➕ 이 식을 레이어로 추가</button></div>
+          <div class="btn-row"><input type="text" class="code" data-code placeholder="1차시에 저장한 필터 코드 (MF-...)" style="flex:1;min-width:140px"><button class="btn sm" data-code-add>코드로 추가</button></div>
+        </div>
+        <div class="part-card" data-part="2">
+          <h4>2차시 · 일차함수 보정 프리셋<small>밝기·노출·대비·따뜻함·페이드·비네트</small></h4>
+          <div><div class="sub-label">예시 프리셋</div><div class="choice" data-quick="2"></div></div>
+          <div class="btn-row"><input type="text" class="code" data-code placeholder="2차시에 저장한 필터 코드 (MF-...)" style="flex:1;min-width:140px"><button class="btn sm" data-code-add>코드로 추가</button></div>
+        </div>
+        <div class="part-card" data-part="3">
+          <h4>3차시 · 색감 행렬<small>3×3 행렬 × 픽셀 (R, G, B)</small></h4>
+          <div class="kadd-row">
+            <div class="matrix m3 kernel-editor" id="mEditor"></div>
+            <button class="btn sm primary" id="mAdd">➕ 이 행렬을 레이어로 추가</button>
           </div>
-          <div class="add-group" style="margin-top:12px">
-            <div class="matrix-label">🔲 빠르게 추가: 커널 필터 (4차시)</div>
-            <div class="choice" id="quickKernel"></div>
-          </div>
-          <div class="add-group" style="margin-top:12px">
-            <div class="matrix-label">✏️ 커널 직접 만들어 추가하기 (성분에 숫자를 넣어요)</div>
+          <div><div class="sub-label">예시 행렬 (누르면 위 칸에 들어가요)</div><div class="choice" data-mquick></div></div>
+          <div class="btn-row"><input type="text" class="code" data-code placeholder="3차시에 저장한 필터 코드 (MF-...)" style="flex:1;min-width:140px"><button class="btn sm" data-code-add>코드로 추가</button></div>
+        </div>
+        <div class="part-card" data-part="4">
+          <h4>4차시 · 커널<small>이웃 픽셀까지 함께 계산하는 3×3 커널</small></h4>
+          <div><div class="sub-label">대표 커널 · 모자이크</div><div class="choice" data-quick="4"></div></div>
+          <div>
+            <div class="sub-label">✏️ 커널 직접 만들기 (성분에 숫자를 넣어요)</div>
             <div class="kadd-row">
               <div class="matrix m3 kernel-editor" id="sKEditor"></div>
               <div>
@@ -343,9 +337,9 @@
             <details class="ai-tip">
               <summary>🤖 원하는 효과의 커널을 AI에게 물어보기</summary>
               <p class="small" style="margin-top:6px">ChatGPT, Gemini, Claude 같은 AI에게 원하는 효과를 말하면 커널을 추천받을 수 있어요. 이렇게 물어보세요.</p>
-              <div class="prompt" id="aiPrompt">사진 필터에 쓸 3×3 커널을 만들어 줘. 원하는 효과: 물체가 옆으로 움직이는 것처럼 잔상이 남는 느낌. 숫자 9개를 3줄로 쓰고, 숫자의 합으로 나눠야 하는지와 몇 번 반복하면 좋은지도 알려 줘.</div>
+              <div class="prompt"><b>예시:</b> <span id="aiPrompt">사진 필터에 쓸 3×3 커널을 만들어 줘. 원하는 효과: 물체가 옆으로 움직이는 것처럼 잔상이 남는 느낌. 숫자 9개를 3줄로 쓰고, 숫자의 합으로 나눠야 하는지와 몇 번 반복하면 좋은지도 알려 줘.</span></div>
               <div class="btn-row"><button class="btn sm" id="aiCopy">📋 질문 복사</button></div>
-              <p class="small" style="margin-top:8px">⚠️ AI의 답이 항상 맞지는 않아요. 받은 숫자를 위 칸에 직접 넣어 <b>정말 그 효과가 나는지 확인</b>하고, 마음에 들게 고쳐 보세요. 5×5처럼 큰 커널을 주면 "3×3으로 바꿔 줘"라고 다시 물어보세요.</p>
+              <p class="small" style="margin-top:8px">⚠️ AI의 답이 항상 맞지는 않아요. 받은 숫자를 위의 커널 칸에 직접 넣어 <b>정말 그 효과가 나는지 확인</b>하고, 마음에 들게 고쳐 보세요. 5×5처럼 큰 커널을 주면 "3×3으로 바꿔 줘"라고 다시 물어보세요.</p>
               <div class="matrix-label" style="margin-top:8px">예시: AI가 추천할 만한 잔상 커널 (눌러서 위 칸에 넣어 보기)</div>
               <div class="choice" id="aiExamples"></div>
             </details>
@@ -361,17 +355,13 @@
     </div>
   </section>
 
-  <!-- 8. 돌아보기 -->
-  <section class="screen" data-key="end" data-title="돌아보기">
+  <!-- 6. 활동지 제출 -->
+  <section class="screen" data-key="end" data-title="마무리">
     <div class="step">
       <div class="step-head">
         <div class="step-num">✓</div>
-        <div><h2>돌아보기</h2><p>생각해보기 질문에 답하고, 느낀 점까지 써서 활동지를 제출해요.</p></div>
+        <div><h2>활동지 제출</h2><p>필수 기록과 느낀 점을 쓰고, 활동지를 이미지로 저장해서 제출해요. 최종 필터 결과 이미지와 필터 코드가 자동으로 함께 담겨요.</p></div>
       </div>
-      <ol class="think">
-        <li data-hint="7번 화면에서 레이어의 ↑ ↓ 버튼으로 순서를 바꿔 보세요.|3차시에서 행렬의 곱셈은 AB ≠ BA 였어요. 필터도 계산 순서에 따라 결과가 달라질 수 있어요.">레이어의 순서를 바꾸면 결과가 달라질까요? 내 필터로 실험해 보고 그 이유를 설명해 보세요.</li>
-        <li data-hint="1차시 전에는 행렬을 어떻게 생각했나요? 지금은요?|&quot;행렬은 ___ 인 줄 알았는데, ___ 에 쓰인다는 것을 알게 되었다&quot; 형식으로 써 보세요.">4차시 활동을 하면서 행렬에 대한 생각이 어떻게 바뀌었나요?</li>
-      </ol>
     </div>
   </section>
 
@@ -382,7 +372,7 @@
   </div>
 </main>
 
-<script src="assets/common.js?v=202610252300"></script>
+<script src="assets/common.js?v=202610260100"></script>
 <script>
 (() => {
   /* ===== 공유 상태 ===== */
@@ -403,9 +393,9 @@
   const ro = n => ('036'.includes(String(MF.num(n)).slice(-1)) ? '으로' : '로');
   const eul = n => ('013678'.includes(String(MF.num(n)).slice(-1)) ? '을' : '를'); // 28을, 255를
   const kStep = (key, n = 1) => ({ t: 'kernel', name: K[key].name, k: K[key].k, d: K[key].d, n });
-  const kMat = (k, d) => `<div style="display:flex;align-items:center;gap:6px">${MF.mat3HTML(k)}${d !== 1 ? `<b style="font-family:var(--mono)">÷ ${d}</b>` : ''}</div>`;
+  const kMat = (k, d) => `<div style="display:flex;align-items:center;gap:6px">${MF.mat3HTML(k)}${d !== 1 ? `<b style="font-family:var(--mono)">× 1/${d}</b>` : ''}</div>`;
 
-  const labs = {}, PICK = ['mykernel']; // 고른 점으로 계산하는 칸
+  const labs = {}, PICK = []; // 고른 점으로 계산하는 칸 (지금은 없음)
   document.querySelectorAll('[data-lab]').forEach(el => {
     const key = el.dataset.lab, pick = PICK.includes(key);
     el.innerHTML = `
@@ -442,7 +432,7 @@
     const p = MF.pickedPoint(photo);
     $('hookGrid').innerHTML = '';
     const outs = HOOK.map(([name, sub, steps], k) => {
-      const c = MF.applySteps(photo, steps), shown = k === 0 ? MF.withMark(c, p) : c;
+      const c = MF.applySteps(photo, steps), shown = k === 0 ? MF.withMark(c, p, Math.round(photo.width / 14)) : c; // 작은 사진이라 표시를 크게
       const fig = document.createElement('figure');
       fig.innerHTML = `<figcaption>${name}<small>${sub || '필터 없음 · 클릭해 보세요'}</small></figcaption>`;
       fig.prepend(shown); $('hookGrid').append(fig);
@@ -475,7 +465,7 @@
       if (kv) terms.push(kv === 1 ? `${v}` : `${kv < 0 ? '(' + kv + ')' : kv}×${v}`);
     }
     const raw = sum / k.d, val = MF.clamp(Math.round(raw));
-    return { val, text: `${k.d !== 1 ? '(' : ''}${terms.join(' + ')}${k.d !== 1 ? ') ÷ ' + k.d : ''} = ${MF.num(raw)}${val !== Math.round(raw) ? ' → ' + val : raw !== val ? ' ≈ ' + val : ''}` };
+    return { val, text: `${k.d !== 1 ? '(' : ''}${terms.join(' + ')}${k.d !== 1 ? ') × 1/' + k.d : ''} = ${MF.num(raw)}${val !== Math.round(raw) ? ' → ' + val : raw !== val ? ' ≈ ' + val : ''}` };
   };
   function renderSlide() {
     const showWin = sPos > 0, r0 = Math.floor(Math.max(0, sPos - 1) / 4), c0 = Math.max(0, sPos - 1) % 4;
@@ -525,74 +515,10 @@
   }));
   slideReset();
 
-  /* ===== 3. 커널 결과 예상하기: 참고용 커널과 고른 부분 ===== */
-  $('refK').innerHTML =
-    `<div><span class="lbl">모든 칸이 100인 곳</span>${MF.mat3HTML(Array(9).fill(100))}</div>` +
-    `<div><span class="lbl">흐리게 커널</span>${kMat(K.blur.k, K.blur.d)}</div>` +
-    `<div><span class="lbl">윤곽선 커널</span>${kMat(K.edge.k, K.edge.d)}</div>`;
-
-  /* ===== 4. 커널 실험실 (갤러리 + 내 커널) ===== */
-  const NOTES = {
-    blur: '모든 이웃의 <b>평균</b>이에요. 숫자의 합 9 ÷ 9 = 1 이라 밝기는 그대로예요.',
-    soft: '가운데에 가까울수록 큰 숫자를 줘요(가중평균). 흐리게보다 자연스러워요. 합 16 ÷ 16 = 1.',
-    sharpen: '가운데는 키우고 이웃은 빼서 <b>차이를 강조</b>해요. 합이 1이라 밝기는 유지돼요.',
-    edge: '이웃과 차이가 없으면 0이 돼요. 숫자의 합이 <b>0</b>이라서 변화가 없는 곳은 검정이 되고 경계만 남아요.',
-    emboss: '한쪽은 빼고 반대쪽은 더해서, 빛이 비스듬히 비친 것처럼 입체감이 생겨요.'
-  };
-  const patchR = p => { const out = []; for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) out.push(pixelAt(Math.min(photo.width - 1, Math.max(0, p.x + b)), Math.min(photo.height - 1, Math.max(0, p.y + a)))[0]); return out; };
-  const kernelCalcHTML = (k, d, label) => {
-    const p = MF.pickedPoint(photo), pr = patchR(p), sum = pr.reduce((s, v, i) => s + v * k[i], 0), val = MF.clamp(Math.round(sum / d));
-    return `📍 사진에서 고른 ${label} (${p.x}, ${p.y})의 R 값 계산<br>주변 R: [${pr.slice(0, 3).join(' ')} / ${pr.slice(3, 6).join(' ')} / ${pr.slice(6).join(' ')}]<br>` +
-      `같은 자리끼리 곱해서 더하면 ${MF.num(sum)}${d !== 1 ? ` ÷ ${d} = ${MF.num(sum / d)}` : ''} → <b>${val}</b>`;
-  };
-  let myK = [0, -1, 0, -1, 6, -1, 0, -1, 0];
-  const K_IDEAS = [
-    ['↔ 세로선 강조', [-1, 0, 1, -2, 0, 2, -1, 0, 1]], ['↕ 가로선 강조', [-1, -2, -1, 0, 0, 0, 1, 2, 1]],
-    ['↘ 움직임 흐림', [1, 0, 0, 0, 1, 0, 0, 0, 1]], ['💥 강한 선명', [-1, -1, -1, -1, 9, -1, -1, -1, -1]],
-    ['🔆 밝게 흐림', [1, 1, 1, 1, 2, 1, 1, 1, 1]]
-  ];
-  $('kEditor').innerHTML = `<table>${[0, 1, 2].map(r => '<tr>' + [0, 1, 2].map(c => `<td style="padding:2px;border:0;background:none"><input type="number" step="1" data-k="${r * 3 + c}"></td>`).join('') + '</tr>').join('')}</table>`;
-  const kSync = () => $('kEditor').querySelectorAll('input').forEach(inp => inp.value = myK[+inp.dataset.k]);
-  $('kIdeas').innerHTML = K_IDEAS.map(([n], i) => `<button class="btn sm" data-ki="${i}">${n}</button>`).join('');
-  const myDiv = () => { const s = myK.reduce((a, b) => a + b, 0); return kNorm.checked && s > 0 ? s : 1; };
-  const myStep = () => ({ t: 'kernel', name: '내 커널', k: myK.slice(), d: myDiv(), n: +kN.value });
-  R.mykernel = () => {
-    kNo.textContent = kN.value + '번';
-    labs.mykernel.show([myStep()]);
-    const s = myK.reduce((a, b) => a + b, 0);
-    $('kSum').innerHTML = `숫자의 합 = <b>${MF.num(s)}</b>${kNorm.checked && s > 0 ? ` → ${MF.num(s)}${ro(s)} 나눠요` : s <= 0 ? ' → 합이 0 이하라 나누지 않아요' : ''}<br>` + kernelCalcHTML(myK, myDiv(), '픽셀');
-  };
-  // 갤러리에서 고르면 그 커널이 편집 칸에 들어간다
-  $('galChoice').innerHTML = Object.entries(K).map(([key, k]) => `<button class="btn sm" data-gk="${key}">${k.name}</button>`).join('');
-  const galOff = msg => { $('galChoice').querySelectorAll('button').forEach(x => x.classList.remove('on')); $('galNote').innerHTML = msg; };
-  $('galChoice').addEventListener('click', e => {
-    const b = e.target.closest('[data-gk]'); if (!b) return;
-    const key = b.dataset.gk;
-    myK = K[key].k.slice(); kNorm.checked = true; kSync();
-    $('galChoice').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
-    $('galNote').innerHTML = `<b>${K[key].name}</b>: ${NOTES[key]}`;
-    R.mykernel();
-  });
-  $('kEditor').addEventListener('input', e => {
-    const k = e.target.dataset.k; if (k === undefined) return;
-    const v = parseFloat(e.target.value); if (isNaN(v) || Math.abs(v) > 20) return;
-    myK[+k] = v; galOff('✏️ 숫자를 바꿔서 나만의 커널을 만드는 중이에요.'); R.mykernel();
-  });
-  $('kIdeas').addEventListener('click', e => {
-    const b = e.target.closest('[data-ki]'); if (!b) return;
-    myK = K_IDEAS[+b.dataset.ki][1].slice(); kSync(); galOff(`💡 ${K_IDEAS[+b.dataset.ki][0]}: 숫자를 조금씩 바꿔 보세요.`); R.mykernel();
-  });
-  [kNorm, kN].forEach(x => x.addEventListener('input', () => R.mykernel()));
-  $('kToStudio').addEventListener('click', () => {
-    addLayer({ label: '내 커널', from: '4차시', steps: [myStep()] });
-    MF.toast(`${NO('studio')}번 화면의 최종 필터에 추가했어요!`);
-  });
-  kSync();
-
-  /* ===== 5. 커널 성분 관찰 ===== */
+  /* ===== 3. 커널 갤러리: 대표 커널과 성분 관찰 ===== */
   const WHY = {
     blur: {
-      look: '숫자가 <b>모두 1</b>로 같고, 옆에 <b>÷ 9</b>가 있어요. 9칸을 똑같이 섞으면 무엇을 구하는 걸까요?',
+      look: '숫자가 <b>모두 1</b>로 같고, 옆에 <b>× 1/9</b>가 있어요. 9칸을 똑같이 섞으면 무엇을 구하는 걸까요?',
       why: '9칸을 같은 비율(1)로 더해서 9로 나누면 <b>평균</b>이에요. 평균은 튀는 값을 누그러뜨리니까 경계의 차이가 줄어들어 흐려져요. 숫자의 합(9)을 9로 나눠서 결국 1이 되니까, 밝기는 그대로예요.'
     },
     soft: {
@@ -616,13 +542,14 @@
   $('whyChoice').innerHTML = Object.keys(WHY).map(key => `<button class="btn sm${key === whyKey ? ' on' : ''}" data-why="${key}">${K[key].name}</button>`).join('');
   const whyMat = (k, d) => `<div style="display:flex;align-items:center;gap:8px"><div class="matrix m3"><table>${[0, 1, 2].map(r => '<tr>' + [0, 1, 2].map(c => {
     const v = k[r * 3 + c]; return `<td class="${v > 0 ? 'pos' : v < 0 ? 'neg' : 'zero'}">${v}</td>`;
-  }).join('') + '</tr>').join('')}</table></div>${d !== 1 ? `<b style="font-family:var(--mono);font-size:16px">÷ ${d}</b>` : ''}</div>`;
+  }).join('') + '</tr>').join('')}</table></div>${d !== 1 ? `<b style="font-family:var(--mono);font-size:16px">× 1/${d}</b>` : ''}</div>`;
   R.why = () => {
     const k = K[whyKey], sum = k.k.reduce((a, b) => a + b, 0);
-    labs.why.show([kStep(whyKey, whyKey === 'blur' ? 2 : 1)]);
+    $('whyNo').textContent = $('whyN').value + '번';
+    labs.why.show([kStep(whyKey, +$('whyN').value)]);
     $('whyK').innerHTML = whyMat(k.k, k.d);
     const pos = k.k.filter(v => v > 0).length, neg = k.k.filter(v => v < 0).length;
-    $('whyFacts').innerHTML = `숫자의 합 = <b>${sum}</b>${k.d !== 1 ? ` → ÷ ${k.d} 하면 <b>${MF.num(sum / k.d)}</b>` : ''}<br>양수 <b>${pos}</b>칸 · 음수 <b>${neg}</b>칸 · 0 <b>${9 - pos - neg}</b>칸 · 가운데 <b>${k.k[4]}</b>`;
+    $('whyFacts').innerHTML = `숫자의 합 = <b>${sum}</b>${k.d !== 1 ? ` → × 1/${k.d} 하면 <b>${MF.num(sum / k.d)}</b>` : ''}<br>양수 <b>${pos}</b>칸 · 음수 <b>${neg}</b>칸 · 0 <b>${9 - pos - neg}</b>칸 · 가운데 <b>${k.k[4]}</b>`;
     $('whyLook').innerHTML = '👀 ' + WHY[whyKey].look;
     $('whyExplain').innerHTML = '🔍 ' + WHY[whyKey].why;
   };
@@ -632,6 +559,11 @@
     $('whyExplain').classList.add('hidden'); $('whyBtn').textContent = '🔍 왜 그럴까? 설명 보기';
     R.why();
   });
+  $('whyN').addEventListener('input', () => R.why());
+  $('kToStudio').addEventListener('click', () => {
+    addLayer({ label: K[whyKey].name, from: '4차시', steps: [kStep(whyKey, +$('whyN').value)] });
+    MF.toast(`${NO('studio')}번 화면의 최종 필터에 추가했어요!`);
+  });
   $('whyBtn').addEventListener('click', () => {
     const open = $('whyExplain').classList.toggle('hidden') === false;
     $('whyBtn').textContent = open ? '🔍 설명 닫기' : '🔍 왜 그럴까? 설명 보기';
@@ -639,24 +571,44 @@
 
   /* ===== 7. 1~4차시 종합: 최종 필터 완성 ===== */
   let layers = [], studioResult = null, studioFiltered = null;
-  const QUICK = [
-    ['1차시 노을빛 식', '1차시', [{ t: 'formula', f: ['R × 1.2 + 20', 'G', 'B × 0.7'] }]],
-    ['2차시 빈티지 필름', '2차시', [{ t: 'adjust', p: { fade: 0.5, warm: 15, vignette: 0.5, contrast: 0.9 } }]],
-    ['2차시 한여름 오후', '2차시', [{ t: 'adjust', p: { bright: 15, contrast: 1.25, warm: 30 } }]],
-    ['3차시 세피아', '3차시', [{ t: 'matrix', m: MF.SEPIA3 }]],
-    ['3차시 쿨톤', '3차시', [{ t: 'matrix', m: [0.9, 0, 0, 0, 1, 0.1, 0, 0.1, 1.2] }]],
-    ['모자이크', '4차시', [{ t: 'mosaic', size: 10 }]],
-    // 커널 필터 (4차시)
-    ...[['blur', 1], ['soft', 2], ['sharpen', 1], ['edge', 1], ['emboss', 1]].map(([key, n]) => [K[key].name, '4차시', [kStep(key, n)], 'kernel'])
-  ];
-  const quickBtns = kind => QUICK.map(([n, , , g], i) => ((g === 'kernel') === (kind === 'kernel') ? `<button class="btn sm" data-q="${i}">+ ${n}</button>` : '')).join('');
-  $('quickColor').innerHTML = quickBtns('color');
-  $('quickKernel').innerHTML = quickBtns('kernel');
-  [$('quickColor'), $('quickKernel')].forEach(box => box.addEventListener('click', e => {
-    const b = e.target.closest('[data-q]'); if (!b) return;
-    const [label, from, steps] = QUICK[+b.dataset.q];
-    addLayer({ label, from, steps: JSON.parse(JSON.stringify(steps)) });
-  }));
+  // 차시별 예시 재료 [이름, 차시, 단계]
+  const QUICK = {
+    2: [['🎞️ 빈티지 필름', [{ t: 'adjust', p: { fade: 0.5, warm: 15, vignette: 0.5, contrast: 0.9 } }]],
+      ['☀️ 한여름 오후', [{ t: 'adjust', p: { bright: 15, contrast: 1.25, warm: 30 } }]],
+      ['🌫️ 새벽 감성', [{ t: 'adjust', p: { expo: 0.85, warm: -30, fade: 0.35 } }]],
+      ['🔆 쨍하게', [{ t: 'adjust', p: { contrast: 1.35 } }]]],
+    4: [...[['blur', 1], ['soft', 2], ['sharpen', 1], ['edge', 1], ['emboss', 1]].map(([key, n]) => [K[key].name, [kStep(key, n)]]),
+      ['모자이크', [{ t: 'mosaic', size: 10 }]]]
+  };
+  document.querySelectorAll('[data-quick]').forEach(box => {
+    const no = +box.dataset.quick;
+    box.innerHTML = QUICK[no].map(([n], i) => `<button class="btn sm" data-q="${i}">+ ${n}</button>`).join('');
+    box.addEventListener('click', e => {
+      const b = e.target.closest('[data-q]'); if (!b) return;
+      const [label, steps] = QUICK[no][+b.dataset.q];
+      addLayer({ label: label.replace(/^\S+\s/, ''), from: no + '차시', steps: JSON.parse(JSON.stringify(steps)) });
+    });
+  });
+  // 1차시: 식 직접 쓰기
+  $('fAdd').addEventListener('click', () => {
+    const f = [$('fR').value, $('fG').value, $('fB').value].map(v => v.trim() || 'R');
+    try { f.forEach(MF.compileExpr); } catch (e) { MF.toast('식을 계산할 수 없어요. R, G, B, 숫자, + − × ÷ ( )만 써 주세요.'); return; }
+    addLayer({ label: '내 식 필터', from: '1차시', steps: [{ t: 'formula', f }] });
+  });
+  // 3차시: 색감 행렬 직접 쓰기
+  const GRAY_AVG = Array(9).fill(1 / 3);
+  let mM = MF.I3.slice();
+  $('mEditor').innerHTML = `<table>${[0, 1, 2].map(r => '<tr>' + [0, 1, 2].map(c => `<td style="padding:2px;border:0;background:none"><input type="number" step="0.1" data-k="${r * 3 + c}" style="color:${['#d32f2f', '#2e7d32', '#1565c0'][r]}"></td>`).join('') + '</tr>').join('')}</table>`;
+  const mSync = () => $('mEditor').querySelectorAll('input').forEach(inp => inp.value = MF.num(mM[+inp.dataset.k]));
+  $('mEditor').addEventListener('input', e => { const k = e.target.dataset.k; const v = parseFloat(e.target.value); if (k !== undefined && !isNaN(v)) mM[+k] = v; });
+  const M_EX = [['세피아', MF.SEPIA3], ['흑백', GRAY_AVG], ['쿨톤', [0.9, 0, 0, 0, 1, 0.1, 0, 0.1, 1.2]], ['R ↔ B', [0, 0, 1, 0, 1, 0, 1, 0, 0]], ['단위행렬 E', MF.I3]];
+  document.querySelector('[data-mquick]').innerHTML = M_EX.map(([n], i) => `<button class="btn sm" data-m="${i}">${n}</button>`).join('');
+  document.querySelector('[data-mquick]').addEventListener('click', e => {
+    const b = e.target.closest('[data-m]'); if (!b) return;
+    mM = M_EX[+b.dataset.m][1].slice(); mSync();
+  });
+  $('mAdd').addEventListener('click', () => addLayer({ label: '내 색감 행렬', from: '3차시', steps: [{ t: 'matrix', m: mM.map(x => Math.round(x * 1000) / 1000) }] }));
+  mSync();
   // 커널 직접 만들어 추가하기
   let sK = [0, -1, 0, -1, 5, -1, 0, -1, 0], sKCount = 0;
   $('sKEditor').innerHTML = `<table>${[0, 1, 2].map(r => '<tr>' + [0, 1, 2].map(c => `<td style="padding:2px;border:0;background:none"><input type="number" step="1" data-k="${r * 3 + c}" value="${sK[r * 3 + c]}"></td>`).join('') + '</tr>').join('')}</table>`;
@@ -687,7 +639,7 @@
     const [, k, n] = AI_EX[+b.dataset.ai];
     sK = k.slice(); $('sKEditor').querySelectorAll('input').forEach(inp => inp.value = sK[+inp.dataset.k]);
     $('sKNorm').checked = true; $('sKN').value = n; $('sKNo').textContent = n + '번'; sKShow();
-    MF.toast('위 칸에 넣었어요. [이 커널을 레이어로 추가]를 눌러 확인해 보세요!');
+    MF.toast('커널 칸에 넣었어요. [이 커널을 레이어로 추가]를 눌러 확인해 보세요!');
   });
   function addLayer(layer) {
     layers.push(Object.assign({ on: true }, layer));
@@ -704,7 +656,7 @@
           <button title="아래로" data-act="down" data-i="${i}">↓</button>
           <button title="삭제" data-act="del" data-i="${i}">✕</button>
         </div>
-      </div>`).join('') : '<div class="empty-layers">아직 레이어가 없어요. 아래에서 필터 코드를 붙여넣거나 빠르게 추가해 보세요.</div>';
+      </div>`).join('') : '<div class="empty-layers">아직 레이어가 없어요. 아래 재료 카드에서 1~4차시 필터를 골라 추가해 보세요.</div>';
     // 1~4차시 중 어떤 수학이 담겼는지 (켜진 레이어 기준)
     const MIX = [[['formula'], '1차시 식'], [['adjust'], '2차시 일차함수 보정'], [['matrix'], '3차시 행렬 곱'], [['kernel', 'mosaic'], '4차시 커널']];
     const used = new Set(layers.filter(l => l.on).flatMap(l => l.steps.map(s => s.t)));
@@ -758,20 +710,22 @@
   splitX.addEventListener('input', drawSplit);
   strength.addEventListener('input', () => { strengtho.textContent = strength.value + '%'; computeStudio(); drawSplit(); saveCode(); });
   $('filterName').addEventListener('input', saveCode);
-  $('layerCodeAdd').addEventListener('click', () => {
+  // 차시 카드의 [코드로 추가]
+  document.querySelectorAll('[data-code-add]').forEach(btn => btn.addEventListener('click', () => {
+    const inp = btn.parentElement.querySelector('[data-code]');
     try {
-      const obj = MF.decode($('layerCode').value);
+      const obj = MF.decode(inp.value);
       if (obj.lesson === 4 && obj.layers) {
         obj.layers.forEach(l => addLayer({ label: l.label, from: l.from, steps: l.steps, on: l.on !== false }));
       } else {
         if (!obj.steps || !obj.steps.length) throw new Error('레이어로 쓸 수 있는 필터가 없어요.');
-        obj.steps.forEach(s => { if (!MF.filters[s.t]) throw new Error('알 수 없는 필터 종류예요.'); if (s.t === 'formula') s.f.forEach(MF.compileExpr); });
+        obj.steps.forEach(st => { if (!MF.filters[st.t]) throw new Error('알 수 없는 필터 종류예요.'); if (st.t === 'formula') st.f.forEach(MF.compileExpr); });
         addLayer({ label: obj.name || `${obj.lesson}차시 필터`, from: `${obj.lesson || '?'}차시`, steps: obj.steps });
       }
-      $('layerCode').value = '';
+      inp.value = '';
       MF.toast('레이어를 추가했어요!');
     } catch (e) { MF.toast(e.message); }
-  });
+  }));
   $('studioDownload').addEventListener('click', () => studioResult && MF.download(studioResult, ($('filterName').value.trim() || '나만의필터') + '.png'));
   $('copyCode').addEventListener('click', () => {
     if (!$('filterName').value.trim()) { MF.toast('필터 이름을 먼저 지어 주세요!'); $('filterName').focus(); return; }
@@ -781,7 +735,7 @@
   $('loadCode').addEventListener('click', () => {
     try {
       const obj = MF.decode($('codeIn').value);
-      if (obj.lesson !== 4 || !obj.layers) throw new Error('4차시 완성 필터 코드가 아니에요. 1~3차시 코드는 위의 [레이어 추가]에 넣어 주세요.');
+      if (obj.lesson !== 4 || !obj.layers) throw new Error('4차시 완성 필터 코드가 아니에요. 1~3차시 코드는 위의 재료 카드에 넣어 주세요.');
       layers = obj.layers.map(l => ({ label: l.label, from: l.from, steps: l.steps, on: l.on !== false }));
       $('filterName').value = obj.name || ''; strength.value = obj.strength ?? 100;
       R.studio();
@@ -796,7 +750,7 @@
     q2: '완성한 필터의 레이어 순서와 각 레이어에 쓰인 수학을 쓰고, 왜 이렇게 조합했는지 설명해 주세요.',
     getResult: () => { if (!studioResult) computeStudio(); saveCode(); return { canvas: studioResult, name: $('filterName').value.trim(), code: $('codeOut').value }; },
     moreReq: [['4차시 수업을 마치며 느낀 점', '1~4차시 활동을 하며 느낀 점, 새롭게 알게 된 점, 어려웠던 점 등을 자유롭게 써 주세요.']],
-    extras: [{ key: 'career', title: '내 관심 분야와의 연결', hint: '6번 화면에서 고른 관심 분야에서 오늘 배운 수학이 어떻게 쓰일 수 있는지, 무엇이 더 궁금해졌는지 써 주세요.', labelKey: 'careerField', label: '관심 분야' }]
+    extras: [{ key: 'career', title: '내 관심 분야와의 연결', hint: '4번 화면에서 고른 관심 분야에서 오늘 배운 수학이 어떻게 쓰일 수 있는지, 무엇이 더 궁금해졌는지 써 주세요.', labelKey: 'careerField', label: '관심 분야' }]
   });
   R.end = ws.refresh;
 

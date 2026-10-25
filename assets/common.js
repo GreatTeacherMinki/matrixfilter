@@ -437,10 +437,13 @@
   // 버튼 등으로 점을 직접 고를 때 (fx, fy: 0~1 비율)
   MF.setPick = (fx, fy) => { pickFrac = [Math.min(0.999, Math.max(0, fx)), Math.min(0.999, Math.max(0, fy))]; };
   // 사진 위에 고른 점을 그린 복사본
-  MF.withMark = (src, p) => {
-    const c = MF.copyCanvas(src), x = c.getContext('2d'), r = Math.max(7, Math.round(src.width / 70));
-    x.lineWidth = 4; x.strokeStyle = '#fff'; x.beginPath(); x.arc(p.x, p.y, r, 0, Math.PI * 2); x.stroke();
-    x.lineWidth = 2.5; x.strokeStyle = '#e1306c'; x.beginPath(); x.arc(p.x, p.y, r, 0, Math.PI * 2); x.stroke();
+  // size: 동그라미 반지름(px). 사진이 작게 보이는 곳에서는 크게 준다.
+  MF.withMark = (src, p, size) => {
+    const c = MF.copyCanvas(src), x = c.getContext('2d'), r = size || Math.max(7, Math.round(src.width / 70));
+    const w = Math.max(2.5, r / 4);
+    x.lineWidth = w + 2.5; x.strokeStyle = '#fff'; x.beginPath(); x.arc(p.x, p.y, r, 0, Math.PI * 2); x.stroke();
+    x.lineWidth = w; x.strokeStyle = '#e1306c'; x.beginPath(); x.arc(p.x, p.y, r, 0, Math.PI * 2); x.stroke();
+    if (size) { x.fillStyle = '#e1306c'; x.beginPath(); x.arc(p.x, p.y, Math.max(3, r / 5), 0, Math.PI * 2); x.fill(); } // 가운데 점
     return c;
   };
   MF.pickable = (canvas, onPick) => {

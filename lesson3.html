@@ -12,28 +12,6 @@
   .side .slider-row { grid-template-columns: 110px 1fr 56px; }
   .side > * + * { margin-top: 12px; }
 
-  /* 이웃을 보는 필터 (커널 도입) */
-  .hook-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
-  .hook-grid figure { margin: 0; }
-  .hook-grid canvas { width: 100%; display: block; border-radius: 10px; }
-  .hook-grid figcaption { text-align: center; font-weight: 700; font-size: 14px; margin-top: 6px; }
-  .hook-grid figcaption small { display: block; font-weight: 500; color: var(--muted); font-size: 12px; }
-  @media (max-width: 860px) { .hook-grid { grid-template-columns: repeat(3, 1fr); } }
-  .zoom-pair { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
-  .zoom-pair canvas { width: 160px; height: 160px; image-rendering: pixelated; border-radius: 8px; border: 1px solid var(--line); }
-  .zoom-pair figure { margin: 0; text-align: center; font-size: 13px; font-weight: 700; }
-
-  /* 미끄러지는 창 */
-  .slide-wrap { display: flex; gap: 22px; align-items: flex-start; flex-wrap: wrap; }
-  .gridm { display: grid; gap: 2px; background: #cfcadf; padding: 2px; border-radius: 8px; width: max-content; }
-  .gridm div { width: 44px; height: 44px; display: grid; place-items: center; font-family: var(--mono); font-size: 12px; font-weight: 700; border-radius: 3px; position: relative; }
-  .gridm div.win { outline: 3px solid var(--pink); outline-offset: -3px; z-index: 1; }
-  .gridm div.cur { outline: 3px solid var(--pink); outline-offset: -3px; }
-  .gridm div.empty { background: #fff; color: #bbb; }
-  .slide-calc { font-family: var(--mono); font-size: 13px; background: var(--soft); border-radius: 10px; padding: 10px 12px; margin-top: 12px; line-height: 1.8; overflow-x: auto; }
-  .slide-wrap .lbl { font-size: 12px; color: var(--muted); text-align: center; display: block; }
-  .op-big { font-size: 22px; font-weight: 800; color: var(--muted); align-self: center; }
-
   /* 식 3개 = 행렬 하나 */
   .eq-lines { display: grid; gap: 8px; }
   .eq-line { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 17px; font-weight: 700; flex-wrap: wrap; padding: 6px 8px; border-radius: 10px; }
@@ -57,6 +35,11 @@
   .choice { display: flex; gap: 8px; flex-wrap: wrap; }
   .mat-sum { font-family: var(--mono); font-size: 13px; color: var(--muted); }
   .mat-sum b { color: var(--ink); }
+  .next-box { margin-top: 16px; background: #eef6ff; }
+  .teaser { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 460px; margin: 10px 0; }
+  .teaser figure { margin: 0; }
+  .teaser canvas { width: 100%; border-radius: 8px; display: block; }
+  .teaser figcaption { text-align: center; font-size: 13px; font-weight: 700; margin-top: 4px; }
   .rb-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
   .combo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-family: var(--mono); font-weight: 700; }
   .combo .matrix.m3 td { min-width: 40px; height: 26px; font-size: 13px; }
@@ -261,51 +244,7 @@
     </div>
   </section>
 
-  <!-- 8. 이웃을 보는 필터 (커널 도입) -->
-  <section class="screen" data-key="nbr" data-title="이웃을 보는 필터" data-photo>
-    <div class="step">
-      <div class="step-head">
-        <div class="step-num">8</div>
-        <div><h2>이웃을 보는 필터</h2><p>지금까지 만든 필터는 모두 픽셀 하나의 숫자(R, G, B)만 보고 계산했어요. 그런데 흐림, 선명하게, 윤곽선 필터는 픽셀 하나만 봐서는 만들 수 없어요.</p></div>
-      </div>
-      <div class="hook-grid" id="hookGrid"></div>
-      <div class="zoom-pair" id="zoomPair"></div>
-      <div class="box key" style="margin-top:14px">
-        <p>흐리게 하면 경계가 부드러워지고, 선명하게 하면 경계가 또렷해져요. 경계는 <b>픽셀과 그 이웃 픽셀의 숫자 차이</b>예요. 그래서 이 필터들은 <b>주변 픽셀까지 함께</b> 계산해요.</p>
-      </div>
-      <p class="screen-next">💡 휴대폰 사진 편집의 '선명도' 조절도 이웃 픽셀을 함께 계산하는 필터예요.</p>
-    </div>
-  </section>
-
-  <!-- 9. 미끄러지는 창 -->
-  <section class="screen" data-key="slide" data-title="커널이 움직인다">
-    <div class="step">
-      <div class="step-head">
-        <div class="step-num">9</div>
-        <div><h2>3×3 창이 미끄러지며 계산해요</h2><p>3×3 크기의 작은 행렬 <b>커널</b>을 이미지 위에 올리고, <b>같은 자리끼리 곱해서 모두 더해요</b>. 한 칸씩 옮기며 반복해요. 4차시에는 이 계산으로 나만의 커널을 만들어요!</p></div>
-      </div>
-      <div class="choice" style="margin-bottom:14px">
-        <button class="btn sm on" data-sk="blur">흐리게 커널</button>
-        <button class="btn sm" data-sk="edge">윤곽선 커널</button>
-      </div>
-      <div class="slide-wrap">
-        <div><span class="lbl">이미지 (6×6)</span><div class="gridm" id="slideIn" style="grid-template-columns:repeat(6,44px)"></div></div>
-        <span class="op-big">⊛</span>
-        <div><span class="lbl">커널</span><div id="slideK"></div></div>
-        <span class="op-big">=</span>
-        <div><span class="lbl">결과 (4×4)</span><div class="gridm" id="slideOut" style="grid-template-columns:repeat(4,44px)"></div></div>
-      </div>
-      <div class="btn-row" style="margin-top:14px">
-        <button class="btn primary" id="slideNext">다음 칸 ▶</button>
-        <button class="btn" id="slideAll">⏩ 모두 계산</button>
-        <button class="btn" id="slideReset">↺ 처음부터</button>
-      </div>
-      <div class="slide-calc" id="slideCalc">'다음 칸'을 눌러 보세요.</div>
-      <div class="screen-q" data-hint="결과 행렬에서 0과 255 사이의 숫자가 생긴 곳을 찾아보세요.|흐리게는 경계에 중간값(28, 57, 85 …)이 생겨 부드러워져요. 윤곽선은 어떤 곳만 밝게 남았나요?">흐리게 커널의 결과에서 검정(0)과 흰색(255)의 경계는 어떻게 바뀌었나요? 윤곽선 커널은요?</div>
-    </div>
-  </section>
-
-  <!-- 10. 정리 -->
+  <!-- 8. 정리 -->
   <section class="screen" data-key="end" data-title="정리">
     <div class="step">
       <div class="step-head">
@@ -315,13 +254,20 @@
       <div class="box key" style="margin-bottom:16px">
         <p>색감 필터 = <b>3×3 행렬 × 픽셀(3×1 행렬)</b>. i행 × 픽셀 = 결과의 i번째 성분.<br>
         단위행렬 E = 그대로, 대각선 = 색 세기, 1의 위치 = 색 이사, 세 행이 같음 = 흑백.<br>
-        채도·강도 슬라이더 = 행렬의 <b>실수배와 덧셈</b>으로 두 행렬 섞기.<br>
-        흐림·선명·윤곽 = <b>이웃 픽셀</b>까지 보는 필터 → 3×3 커널을 옮기며 같은 자리끼리 곱해서 더하기 (4차시에 계속!)</p>
+        채도·강도 = 행렬의 <b>실수배와 덧셈</b>으로 두 행렬 섞기.</p>
       </div>
       <ol class="think">
         <li data-hint="E × (R, G, B)를 1행부터 계산해 보세요.|1행: 1×R + 0×G + 0×B = R. 2행과 3행도 계산하면 무엇이 나오나요?">단위행렬 E를 곱하면 왜 사진이 바뀌지 않을까요? 픽셀 (R, G, B)로 계산해 설명해 보세요.</li>
         <li data-hint="검정 픽셀 (0, 0, 0)에 아무 3×3 행렬이나 곱해 보세요.|곱셈만으로는 0을 0이 아닌 수로 바꿀 수 없어요. 밝기를 올리면 검정도 k가 되어야 해요.">2차시의 밝기(A + k)는 3×3 행렬 곱셈만으로 만들 수 있을까요? 그렇지 않다면 이유는?</li>
       </ol>
+      <div class="box next-box">
+        <h3>🔜 다음 시간 예고: 이웃을 보는 필터와 최종 필터</h3>
+        <div class="teaser">
+          <figure><canvas id="tzOrig"></canvas><figcaption>원본</figcaption></figure>
+          <figure><canvas id="tzEdge"></canvas><figcaption>윤곽선</figcaption></figure>
+        </div>
+        <p class="small">오늘까지 만든 필터는 모두 픽셀 하나의 숫자(R, G, B)만 보고 계산했어요. 흐림, 선명하게, 윤곽선 필터는 <b>이웃 픽셀</b>까지 함께 계산해요. 다음 시간에는 이 계산(<b>커널</b>)을 배우고, <b>1~4차시의 필터를 모두 모아 나만의 최종 필터</b>를 완성해요!</p>
+      </div>
     </div>
   </section>
 
@@ -600,77 +546,6 @@
   });
   mineSync();
 
-  /* ===== 8. 이웃을 보는 필터 ===== */
-  const K = MF.KERNELS;
-  const kStep = (key, n = 1) => ({ t: 'kernel', name: K[key].name, k: K[key].k, d: K[key].d, n });
-  const kMat = (k, d) => `<div style="display:flex;align-items:center;gap:6px">${MF.mat3HTML(k)}${d !== 1 ? `<b style="font-family:var(--mono)">÷ ${d}</b>` : ''}</div>`;
-  const HOOK = [['원본', '', []], ['흐리게', '블러', [kStep('blur', 3)]], ['선명하게', '샤픈', [kStep('sharpen')]], ['윤곽선', '엣지', [kStep('edge')]], ['모자이크', '픽셀화', [{ t: 'mosaic', size: 14 }]]];
-  R.nbr = () => {
-    $('hookGrid').innerHTML = '';
-    const outs = HOOK.map(([name, sub, steps]) => {
-      const c = MF.applySteps(photo, steps);
-      const fig = document.createElement('figure');
-      fig.innerHTML = `<figcaption>${name}<small>${sub || '필터 없음'}</small></figcaption>`;
-      fig.prepend(c); $('hookGrid').append(fig);
-      return c;
-    });
-    // 경계 부분을 크게 확대해서 비교
-    const p = MF.defaultPoint(photo), s = 12;
-    $('zoomPair').innerHTML = '<span class="small muted">풍선 가장자리 확대 →</span>';
-    [[0, '원본'], [1, '흐리게'], [2, '선명하게']].forEach(([k, label]) => {
-      const cv = document.createElement('canvas'); cv.width = s; cv.height = s;
-      cv.getContext('2d').drawImage(outs[k], Math.max(0, p.x - s / 2), Math.max(0, p.y - s / 2), s, s, 0, 0, s, s);
-      const fig = document.createElement('figure'); fig.append(cv); fig.insertAdjacentHTML('beforeend', `<div>${label}</div>`);
-      $('zoomPair').append(fig);
-    });
-  };
-
-  /* ===== 9. 미끄러지는 창 ===== */
-  const SIN = [
-    [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 255, 255, 255, 255],
-    [0, 0, 255, 255, 255, 255], [0, 0, 255, 255, 255, 255], [0, 0, 255, 255, 255, 255]
-  ];
-  let sKey = 'blur', sPos = 0, sOut = Array(16).fill(null);
-  const sCell = (r, c) => {
-    const k = K[sKey], terms = [];
-    let sum = 0;
-    for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++) {
-      const kv = k.k[a * 3 + b], v = SIN[r + a][c + b];
-      sum += kv * v;
-      if (kv) terms.push(kv === 1 ? `${v}` : `${kv < 0 ? '(' + kv + ')' : kv}×${v}`);
-    }
-    const raw = sum / k.d, val = MF.clamp(Math.round(raw));
-    return { val, text: `${k.d !== 1 ? '(' : ''}${terms.join(' + ')}${k.d !== 1 ? ') ÷ ' + k.d : ''} = ${MF.num(raw)}${val !== Math.round(raw) ? ' → ' + val : raw !== val ? ' ≈ ' + val : ''}` };
-  };
-  function renderSlide() {
-    const r0 = Math.floor(Math.max(0, sPos - 1) / 4), c0 = Math.max(0, sPos - 1) % 4, showWin = sPos > 0;
-    $('slideIn').innerHTML = SIN.flatMap((row, r) => row.map((v, c) => {
-      const win = showWin && r >= r0 && r < r0 + 3 && c >= c0 && c < c0 + 3;
-      return `<div class="${win ? 'win' : ''}" style="background:${MF.tint(v)};color:${v > 130 ? '#111' : '#fff'}">${v}</div>`;
-    })).join('');
-    $('slideK').innerHTML = kMat(K[sKey].k, K[sKey].d);
-    $('slideOut').innerHTML = sOut.map((v, i) => v === null
-      ? `<div class="empty">?</div>`
-      : `<div class="${showWin && i === sPos - 1 ? 'cur' : ''}" style="background:${MF.tint(v)};color:${v > 130 ? '#111' : '#fff'}">${v}</div>`).join('');
-  }
-  $('slideNext').addEventListener('click', () => {
-    if (sPos >= 16) { MF.toast('모두 계산했어요! 처음부터 다시 해 보세요.'); return; }
-    const r = Math.floor(sPos / 4), c = sPos % 4, { val, text } = sCell(r, c);
-    sOut[sPos] = val; sPos++;
-    $('slideCalc').innerHTML = `결과 (${r + 1}, ${c + 1}) 성분 = ${text}`;
-    renderSlide();
-  });
-  $('slideAll').addEventListener('click', () => {
-    for (let i = 0; i < 16; i++) sOut[i] = sCell(Math.floor(i / 4), i % 4).val;
-    sPos = 16; $('slideCalc').textContent = '16칸을 모두 계산했어요. 결과 행렬을 원래 이미지와 비교해 보세요.'; renderSlide();
-  });
-  const slideReset = () => { sPos = 0; sOut.fill(null); $('slideCalc').textContent = "'다음 칸'을 눌러 보세요."; renderSlide(); };
-  $('slideReset').addEventListener('click', slideReset);
-  document.querySelectorAll('[data-sk]').forEach(b => b.addEventListener('click', () => {
-    sKey = b.dataset.sk; document.querySelectorAll('[data-sk]').forEach(x => x.classList.toggle('on', x === b)); slideReset();
-  }));
-  slideReset();
-
   /* ===== 활동지 ===== */
   const ws = MF.worksheet({
     lesson: 3, title: '색을 바꾸는 행렬 곱',
@@ -679,7 +554,12 @@
     q2: '7번 화면에서 만든 색감 행렬의 이름을 쓰고, 숫자를 어떻게 정했는지와 각 행이 하는 역할을 설명해 주세요.',
     getResult: () => { if (!labs.mine.result) R.mine(); return { canvas: labs.mine.result, name: $('mineName').value.trim(), code: $('codeOut').value }; }
   });
-  R.end = ws.refresh;
+  R.end = () => {
+    // 다음 차시 예고: 윤곽선 커널
+    MF.draw($('tzOrig'), photo);
+    MF.draw($('tzEdge'), MF.applySteps(photo, [{ t: 'kernel', k: MF.KERNELS.edge.k, d: 1, n: 1 }]));
+    ws.refresh();
+  };
 
   /* ===== 시작 ===== */
   MF.photoPicker($('picker'), setPhoto);

@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2차시 일차함수로 필터 만들기</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="assets/common.css?v=202610202034">
+<style>
+  .compare-wrap { position: relative; }
+  .compare-badge { position: absolute; left: 10px; top: 10px; background: rgba(0,0,0,.7); color: #fff; font-size: 12px; padding: 3px 10px; border-radius: 999px; pointer-events: none; }
+  .lab-side .slider-row { grid-template-columns: 110px 1fr 64px; }
+  .graph-row { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; margin-top: 14px; }
+  .graph-row canvas.graph { border: 1px solid var(--line); border-radius: 10px; flex: none; }
+
+  /* 사진에서 고른 점 */
+  .pt { flex: 1; min-width: 210px; display: grid; gap: 4px; align-content: start; }
+  .pt-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-family: var(--mono); font-size: 13px; font-weight: 700; }
+  .sw { display: inline-block; width: 20px; height: 20px; border-radius: 5px; border: 1px solid rgba(0,0,0,.15); vertical-align: middle; }
+  .pt-calc { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+  .pick-tip { font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+  .choice { display: flex; gap: 8px; flex-wrap: wrap; }
+  .why-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+  .why-grid h3 { font-size: 15px; margin-bottom: 6px; }
+  .why-grid p + p, .part .box p + p { margin-top: 6px; }
+  .why-table { max-width: 620px; }
+  .recall { background: #f4f0ff; }
+  .recall-list { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 10px; }
+  .recall-list span { font-family: var(--mono); font-weight: 700; font-size: 15px; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; }
+  .tx { color: #e1306c; } .tp { color: #6d4aff; }
+  @media (max-width: 760px) { .why-grid { grid-template-columns: 1fr; } }
+
+  /* 대비·페이드: 위아래로 나눈 두 부분 */
+  .part { border: 2px solid var(--line); border-radius: 16px; padding: 16px; margin-top: 16px; }
+  .part-title { font-size: 19px; font-weight: 800; margin: 0 0 10px; }
+  .part .box h3 { font-size: 15px; margin-bottom: 6px; }
+  .calc-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; font-family: var(--mono); font-weight: 700; margin-top: 10px; }
+  .calc-row input { width: 70px; font-family: var(--mono); font-size: 15px; font-weight: 700; text-align: center; border: 2px solid var(--line); border-radius: 6px; padding: 4px 2px; }
+  .calc-row input.right { border-color: var(--ok); background: #effaf3; }
+  .calc-row input.wrong { border-color: #e53935; background: #fff5f5; }
+  .sol { font-family: var(--mono); font-size: 13px; margin-top: 8px; line-height: 1.7; }
+
+  .tool-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 12px; }
+  .tool-table th, .tool-table td { border-bottom: 1px solid var(--line); padding: 7px 8px; text-align: left; }
+  .tool-table td.m { font-family: var(--mono); }
+
+  /* 비네트 기법 */
+  .mask-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; margin-top: 12px; }
+  .mask-row canvas { width: 180px; border-radius: 8px; border: 1px solid var(--line); display: block; }
+  .mask-mat .matrix td { min-width: 40px; background: #fff; color: #111; border: 1px solid var(--line); }
+
+  /* 패널 (따라잡기, 나만의 프리셋) */
+  .panel .slider-row { grid-template-columns: 120px 1fr 56px; margin: 4px 0; }
+  .panel .slider-row label small { display: block; font-weight: 500; color: var(--muted); font-family: var(--mono); font-size: 11px; }
+  .targets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .score-bar { height: 14px; border-radius: 999px; background: var(--line); overflow: hidden; margin: 6px 0 2px; }
+  .score-bar div { height: 100%; background: var(--grad); width: 0; transition: width .2s; }
+  .score-num { font-size: 28px; font-weight: 800; }
+  .trio { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .trio figure { margin: 0; }
+  .trio canvas { width: 100%; border-radius: 10px; display: block; }
+  .trio figcaption { text-align: center; font-weight: 700; font-size: 13px; margin-top: 4px; }
+  .save-box { margin-top: 14px; display: grid; gap: 8px; }
+  .recipe { font-family: var(--mono); font-size: 13px; background: var(--soft); border-radius: 10px; padding: 10px 12px; margin-top: 10px; line-height: 1.8; }
+  .map-box { margin-top: 14px; background: #f4f0ff; }
+  .map-eq { font-family: var(--mono); font-size: 15px; font-weight: 700; line-height: 1.8; }
+
+  /* 다른 사진에 적용 */
+  .others-head { font-size: 14px; margin-bottom: 12px; }
+  .others-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .o-card { margin: 0; border: 1px solid var(--line); border-radius: 14px; padding: 10px; background: #fff; }
+  .o-card figcaption { font-weight: 800; font-size: 15px; margin-bottom: 8px; }
+  .o-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .o-pair canvas { width: 100%; border-radius: 8px; display: block; }
+  .o-lbl { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; color: var(--muted); text-align: center; margin-top: 3px; }
+  .o-stat { font-size: 12.5px; margin-top: 8px; line-height: 1.6; }
+  .o-stat b.up { color: #e53935; }
+
+  /* 다음 차시 예고 */
+  .next-box { margin-top: 16px; background: #eef6ff; }
+  .teaser { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 460px; margin: 10px 0; }
+  .teaser figure { margin: 0; }
+  .teaser canvas { width: 100%; border-radius: 8px; display: block; }
+  .teaser figcaption { text-align: center; font-size: 13px; font-weight: 700; margin-top: 4px; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">M</span>AI 융합캠프(조민기)</a>
+    <nav class="lesson-nav">
+      <a href="index.html">홈</a>
+      <a href="lesson1.html">1차시</a>
+      <a href="lesson2.html" class="on">2차시</a>
+      <a href="lesson3.html">3차시</a>
+      <a href="lesson4.html">4차시</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="lesson-head">
+    <span class="eyebrow">2차시</span>
+    <h1><span class="grad-text">일차함수</span>로 필터 만들기</h1>
+  </div>
+  <ol class="stepper" id="stepper"></ol>
+  <div class="photo-bar" id="photoBar"><div id="picker"></div></div>
+
+  <!-- 1. 밝기·노출 -->
+  <section class="screen" data-key="addmul" data-title="노출·밝기" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">1</div>
+        <div><h2>곱하기는 노출, 더하기는 밝기</h2><p>1차시에 만든 나만의 필터 식을 떠올려 보세요. 그 식 속에 사진 편집의 <b>노출</b>과 <b>밝기</b>가 숨어 있었어요.</p></div>
+      </div>
+      <div class="box recall">
+        <h3>🔁 1차시에 여러분이 만든 필터 식 (예)</h3>
+        <div class="recall-list">
+          <span>R' = R <b class="tx">× 1.2</b> <b class="tp">+ 80</b></span>
+          <span>R' = R <b class="tx">× 2</b> <b class="tp">+ 5</b></span>
+          <span>G' = G <b class="tp">+ 40</b></span>
+          <span>B' = B <b class="tx">× 0.5</b></span>
+        </div>
+        <p class="small">모두 <b class="tx">곱하기(×)</b>와 <b class="tp">더하기(+)</b>로 된 식이에요. 휴대폰 갤러리의 사진 편집(아이폰 '사진', 갤럭시 '갤러리')에서 <b class="tx">곱하기는 노출</b>, <b class="tp">더하기는 밝기</b>예요. 둘 다 사진을 밝게 만드는데, 무엇이 다를까요?</p>
+      </div>
+      <div class="part">
+        <h3 class="part-title">✖️ 노출 = 모든 성분에 같은 수 곱하기 (kA)</h3>
+        <div class="box">
+          <p class="small">노출은 카메라가 <b>빛을 받아들인 양</b>이에요. 셔터를 2배 오래 열면 각 점에 들어오는 빛도 2배가 돼서, 원래 숫자에 <b>비례해서</b> 늘어나요.</p>
+          <p class="small">그래서 밝은 곳은 많이, 어두운 곳은 조금 바뀌고, 빛이 없던 검정(0)은 몇 배를 해도 <b>그대로 0</b>이에요.</p>
+          <p class="small muted">📝 비유: 모든 학생 점수를 <b>1.2배</b> → 40점은 48점(+8), 90점은 108점(+18)</p>
+        </div>
+        <div class="lab" data-concept="expo" style="margin-top:12px"></div>
+      </div>
+      <div class="part">
+        <h3 class="part-title">➕ 밝기 = 모든 성분에 같은 수 더하기 (A + kJ)</h3>
+        <div class="box">
+          <p class="small">사진 전체에 <b>같은 양의 빛을 덧칠</b>하는 것과 같아요. 어두운 곳이든 밝은 곳이든 <b>똑같이 k만큼</b> 올라가요.</p>
+          <p class="small">그래서 빛이 없던 검정(0)도 k가 되어 <b>회색빛으로 떠요</b>.</p>
+          <p class="small muted">📝 비유: 모든 학생 점수에 <b>+10점</b> → 40점은 50점(+10), 90점은 100점(+10)</p>
+        </div>
+        <div class="lab" data-concept="bright" style="margin-top:12px"></div>
+        <div class="box tip" style="margin-top:12px">
+          <h3>🧪 되돌리기 실험</h3>
+          <p class="small">밝기를 +100 한 다음 다시 −100 하면 원래 사진으로 돌아올까요? 예상해 보고 버튼을 눌러 확인해 보세요.</p>
+          <div class="btn-row" style="margin-top:8px"><button class="btn sm" id="undoTest">+100 → −100 해 보기</button><span class="small" id="undoResult"></span></div>
+        </div>
+      </div>
+      <h3 style="margin-top:18px">🔍 노출과 밝기 비교</h3>
+      <table class="tool-table why-table">
+        <tr><th>원래 숫자</th><th>0 (검정)</th><th>50 (어두운 곳)</th><th>200 (밝은 곳)</th></tr>
+        <tr><td>✖️ 노출 ×1.5</td><td class="m">0</td><td class="m">75 <span class="muted">(+25)</span></td><td class="m">300 → 255 <span class="muted">(+55)</span></td></tr>
+        <tr><td>➕ 밝기 +50</td><td class="m">50</td><td class="m">100 <span class="muted">(+50)</span></td><td class="m">250 <span class="muted">(+50)</span></td></tr>
+      </table>
+      <p class="small muted" style="margin-top:6px">* 실제 앱의 계산식은 공개되어 있지 않아서, 원리를 보여 주는 가장 기본적인 식으로 만들었어요.</p>
+      <div class="screen-q" data-hint="노출과 밝기의 상수를 각각 움직이며 보라색 선이 어떻게 움직이는지 비교해 보세요.|밝기(더하기)는 선을 위아래로 옮기고, 노출(곱하기)은 기울기를 바꿔요. 노출 선은 항상 (0, 0)을 지나요. 0은 몇 배를 해도 0이니까요.">노출과 밝기는 그래프가 어떻게 다르게 움직이나요? 검정(0)은 각각 어떻게 되나요?</div>
+    </div>
+  </section>
+
+  <!-- 2. 대비·페이드 -->
+  <section class="screen" data-key="cf" data-title="대비·페이드" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">2</div>
+        <div><h2>대비와 페이드도 곱하기와 더하기</h2><p>사진 편집의 <b>대비</b>와 인스타그램의 <b>페이드</b>도 곱하기와 더하기로 만들어요. 다른 점은 <b>움직이지 않는 기준점</b>이 있다는 거예요. 하나씩 자세히 살펴봐요.</p></div>
+      </div>
+
+      <div class="part">
+        <h3 class="part-title">◐ 대비 = 128에서 멀어지게</h3>
+        <div class="box">
+          <p class="small" style="font-family:var(--mono);font-weight:700">A' = k × (A − 128) + 128</p>
+          <p class="small">k는 <b>대비 상수</b>예요. 얼마나 벌릴지를 정하는 수로, 중간 회색 <b>128과의 거리를 k배</b> 해요. k가 1보다 크면 밝은 곳은 더 밝게, 어두운 곳은 더 어둡게 벌어지고, 1보다 작으면 모두 128 쪽으로 모여 흐릿해져요.</p>
+          <p class="small muted">📝 비유: 반 평균 점수를 기준으로 평균과의 차이를 2배로 → 평균인 학생은 그대로, 나머지는 위아래로 벌어져요.</p>
+        </div>
+        <div class="lab" data-concept="contrast" style="margin-top:12px"></div>
+        <div class="box tip" data-calc style="margin-top:12px">
+          <h3>✏️ 직접 계산해 보기</h3>
+          <div class="formula">A' = k × (A − 128) + 128 &nbsp;&nbsp;→&nbsp;&nbsp; 대비 상수 k = 1.5 이면 &nbsp;A' = 1.5 × (A − 128) + 128</div>
+          <p class="small" style="margin-top:8px">원래 숫자 A를 식에 넣어 바뀐 숫자 A'를 구해 보세요.</p>
+          <div class="calc-row">
+            <span>A = 100 → A' = <input data-ans="86"></span>
+            <span>A = 128 → A' = <input data-ans="128"></span>
+          </div>
+          <div class="btn-row" style="margin-top:10px"><button class="btn sm primary" data-check>채점하기</button><button class="btn sm" data-sol>💡 첫 칸 풀이 보기</button><span class="small" data-res></span></div>
+          <p class="sol hidden" data-soltext>1.5 × (100 − 128) + 128 = 1.5 × (−28) + 128 = −42 + 128 = 86</p>
+        </div>
+      </div>
+
+      <div class="part">
+        <h3 class="part-title">🌫️ 페이드 = 검정을 들어 올리기</h3>
+        <div class="box">
+          <p class="small" style="font-family:var(--mono);font-weight:700">A' = A + f × (255 − A) ÷ 2</p>
+          <p class="small">f는 <b>페이드 상수</b>(0~1)예요. 얼마나 들어 올릴지를 정하는 수로, <b>255까지 남은 거리</b>의 일부를 채워요. 어두운 곳은 남은 거리가 커서 많이 밝아지고, 흰색(255)은 남은 거리가 0이라 그대로예요. 감성 사진의 '물 빠진' 필름 느낌이 나요.</p>
+          <p class="small muted">📝 비유: 100점까지 남은 점수의 절반을 채워 주기 → 40점은 70점(+30), 90점은 95점(+5)</p>
+        </div>
+        <div class="lab" data-concept="fade" style="margin-top:12px"></div>
+        <div class="box tip" data-calc style="margin-top:12px">
+          <h3>✏️ 직접 계산해 보기</h3>
+          <div class="formula">A' = A + f × (255 − A) ÷ 2 &nbsp;&nbsp;→&nbsp;&nbsp; 페이드 상수 f = 0.4 이면 &nbsp;A' = A + 0.4 × (255 − A) ÷ 2</div>
+          <p class="small" style="margin-top:8px">원래 숫자 A를 식에 넣어 바뀐 숫자 A'를 구해 보세요.</p>
+          <div class="calc-row">
+            <span>A = 100 → A' = <input data-ans="131"></span>
+            <span>A = 255 → A' = <input data-ans="255"></span>
+          </div>
+          <div class="btn-row" style="margin-top:10px"><button class="btn sm primary" data-check>채점하기</button><button class="btn sm" data-sol>💡 첫 칸 풀이 보기</button><span class="small" data-res></span></div>
+          <p class="sol hidden" data-soltext>100 + 0.4 × (255 − 100) ÷ 2 = 100 + 0.4 × 155 ÷ 2 = 100 + 31 = 131</p>
+        </div>
+      </div>
+
+      <div class="box key" style="margin-top:16px">
+        <p>🔎 식을 정리하면 대비는 <b>k·A + (128 − 128k)</b>, 페이드는 <b>(1 − f/2)·A + 127.5f</b>예요. 밝기, 노출처럼 모두 <b>A' = aA + b</b> 꼴의 <b>일차함수</b>라서 그래프가 직선이에요.</p>
+      </div>
+      <div class="screen-q" data-hint="상수를 움직여도 그래프의 선이 항상 지나가는 점을 찾아보세요. 계산 결과도 살펴보세요.|대비는 (128, 128), 페이드는 (255, 255)를 늘 지나요. 식에 A = 128, A = 255를 넣어 확인해 보세요.">대비를 바꿔도 변하지 않는 숫자, 페이드를 해도 변하지 않는 숫자는 각각 무엇인가요? 그래프에서는 어떻게 보이나요?</div>
+    </div>
+  </section>
+
+  <!-- 3. 비네트 기법 -->
+  <section class="screen" data-key="vig" data-title="비네트 기법" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">3</div>
+        <div><h2>비네트 기법 = 마스크 행렬과 같은 자리끼리 곱하기</h2><p>사진 가장자리를 어둡게 해서 가운데로 시선을 모아요. 위치마다 곱하는 수가 다르기 때문에 사진과 같은 크기의 <b>마스크 행렬 M</b>을 써요.</p></div>
+      </div>
+      <div class="cols wide-left">
+        <div>
+          <div class="canvas-frame compare-wrap"><canvas id="vigCanvas"></canvas><span class="compare-badge" id="vigBadge">결과</span></div>
+          <div class="btn-row" style="margin-top:10px"><button class="btn sm" id="vigHold">👆 누르고 있으면 원본</button></div>
+        </div>
+        <div class="lab-side">
+          <div class="slider-row"><label>세기 v</label><input type="range" min="0" max="1" step="0.05" value="0.6" id="vigV"><output id="vigVo"></output></div>
+          <div class="formula" style="margin-top:8px">A'<sub>ij</sub> = A<sub>ij</sub> <span class="hl">× M<sub>ij</sub></span></div>
+          <div class="mask-row">
+            <div><div class="matrix-label">마스크 M (그림)</div><canvas id="vigMask"></canvas></div>
+            <div class="mask-mat"><div class="matrix-label">M (5×5로 줄여 보기)</div><div id="vigMat"></div></div>
+          </div>
+          <div class="recipe" id="vigCalc"></div>
+        </div>
+      </div>
+      <div class="box tip" style="margin-top:14px">
+        <p class="small">⚠️ 이 계산은 교과서의 <b>행렬의 곱셈</b>(행과 열을 곱해서 더하기)과 다른 계산이에요. 같은 자리의 성분끼리만 곱해요. 교과서의 행렬의 곱셈은 다음 차시에 필터로 만나요!</p>
+      </div>
+      <div class="screen-q" data-hint="5×5로 줄인 M에서 가운데 숫자와 네 모서리 숫자를 읽어 보세요. 세기 v를 바꿔 가며 비교해 보세요.|가운데는 1, 모서리는 1 − v예요. 곱하는 수가 작을수록 결과가 어두워져요.">마스크 행렬의 가운데 성분과 모서리 성분 중 어느 쪽이 더 큰가요? 크기 차이 때문에 사진은 어떻게 바뀌나요?</div>
+    </div>
+  </section>
+
+  <!-- 4. 필터 따라잡기 -->
+  <section class="screen" data-key="target" data-title="필터 따라잡기" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">4</div>
+        <div><h2>미션: 필터 따라잡기</h2><p>목표 사진과 똑같아지도록 슬라이더를 맞춰 보세요. 일치도 95% 이상이면 성공! <b>첫 번째 목표는 꼭</b> 해 보고, 나머지 두 개는 시간이 남으면 도전해 보세요.</p></div>
+      </div>
+      <div class="targets" id="targets"></div>
+      <div class="cols">
+        <div>
+          <div class="trio">
+            <figure><canvas id="tgCanvas"></canvas><figcaption>🎯 목표</figcaption></figure>
+            <figure><canvas id="myCanvas"></canvas><figcaption>✋ 내 결과</figcaption></figure>
+          </div>
+          <div style="margin-top:12px">
+            <span class="small muted">일치도</span> <span class="score-num" id="scoreNum">0%</span>
+            <div class="score-bar"><div id="scoreBar"></div></div>
+          </div>
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn sm" id="hintBtn">💡 힌트</button>
+            <button class="btn sm" id="answerBtn">정답 보기</button>
+          </div>
+          <p class="small" id="hintText" style="margin-top:8px"></p>
+        </div>
+        <div class="panel" id="panel1"></div>
+      </div>
+      <div class="screen-q" data-hint="[힌트] 버튼으로 어떤 슬라이더를 움직였는지 먼저 알아보세요.|색감(따뜻함)처럼 눈에 잘 띄는 것부터 맞추고, 일치도가 오르는지 보며 하나씩 조절하는 전략을 써 보세요.">어떤 순서로 슬라이더를 맞추는 게 좋았나요? 내 전략을 설명해 보세요.</div>
+    </div>
+  </section>
+
+  <!-- 5. 나만의 프리셋 -->
+  <section class="screen" data-key="preset" data-title="나만의 프리셋" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">5</div>
+        <div><h2>나만의 보정 프리셋 만들기</h2><p>슬라이더를 조합해서 나만의 분위기를 만들고 이름을 붙여 보세요. 아래에서 내 프리셋이 사진의 숫자를 어떻게 바꾸는지 확인할 수 있어요.</p></div>
+      </div>
+      <div class="cols">
+        <div>
+          <div class="canvas-frame compare-wrap"><canvas id="presetCanvas"></canvas><span class="compare-badge" id="presetBadge">결과</span></div>
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn sm" id="presetHold">👆 누르고 있으면 원본</button>
+            <button class="btn sm" id="presetDownload">💾 이미지 저장</button>
+          </div>
+          <p class="pick-tip">📍 사진을 클릭하면 그 점의 숫자가 어떻게 바뀌는지 아래에 나와요.</p>
+          <div class="recipe" id="recipe"></div>
+        </div>
+        <div>
+          <input type="text" id="presetName" placeholder="프리셋 이름 (예: 비 오는 날)" maxlength="20" style="font-weight:700;font-size:16px;margin-bottom:8px">
+          <div class="panel" id="panel2"></div>
+        </div>
+      </div>
+      <div class="box map-box">
+        <h3>🧮 내 프리셋을 식 하나로 정리하면</h3>
+        <p class="small">노출 → 밝기 → 대비 → 따뜻함 → 페이드를 차례로 계산하면, 결국 색마다 <b>A' = aA + b 꼴의 일차함수 하나</b>가 돼요. 그래프의 세 선이 R, G, B 각각의 규칙이에요.</p>
+        <div class="graph-row">
+          <canvas class="graph" id="presetGraph"></canvas>
+          <div class="pt" id="presetMap"></div>
+        </div>
+      </div>
+      <div class="box save-box">
+        <h3>🔑 필터 코드로 저장하기</h3>
+        <p class="small">코드를 복사해 카카오톡에 올리거나 메모장에 붙여넣어 두세요. 4차시에 다시 불러와서 쓸 수 있어요.</p>
+        <div class="btn-row"><input type="text" class="code" id="codeOut" readonly style="flex:1;min-width:200px"><button class="btn sm primary" id="copyCode">복사</button></div>
+        <div class="btn-row"><input type="text" class="code" id="codeIn" placeholder="저장해 둔 필터 코드를 붙여넣으세요 (MF-...)" style="flex:1;min-width:200px"><button class="btn sm" id="loadCode">불러오기</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. 다른 사진에 적용 -->
+  <section class="screen" data-key="others" data-title="다른 사진에 적용">
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">6</div>
+        <div><h2>내 프리셋, 다른 사진에도 어울릴까?</h2><p>5번 화면에서 만든 프리셋을 느낌이 다른 사진들에 똑같이 적용해 보세요. 내가 의도한 분위기가 그대로 나오는지, <b>하얗게 날아가거나(255에 걸림) 까맣게 뭉개지는(0에 걸림)</b> 부분이 생기는지 확인해요.</p></div>
+      </div>
+      <div class="others-head">적용한 프리셋: <b id="othersName"></b> <span class="small muted" id="othersRecipe"></span></div>
+      <div class="others-grid" id="othersGrid"></div>
+      <div class="btn-row" style="margin-top:12px">
+        <label class="btn sm">📁 내 사진 추가해서 비교하기<input type="file" accept="image/*" hidden id="othersFile"></label>
+        <span class="small muted">사진은 내 컴퓨터 안에서만 처리돼요.</span>
+      </div>
+      <div class="screen-q" data-hint="사진마다 '255에 걸린 점'과 '0에 걸린 점'의 비율이 어떻게 변했는지 비교해 보세요.|같은 식이라도 원래 숫자가 다르면 결과가 달라요. 이미 밝은 사진에 밝기를 더하면 255에 걸려 하얗게 날아가고, 어두운 사진은 조금 밝혀도 여전히 어두울 수 있어요.">내 프리셋이 모든 사진에서 의도한 느낌으로 나왔나요? 의도와 다르게 나온 사진은 무엇이고, 왜 그럴까요?</div>
+    </div>
+  </section>
+
+  <!-- 7. 정리 -->
+  <section class="screen" data-key="end" data-title="정리">
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">✓</div>
+        <div><h2>오늘 배운 것</h2><p>생각해보기 질문에 답하고, 내 프리셋을 제출해요.</p></div>
+      </div>
+      <div class="box key" style="margin-bottom:16px">
+        <p>밝기 = <b>덧셈</b> A + kJ, 노출 = <b>실수배</b> kA, 대비·페이드 = 둘을 섞은 <b>aA + b</b> → 모두 <b>일차함수</b>라서 그래프가 직선!<br>
+        내 프리셋도 결국 색마다 <b>일차함수 하나</b>. 하지만 같은 식이라도 사진에 따라 0과 255에 걸려 결과가 달라져요.<br>
+        비네트 기법 = 마스크 행렬과 <b>같은 자리끼리 곱하기</b>.</p>
+      </div>
+      <ol class="think">
+        <li data-hint="k = 0이면 k × (A − 128) 부분은 얼마가 될까요?|0 × (A − 128) = 0 이므로 A′ = 128 이에요. 모든 픽셀이 같은 값이 되면 사진은 어떻게 보일까요?">대비 상수 k를 0으로 하면 사진이 어떻게 될까요? 식 A' = k × (A − 128) + 128에 넣어 설명해 보세요.</li>
+      </ol>
+      <div class="box next-box">
+        <h3>🔜 다음 시간 예고: R, G, B를 섞는 필터</h3>
+        <div class="teaser">
+          <figure><canvas id="tzOrig"></canvas><figcaption>원본</figcaption></figure>
+          <figure><canvas id="tzSepia"></canvas><figcaption>세피아</figcaption></figure>
+        </div>
+        <p class="small">오늘 만든 필터는 모두 R'를 R만으로, B'를 B만으로 계산했어요. 그런데 세피아는 <b>R' = 0.39R + 0.77G + 0.19B</b>처럼 R, G, B를 <b>섞어서</b> 만들어요. 이런 식 3개는 <b>3×3 행렬 하나</b>로 쓸 수 있고, <b>행렬의 곱셈</b>으로 계산해요. 3차시에 직접 해 봐요!</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="pager">
+    <button class="btn" id="prevBtn">← 이전</button>
+    <span class="count" id="pageCount"></span>
+    <button class="btn primary" id="nextBtn">다음 →</button>
+  </div>
+</main>
+
+<script src="assets/common.js?v=202610251800"></script>
+<script>
+(() => {
+  /* ===== 공유 상태 ===== */
+  let photo = MF.sampleCanvas(), photoData = null, wiz;
+  const R = {}; // 화면 이름(data-key)별 그리기 함수
+  const SCREENS = [...document.querySelectorAll('.screen')];
+  const $ = id => document.getElementById(id);
+  const rerender = () => { if (wiz) R[SCREENS[wiz.current].dataset.key]?.(); };
+  const pixelAt = (x, y) => { const i = (y * photoData.width + x) * 4, d = photoData.data; return [d[i], d[i + 1], d[i + 2]]; };
+  const setPhoto = c => {
+    photo = c;
+    photoData = MF.ctx(photo).getImageData(0, 0, photo.width, photo.height);
+    targetCache = {};
+    rerender();
+  };
+  const adjust = p => MF.applySteps(photo, [{ t: 'adjust', p }]);
+  const fmtSigned = v => (v > 0 ? '+' : '') + v;
+  const signed = k => (k < 0 ? '− ' + -k : '+ ' + k);
+  const RGBC = ['#d32f2f', '#2e7d32', '#1565c0'], RGBN = ['R', 'G', 'B'];
+  const sw = c => `<span class="sw" style="background:rgb(${c.join(',')})"></span>`;
+  const clipNote = v => (v > 255 ? ' → <b>255</b>' : v < 0 ? ' → <b>0</b>' : '');
+
+  /* 사진에서 고른 점: 바뀌기 전후의 (R, G, B)와 색마다의 계산
+   * calc(c, v) → [계산식 글자, 계산 결과(잘리기 전), 최종 값] */
+  function pointHTML(p, calc, note = '') {
+    const before = pixelAt(p.x, p.y), rows = before.map((v, c) => calc(c, v)), after = rows.map(r => r[2]);
+    return `<div class="matrix-label">📍 사진에서 고른 점 (${p.x}, ${p.y})</div>
+      <div class="pt-row">${sw(before)} (${before.join(', ')}) → ${sw(after)} (${after.join(', ')})</div>
+      ${rows.map(([text], c) => `<div class="pt-calc"><b style="color:${RGBC[c]}">${RGBN[c]}'</b> = ${text}</div>`).join('')}
+      ${note}`;
+  }
+  const marksOf = (p, perLine) => pixelAt(p.x, p.y).map((v, c) => ({ v, color: RGBC[c], line: perLine ? c : 0 }));
+
+  /* ===== 1, 2번 화면: 상수를 바꾸며 사진·그래프·고른 점을 함께 보는 실험 칸 =====
+   * modes: { 이름: {label, min, max, step, fmt, reset, fn(k) → (v → 바뀐 값), formula(k), cell(k, v)} }
+   * 모드가 둘 이상이면 btnBoxId의 버튼으로 바꾸고, 그래프에 다른 모드를 연한 선으로 함께 그린다.
+   */
+  function modeLab(key, modes, vals, btnBoxId) {
+    let mode = Object.keys(modes)[0], result = null, shown = null;
+    const root = document.querySelector(`[data-concept="${key}"]`);
+    root.innerHTML = `
+      <div class="cols wide-left">
+        <div>
+          <div class="canvas-frame compare-wrap"><canvas data-r="canvas"></canvas><span class="compare-badge" data-r="badge">결과</span></div>
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn sm" data-r="hold">👆 누르고 있으면 원본</button>
+            <button class="btn sm" data-r="reset">↺ 원래대로</button>
+          </div>
+          <p class="pick-tip">📍 사진을 클릭하면 그 점의 숫자가 어떻게 바뀌는지 오른쪽에 나와요.</p>
+        </div>
+        <div class="lab-side">
+          <div class="slider-row"><label data-r="label"></label><input type="range" data-r="slider"><output data-r="out"></output></div>
+          <div class="formula" data-r="formula" style="margin-top:8px"></div>
+          <div class="graph-row">
+            <canvas class="graph" data-r="graph"></canvas>
+            <div class="pt" data-r="pt"></div>
+          </div>
+          <p class="small muted" style="margin-top:6px">📈 가로축 = 원래 숫자, 세로축 = 바뀐 숫자, 점선 = 그대로.${btnBoxId ? ' 연한 선은 다른 버튼의 계산이에요.' : ''} 그래프 위의 점은 고른 점의 R, G, B예요.</p>
+        </div>
+      </div>`;
+    const q = n => root.querySelector(`[data-r="${n}"]`), box = btnBoxId ? $(btnBoxId) : null;
+    const setup = () => {
+      const c = modes[mode], sl = q('slider');
+      sl.min = c.min; sl.max = c.max; sl.step = c.step; sl.value = vals[mode];
+      q('label').textContent = c.label;
+      if (box) box.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+    };
+    const render = () => {
+      const c = modes[mode], k = +q('slider').value, f = c.fn(k), p = MF.pickedPoint(photo);
+      vals[mode] = k;
+      q('out').textContent = c.fmt(k);
+      result = MF.applyFns(photo, [f, f, f]);
+      shown = MF.withMark(result, p);
+      MF.draw(q('canvas'), shown);
+      q('badge').textContent = '결과';
+      q('formula').innerHTML = c.formula(k);
+      const others = Object.keys(modes).filter(m => m !== mode).map(m => ({ f: modes[m].fn(vals[m]), color: '#d9d4ea' }));
+      MF.toneGraph(q('graph'), [{ f, color: '#6d4aff' }, ...others], marksOf(p));
+      q('pt').innerHTML = pointHTML(p, (ch, v) => { const raw = f(v); return [`${c.cell(k, v)} = ${MF.round(raw, 1)}${clipNote(raw)}`, raw, MF.clamp(Math.round(raw))]; },
+        '<p class="small muted" style="margin-top:4px">사진의 모든 점(R, G, B 행렬의 모든 성분)에 똑같이 계산해요.</p>');
+    };
+    q('slider').addEventListener('input', render);
+    q('reset').addEventListener('click', () => { q('slider').value = modes[mode].reset; render(); });
+    if (box) box.addEventListener('click', e => {
+      const b = e.target.closest('[data-mode]'); if (!b) return;
+      mode = b.dataset.mode; setup(); render();
+    });
+    MF.holdToCompare(q('hold'), q('canvas'), q('badge'), () => photo, () => shown);
+    MF.pickable(q('canvas'), rerender);
+    setup();
+    return { render, q, get mode() { return mode; }, setMode: m => { mode = m; setup(); render(); } };
+  }
+
+  /* ===== 1. 밝기·노출 ===== */
+  const labE = modeLab('expo', {
+    expo: {
+      label: '노출 상수 k', min: 0.3, max: 2, step: 0.05, fmt: k => '×' + k.toFixed(2), reset: 1,
+      fn: k => v => v * k,
+      formula: k => `A' = <span class="hl">${k.toFixed(2)}</span> × A`,
+      cell: (k, v) => `${k.toFixed(2)} × ${v}`
+    }
+  }, { expo: 1.3 });
+  const labB = modeLab('bright', {
+    bright: {
+      label: '밝기 상수 k', min: -100, max: 100, step: 5, fmt: fmtSigned, reset: 0,
+      fn: k => v => v + k,
+      formula: k => `A' = A <span class="hl">${signed(k)}</span>`,
+      cell: (k, v) => `${v} ${signed(k)}`
+    }
+  }, { bright: 40 });
+  R.addmul = () => { labE.render(); labB.render(); };
+
+  // 되돌리기 실험: 255에서 잘린 정보는 돌아오지 않는다
+  $('undoTest').addEventListener('click', () => {
+    const once = MF.applyFns(photo, [0, 1, 2].map(() => v => v + 100));
+    const back = MF.applyFns(once, [0, 1, 2].map(() => v => v - 100));
+    MF.draw(labB.q('canvas'), MF.withMark(back, MF.pickedPoint(photo)));
+    labB.q('badge').textContent = '+100 → −100 결과';
+    const d = MF.ctx(back).getImageData(0, 0, back.width, back.height).data, s = photoData.data;
+    let same = 0;
+    for (let i = 0; i < s.length; i += 4) if (d[i] === s[i] && d[i + 1] === s[i + 1] && d[i + 2] === s[i + 2]) same++;
+    $('undoResult').innerHTML = `원래와 같은 픽셀은 <b>${Math.round(same / (s.length / 4) * 100)}%</b>뿐이에요. 왜 그럴까요?`;
+  });
+
+  /* ===== 2. 대비·페이드 (위아래로 따로) ===== */
+  const labC = modeLab('contrast', {
+    contrast: {
+      label: '대비 상수 k', min: 0, max: 2.5, step: 0.05, fmt: k => '×' + k.toFixed(2), reset: 1,
+      fn: k => v => (v - 128) * k + 128,
+      formula: k => `A' = <span class="hl">${k.toFixed(2)}</span> × (A − 128) + 128`,
+      cell: (k, v) => `${k.toFixed(2)} × (${v} − 128) + 128`
+    }
+  }, { contrast: 1.5 });
+  const labF = modeLab('fade', {
+    fade: {
+      label: '페이드 상수 f', min: 0, max: 1, step: 0.05, fmt: f => f.toFixed(2), reset: 0,
+      fn: f => v => v + f * (255 - v) / 2,
+      formula: f => `A' = A + <span class="hl">${f.toFixed(2)}</span> × (255 − A) ÷ 2`,
+      cell: (f, v) => `${v} + ${f.toFixed(2)} × (255 − ${v}) ÷ 2`
+    }
+  }, { fade: 0.4 });
+  R.cf = () => { labC.render(); labF.render(); };
+  // 직접 계산해 보기 (채점)
+  document.querySelectorAll('[data-calc]').forEach(box => {
+    box.querySelector('[data-check]').addEventListener('click', () => {
+      const ins = [...box.querySelectorAll('input')];
+      let ok = 0;
+      ins.forEach(inp => {
+        const v = parseFloat(inp.value), right = !isNaN(v) && Math.abs(v - +inp.dataset.ans) <= 1;
+        inp.className = right ? 'right' : 'wrong';
+        if (right) ok++;
+      });
+      box.querySelector('[data-res]').innerHTML = ok === ins.length
+        ? '<b style="color:var(--ok)">🎉 모두 정답!</b> 값이 그대로인 칸이 있었나요?'
+        : `<b>${ok} / ${ins.length}</b> 정답. 틀린 칸을 다시 계산해 보세요.`;
+    });
+    box.querySelector('[data-sol]').addEventListener('click', () => box.querySelector('[data-soltext]').classList.remove('hidden'));
+  });
+
+  /* ===== 3. 비네트 기법 ===== */
+  let vigResult = null;
+  R.vig = () => {
+    const v = +$('vigV').value;
+    $('vigVo').textContent = v.toFixed(2);
+    vigResult = adjust({ vignette: v });
+    MF.draw($('vigCanvas'), vigResult);
+    const mw = 180, mh = Math.round(180 * photo.height / photo.width), mc = $('vigMask');
+    mc.width = mw; mc.height = mh;
+    const mx = mc.getContext('2d'), mi = mx.createImageData(mw, mh);
+    for (let y = 0, i = 0; y < mh; y++) for (let x = 0; x < mw; x++, i += 4) {
+      const m = Math.round(255 * MF.maskAt(x, y, mw, mh, v));
+      mi.data[i] = mi.data[i + 1] = mi.data[i + 2] = m; mi.data[i + 3] = 255;
+    }
+    mx.putImageData(mi, 0, 0);
+    const rows = Array.from({ length: 5 }, (_, i) => Array.from({ length: 5 }, (_, j) => MF.maskAt(j, i, 5, 5, v).toFixed(2)));
+    $('vigMat').innerHTML = `<div class="matrix"><table>${rows.map(r => '<tr>' + r.map(x => `<td>${x}</td>`).join('') + '</tr>').join('')}</table></div>`;
+    const w = photo.width, h = photo.height, c = [Math.floor(w / 2), Math.floor(h / 2)];
+    const [rc] = pixelAt(c[0], c[1]), [r0] = pixelAt(0, 0);
+    $('vigCalc').innerHTML =
+      `가운데 픽셀 R: ${rc} × ${MF.maskAt(c[0], c[1], w, h, v).toFixed(2)} = <b>${Math.round(rc * MF.maskAt(c[0], c[1], w, h, v))}</b><br>` +
+      `모서리 픽셀 R: ${r0} × ${(1 - v).toFixed(2)} = <b>${Math.round(r0 * (1 - v))}</b>`;
+  };
+  $('vigV').addEventListener('input', () => R.vig());
+  MF.holdToCompare($('vigHold'), $('vigCanvas'), $('vigBadge'), () => photo, () => vigResult);
+
+  /* ===== 슬라이더 패널 (4, 5번 화면) ===== */
+  const PANEL = [
+    ['bright', '밝기', 'A + k', -100, 100, 5, v => fmtSigned(v)],
+    ['expo', '노출', 'k × A', 0.5, 1.8, 0.05, v => '×' + v.toFixed(2)],
+    ['contrast', '대비', 'k(A−128)+128', 0, 2, 0.05, v => '×' + v.toFixed(2)],
+    ['warm', '따뜻함', 'R+t, B−t', -60, 60, 5, v => fmtSigned(v)],
+    ['fade', '페이드', 'A+f(255−A)÷2', 0, 1, 0.05, v => v.toFixed(2)],
+    ['vignette', '비네트', 'A × M', 0, 1, 0.05, v => v.toFixed(2)]
+  ];
+  function makePanel(el, onChange) {
+    el.innerHTML = PANEL.map(([k, name, f, min, max, step]) =>
+      `<div class="slider-row"><label>${name}<small>${f}</small></label><input type="range" min="${min}" max="${max}" step="${step}" data-k="${k}"><output data-o="${k}"></output></div>`).join('') +
+      `<button class="btn sm" data-reset style="margin-top:6px">↺ 모두 처음으로</button>`;
+    const api = {
+      get: () => Object.fromEntries(PANEL.map(([k]) => [k, +el.querySelector(`[data-k="${k}"]`).value])),
+      set: p => { PANEL.forEach(([k, , , , , , fmt]) => { const v = p[k] ?? MF.ADJ[k]; el.querySelector(`[data-k="${k}"]`).value = v; el.querySelector(`[data-o="${k}"]`).textContent = fmt(v); }); }
+    };
+    el.addEventListener('input', () => { api.set(api.get()); onChange(api.get()); });
+    el.querySelector('[data-reset]').addEventListener('click', () => { api.set(MF.ADJ); onChange(api.get()); });
+    api.set(MF.ADJ);
+    return api;
+  }
+  const recipeOf = p => {
+    const out = [];
+    if (p.expo !== 1) out.push(`노출: A × ${p.expo.toFixed(2)}`);
+    if (p.bright) out.push(`밝기: A ${signed(p.bright)}`);
+    if (p.contrast !== 1) out.push(`대비: ${p.contrast.toFixed(2)} × (A − 128) + 128`);
+    if (p.warm) out.push(`따뜻함: R ${signed(p.warm)}, B ${signed(-p.warm)}`);
+    if (p.fade) out.push(`페이드: A + ${p.fade.toFixed(2)} × (255 − A) ÷ 2`);
+    if (p.vignette) out.push(`비네트: 모서리 × ${(1 - p.vignette).toFixed(2)}`);
+    return out;
+  };
+
+  /* ===== 4. 필터 따라잡기 ===== */
+  const TARGETS = [
+    ['☀️ 한여름 오후 (필수)', { bright: 15, contrast: 1.25, warm: 30 }],
+    ['🎞️ 빈티지 필름 (도전)', { fade: 0.5, warm: 15, vignette: 0.5, contrast: 0.9 }],
+    ['🌫️ 새벽 감성 (도전)', { expo: 0.85, warm: -30, fade: 0.35 }]
+  ];
+  let tIdx = 0, targetCache = {}, hintStep = 0;
+  $('targets').innerHTML = TARGETS.map(([n], i) => `<button class="btn sm${i ? '' : ' on'}" data-t="${i}">${n}</button>`).join('');
+  const tgData = () => {
+    if (!targetCache[tIdx]) {
+      const c = adjust(TARGETS[tIdx][1]);
+      targetCache[tIdx] = { c, d: MF.ctx(c).getImageData(0, 0, c.width, c.height).data };
+    }
+    return targetCache[tIdx];
+  };
+  const panel1 = makePanel($('panel1'), () => R.target());
+  R.target = () => {
+    const tg = tgData();
+    MF.draw($('tgCanvas'), tg.c);
+    const mine = adjust(panel1.get());
+    MF.draw($('myCanvas'), mine);
+    const d = MF.ctx(mine).getImageData(0, 0, mine.width, mine.height).data;
+    let sum = 0, n = 0;
+    for (let i = 0; i < d.length; i += 16) { sum += Math.abs(d[i] - tg.d[i]) + Math.abs(d[i + 1] - tg.d[i + 1]) + Math.abs(d[i + 2] - tg.d[i + 2]); n += 3; }
+    const score = Math.max(0, Math.round(100 - (sum / n) * 2.5));
+    $('scoreNum').textContent = score + '%';
+    $('scoreBar').style.width = score + '%';
+    if (score >= 95 && !tg.cleared) { tg.cleared = true; MF.toast('🎉 성공! 다른 목표에도 도전해 보세요.'); }
+  };
+  $('targets').addEventListener('click', e => {
+    const b = e.target.closest('[data-t]'); if (!b) return;
+    tIdx = +b.dataset.t; hintStep = 0; $('hintText').textContent = '';
+    $('targets').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    panel1.set(MF.ADJ); R.target();
+  });
+  $('hintBtn').addEventListener('click', () => {
+    const names = Object.fromEntries(PANEL.map(([k, n]) => [k, n]));
+    const used = Object.keys(TARGETS[tIdx][1]).map(k => names[k]);
+    hintStep++;
+    $('hintText').textContent = hintStep === 1
+      ? `힌트 1: 슬라이더 ${used.length}개를 움직였어요.`
+      : `힌트 2: ${used.join(', ')} 슬라이더를 움직였어요.`;
+  });
+  $('answerBtn').addEventListener('click', () => {
+    panel1.set(TARGETS[tIdx][1]); R.target();
+    $('hintText').innerHTML = '정답 레시피: ' + recipeOf(Object.assign({}, MF.ADJ, TARGETS[tIdx][1])).join(' / ');
+  });
+
+  /* ===== 5. 나만의 프리셋 ===== */
+  let presetResult = null, presetShown = null;
+  const panel2 = makePanel($('panel2'), () => R.preset());
+  // 프리셋 전체를 색마다 A' = aA + b 하나로 정리 (비네트는 위치마다 따로 곱한다)
+  const linearOf = p => MF.adjFns(Object.assign({}, MF.ADJ, p)).map(f => { const b = f(0); return { a: f(1) - b, b, f }; });
+  const lineText = (n, { a, b }) => `${n}' = ${MF.num(a)} × ${n} ${b < 0 ? '− ' + MF.num(-b) : '+ ' + MF.num(b)}`;
+  R.preset = () => {
+    const p = panel2.get(), pt = MF.pickedPoint(photo);
+    presetResult = adjust(p);
+    presetShown = MF.withMark(presetResult, pt);
+    MF.draw($('presetCanvas'), presetShown);
+    const steps = recipeOf(p);
+    $('recipe').innerHTML = `<b>📋 ${$('presetName').value.trim() || '내 프리셋'}의 수학 레시피</b><br>` +
+      (steps.length ? steps.map((s, i) => `${i + 1}. ${s}`).join('<br>') : '아직 슬라이더를 움직이지 않았어요.');
+    $('codeOut').value = MF.encode({ v: 1, lesson: 2, name: $('presetName').value.trim(), steps: [{ t: 'adjust', p }] });
+    // 식 하나로 정리 + 그래프 + 고른 점 계산
+    const lin = linearOf(p), m = p.vignette ? MF.maskAt(pt.x, pt.y, photo.width, photo.height, p.vignette) : 1;
+    MF.toneGraph($('presetGraph'), lin.map((l, c) => ({ f: l.f, color: RGBC[c] })), marksOf(pt, true));
+    $('presetMap').innerHTML =
+      `<div class="map-eq">${lin.map((l, c) => `<div style="color:${RGBC[c]}">${lineText(RGBN[c], l)}</div>`).join('')}</div>` +
+      (p.vignette ? `<p class="small">+ 비네트: 위의 결과에 위치마다 마스크 값(가운데 1 ~ 모서리 ${(1 - p.vignette).toFixed(2)})을 곱해요.</p>` : '') +
+      pointHTML(pt, (c, v) => {
+        const raw = lin[c].a * v + lin[c].b, mid = MF.clamp(Math.round(raw)), fin = MF.clamp(Math.round(mid * m));
+        return [`${MF.num(lin[c].a)} × ${v} ${lin[c].b < 0 ? '− ' + MF.num(-lin[c].b) : '+ ' + MF.num(lin[c].b)} = ${MF.round(raw, 1)}${clipNote(raw)}` +
+          (p.vignette ? ` → × ${m.toFixed(2)} (이 위치의 마스크) = <b>${fin}</b>` : ''), raw, fin];
+      });
+  };
+  $('presetName').addEventListener('input', () => R.preset());
+  MF.holdToCompare($('presetHold'), $('presetCanvas'), $('presetBadge'), () => photo, () => presetShown);
+  MF.pickable($('presetCanvas'), rerender);
+  $('presetDownload').addEventListener('click', () => presetResult && MF.download(presetResult, ($('presetName').value.trim() || '내프리셋') + '.png'));
+  $('copyCode').addEventListener('click', () => {
+    if (!$('presetName').value.trim()) { MF.toast('프리셋 이름을 먼저 지어 주세요!'); $('presetName').focus(); return; }
+    MF.copy($('codeOut').value);
+  });
+  $('loadCode').addEventListener('click', () => {
+    try {
+      const obj = MF.decode($('codeIn').value);
+      const s = (obj.steps || []).find(x => x.t === 'adjust');
+      if (!s) throw new Error('2차시 프리셋 코드가 아니에요.');
+      panel2.set(s.p); $('presetName').value = obj.name || '';
+      R.preset();
+      MF.toast(`'${obj.name || '이름 없는 프리셋'}'을 불러왔어요!`);
+    } catch (e) { MF.toast(e.message); }
+  });
+
+  /* ===== 6. 다른 사진에 적용 =====
+   * 샘플 장면을 날씨·시간대가 다른 사진으로 바꿔 만들고, 같은 프리셋을 적용해 비교한다.
+   */
+  const SCENES = [
+    ['☁️ 흐린 날', [{ t: 'matrix', m: MF.mixMat(MF.GRAY3, MF.I3, 0.35) }, { t: 'adjust', p: { contrast: 0.6, expo: 0.95 } }]],
+    ['🌇 해질녘', [{ t: 'matrix', m: [1.05, 0.12, 0, 0, 0.8, 0.05, 0, 0, 0.55] }, { t: 'adjust', p: { expo: 0.85 } }]],
+    ['🌙 밤', [{ t: 'adjust', p: { expo: 0.35 } }, { t: 'matrix', m: [0.7, 0, 0, 0, 0.85, 0, 0, 0.05, 1.3] }]],
+    ['☀️ 쨍한 한낮', [{ t: 'adjust', p: { expo: 1.25, contrast: 1.15, bright: 10 } }]]
+  ];
+  let sceneCache = null;
+  const extraPhotos = [];
+  const clipStat = c => {
+    const d = MF.ctx(c).getImageData(0, 0, c.width, c.height).data;
+    let hi = 0, lo = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i] >= 255 || d[i + 1] >= 255 || d[i + 2] >= 255) hi++;
+      if (d[i] <= 0 || d[i + 1] <= 0 || d[i + 2] <= 0) lo++;
+    }
+    const n = d.length / 4;
+    return { hi: Math.round(hi / n * 100), lo: Math.round(lo / n * 100) };
+  };
+  R.others = () => {
+    if (!sceneCache) { const base = MF.sampleCanvas(); sceneCache = SCENES.map(([name, steps]) => [name, MF.applySteps(base, steps)]); }
+    const p = panel2.get(), name = $('presetName').value.trim() || '내 프리셋';
+    $('othersName').textContent = name;
+    const rec = recipeOf(p);
+    $('othersRecipe').textContent = rec.length ? '(' + rec.join(' / ') + ')' : '(아직 슬라이더를 움직이지 않았어요. 5번 화면에서 프리셋을 먼저 만들어 보세요.)';
+    const list = [[photo.isSample ? '🌳 지금 사진 (맑은 날)' : '🖼️ 지금 사진', photo], ...sceneCache, ...extraPhotos];
+    $('othersGrid').innerHTML = '';
+    list.forEach(([title, src]) => {
+      const out = MF.applySteps(src, [{ t: 'adjust', p }]), s0 = clipStat(src), s1 = clipStat(out);
+      const fig = document.createElement('figure');
+      fig.className = 'o-card';
+      fig.innerHTML = `<figcaption>${title}</figcaption><div class="o-pair"></div><div class="o-lbl"><span>원본</span><span>${name.replace(/</g, '&lt;')}</span></div>
+        <div class="o-stat">⬜ 255에 걸린 점: ${s0.hi}% → <b class="${s1.hi > s0.hi + 2 ? 'up' : ''}">${s1.hi}%</b><br>⬛ 0에 걸린 점: ${s0.lo}% → <b class="${s1.lo > s0.lo + 2 ? 'up' : ''}">${s1.lo}%</b></div>`;
+      const pair = fig.querySelector('.o-pair');
+      [src, out].forEach(c => { const cv = document.createElement('canvas'); MF.draw(cv, c); pair.append(cv); });
+      $('othersGrid').append(fig);
+    });
+  };
+  $('othersFile').addEventListener('change', async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try { extraPhotos.push(['📷 내가 추가한 사진 ' + (extraPhotos.length + 1), await MF.loadFile(f)]); R.others(); }
+    catch (err) { MF.toast(err.message); }
+    e.target.value = '';
+  });
+
+  /* ===== 활동지 ===== */
+  const ws = MF.worksheet({
+    lesson: 2, title: '일차함수로 필터 만들기',
+    q1title: '오늘 가장 인상 깊었던 내용', q1hint: '',
+    q2: '5번 화면에서 만든 프리셋의 이름과 수학 레시피를 쓰고, 각 보정이 사진을 어떻게 바꾸는지 설명해 주세요.',
+    getResult: () => { if (!presetResult) R.preset(); return { canvas: presetResult, name: $('presetName').value.trim(), code: $('codeOut').value }; }
+  });
+  R.end = () => {
+    // 다음 차시 예고: 세피아
+    MF.draw($('tzOrig'), photo);
+    MF.draw($('tzSepia'), MF.applySteps(photo, [{ t: 'matrix', m: MF.SEPIA3 }]));
+    ws.refresh();
+  };
+
+  /* ===== 시작 ===== */
+  MF.photoPicker($('picker'), setPhoto);
+  setPhoto(photo);
+  wiz = MF.wizard({ onShow: (i, sc) => R[sc.dataset.key]?.() });
+})();
+</script>
+</body>
+</html>

@@ -376,10 +376,13 @@
       for (let v = 0; v <= 255; v++) { const y = MF.clamp(f(v)); v ? x.lineTo(px(v), py(y)) : x.moveTo(px(v), py(y)); }
       x.stroke();
     });
-    if (mark != null && lines[0]) {
-      const y = MF.clamp(lines[0].f(mark));
-      x.fillStyle = '#e1306c'; x.beginPath(); x.arc(px(mark), py(y), 5, 0, Math.PI * 2); x.fill();
-    }
+    // mark: 숫자 하나 또는 [{v, color, line}] (line번째 선 위에 점 찍기)
+    const marks = Array.isArray(mark) ? mark : mark != null ? [{ v: mark, color: '#e1306c', line: 0 }] : [];
+    marks.forEach(m => {
+      const L = lines[m.line || 0]; if (!L) return;
+      x.fillStyle = m.color; x.strokeStyle = '#fff'; x.lineWidth = 1.5;
+      x.beginPath(); x.arc(px(m.v), py(MF.clamp(L.f(m.v))), 5, 0, Math.PI * 2); x.fill(); x.stroke();
+    });
   };
 
   /* ---------- 인스타그램 스타일 필터 ----------
@@ -423,6 +426,30 @@
   MF.defaultPoint = photo => photo.isSample
     ? { x: Math.round(photo.width * 0.15 + photo.height * 0.058), y: Math.round(photo.height * 0.25) }
     : { x: Math.floor(photo.width / 2), y: Math.floor(photo.height / 2) };
+  /* ---------- 사진에서 점 고르기 ----------
+   * 결과 사진을 클릭하면 그 점을 고르고, 사진 위에 동그라미로 표시한다.
+   * 한 페이지 안의 모든 화면이 같은 점을 쓴다. 고르기 전에는 기본 위치(defaultPoint)를 쓴다.
+   */
+  let pickFrac = null;
+  MF.pickedPoint = photo => pickFrac
+    ? { x: Math.min(photo.width - 1, Math.floor(pickFrac[0] * photo.width)), y: Math.min(photo.height - 1, Math.floor(pickFrac[1] * photo.height)) }
+    : MF.defaultPoint(photo);
+  // 사진 위에 고른 점을 그린 복사본
+  MF.withMark = (src, p) => {
+    const c = MF.copyCanvas(src), x = c.getContext('2d'), r = Math.max(7, Math.round(src.width / 70));
+    x.lineWidth = 4; x.strokeStyle = '#fff'; x.beginPath(); x.arc(p.x, p.y, r, 0, Math.PI * 2); x.stroke();
+    x.lineWidth = 2.5; x.strokeStyle = '#e1306c'; x.beginPath(); x.arc(p.x, p.y, r, 0, Math.PI * 2); x.stroke();
+    return c;
+  };
+  MF.pickable = (canvas, onPick) => {
+    canvas.style.cursor = 'crosshair';
+    canvas.title = '클릭하면 이 점의 숫자를 볼 수 있어요';
+    canvas.addEventListener('click', e => {
+      const b = canvas.getBoundingClientRect();
+      pickFrac = [Math.min(0.999, Math.max(0, (e.clientX - b.left) / b.width)), Math.min(0.999, Math.max(0, (e.clientY - b.top) / b.height))];
+      onPick();
+    });
+  };
   // 버튼을 누르고 있는 동안 원본 보기
   MF.holdToCompare = (btn, canvas, badge, getOrig, getResult) => {
     const show = on => { const c = on ? getOrig() : getResult(); if (c) MF.draw(canvas, c); badge.textContent = on ? '원본' : '결과'; };
@@ -485,7 +512,7 @@
     sc.onload = () => res(); sc.onerror = () => rej(new Error('html2canvas'));
     document.head.append(sc);
   });
-  MF.worksheet = function ({ lesson, title, q1hint, q2, getResult, extras = [], records = () => ({}) }) {
+  MF.worksheet = function ({ lesson, title, q1title = '오늘 가장 인상 깊었던 수학 원리', q1hint, q2, getResult, extras = [], records = () => ({}) }) {
     const KEY = 'mf-ws-' + lesson, ID_KEY = 'mf-ws-id';
     const read = k => { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch (e) { return {}; } };
     const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
@@ -571,7 +598,7 @@
 
     // 필수 기록 3문항 + 제출
     const REQ = [
-      ['오늘 가장 인상 깊었던 수학 원리', q1hint],
+      [q1title, q1hint],
       ['내가 만든 필터 설명', q2],
       ['새로 궁금해진 점', '오늘 활동을 하며 새로 궁금해진 점이나, 앞으로 더 만들어 보고 싶은 필터를 써 주세요.']
     ];
@@ -589,7 +616,7 @@
       ${REQ.map(([t, h], k) => `
         <div class="ws-req">
           <div class="ws-req-t">필수 ${k + 1}. ${t}</div>
-          <div class="small muted">${h}</div>
+          ${h ? `<div class="small muted">${h}</div>` : ''}
           <div data-slot="${k}"></div>
         </div>`).join('')}
       ${extras.map(x => `
@@ -809,7 +836,7 @@
    * 수업을 진행한 차시만 열어 둔다. 다음 차시를 열 때 이 목록에 번호를 추가한다.
    * 선생님 미리보기: 주소 끝에 ?preview 를 붙이면 모든 차시가 열린다.
    */
-  MF.OPEN_LESSONS = [1];
+  MF.OPEN_LESSONS = [1, 2, 3, 4];
   const lessonNo = href => { const m = /lesson(\d)\.html/.exec(href || ''); return m ? +m[1] : 0; };
   const isOpen = n => /[?&](preview|edit)/.test(location.search) || MF.OPEN_LESSONS.includes(n);
   const lockLessons = () => {

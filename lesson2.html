@@ -79,6 +79,9 @@
 
   /* 다음 차시 예고 */
   .next-box { margin-top: 16px; background: #eef6ff; }
+  .compare-box { background: #fffaf0; }
+  .compare-box .m { font-family: var(--mono); font-size: 13px; }
+  .compare-box td { vertical-align: top; }
   .teaser { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 460px; margin: 10px 0; }
   .teaser figure { margin: 0; }
   .teaser canvas { width: 100%; border-radius: 8px; display: block; }
@@ -342,16 +345,29 @@
         내 프리셋도 결국 색마다 <b>일차함수 하나</b>. 하지만 같은 식이라도 사진에 따라 0과 255에 걸려 결과가 달라져요.<br>
         비네트 기법 = 마스크 행렬과 <b>같은 자리끼리 곱하기</b>.</p>
       </div>
+      <div class="box compare-box" style="margin-bottom:16px">
+        <h3>🔁 1차시 필터 vs 2차시 필터</h3>
+        <table class="tool-table">
+          <tr><th></th><th>1차시 필터</th><th>2차시 필터 (프리셋)</th></tr>
+          <tr><td><b>만드는 방법</b></td><td>식을 직접 써요<br><span class="m">R' = R × 1.2 + 80</span></td><td>노출·밝기·대비·페이드·따뜻함 슬라이더를 조합해요</td></tr>
+          <tr><td><b>정리하면</b></td><td>대부분 <b>× 몇 + 몇</b> 꼴</td><td>아무리 조합해도 색마다 <b>A' = aA + b</b> 하나 (일차함수)</td></tr>
+          <tr><td><b>새로 알게 된 것</b></td><td>필터 = 숫자를 바꾸는 규칙</td><td>그래프(기울기 a, 위아래 이동 b), 기준점(128, 255), 위치마다 다른 계산(비네트), 사진마다 다른 결과</td></tr>
+          <tr><td><b>못 하는 것</b></td><td>—</td><td>R'를 만들 때 <b>G, B를 섞기</b><br><span class="m">R' = (R + G + B) ÷ 3</span> 같은 1차시 흑백 식</td></tr>
+        </table>
+        <p class="small" style="margin-top:8px">1차시 식은 자유로웠지만 정리되지 않았고, 2차시는 <b>R은 R끼리 계산하는 일차함수</b>로 정리했어요. 남은 하나, <b>R, G, B를 섞는 식</b>은 다음 시간에 정리해요!</p>
+      </div>
       <ol class="think">
         <li data-hint="k = 0이면 k × (A − 128) 부분은 얼마가 될까요?|0 × (A − 128) = 0 이므로 A′ = 128 이에요. 모든 픽셀이 같은 값이 되면 사진은 어떻게 보일까요?">대비 상수 k를 0으로 하면 사진이 어떻게 될까요? 식 A' = k × (A − 128) + 128에 넣어 설명해 보세요.</li>
       </ol>
       <div class="box next-box">
-        <h3>🔜 다음 시간 예고: R, G, B를 섞는 필터</h3>
+        <h3>🔜 다음 시간 예고: 행렬의 곱셈으로 완성하기</h3>
         <div class="teaser">
           <figure><canvas id="tzOrig"></canvas><figcaption>원본</figcaption></figure>
           <figure><canvas id="tzSepia"></canvas><figcaption>세피아</figcaption></figure>
         </div>
-        <p class="small">오늘 만든 필터는 모두 R'를 R만으로, B'를 B만으로 계산했어요. 그런데 세피아는 <b>R' = 0.39R + 0.77G + 0.19B</b>처럼 R, G, B를 <b>섞어서</b> 만들어요. 이런 식 3개는 <b>3×3 행렬 하나</b>로 쓸 수 있고, <b>행렬의 곱셈</b>으로 계산해요. 3차시에 직접 해 봐요!</p>
+        <p class="small">세피아는 <b>R' = 0.39R + 0.77G + 0.19B</b>처럼 R, G, B를 <b>섞어서</b> 만들어요. 1차시 흑백 식도, 세피아도 슬라이더로는 만들 수 없어요. 3차시에 배울 <b>행렬의 곱셈</b>을 쓰면 이런 식 3개를 <b>3×3 행렬 M 하나</b>로 정리할 수 있어요.</p>
+        <p class="small" style="margin-top:6px">여기에 오늘 배운 <b>더하기(b)</b>까지 붙이면, 1차시와 2차시에 만든 색 필터가 <b>모두 한 줄로 정리</b>돼요.</p>
+        <div class="formula" style="margin-top:8px;white-space:normal;overflow-wrap:anywhere">오늘 (일차함수)<br>A' = a × A + b<br><br>3차시 (행렬의 곱셈 + 덧셈)<br>(R', G', B') = <span class="hl">M</span> × (R, G, B) + (b₁, b₂, b₃)</div>
       </div>
     </div>
   </section>

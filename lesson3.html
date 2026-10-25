@@ -40,6 +40,11 @@
   .teaser figure { margin: 0; }
   .teaser canvas { width: 100%; border-radius: 8px; display: block; }
   .teaser figcaption { text-align: center; font-size: 13px; font-weight: 700; margin-top: 4px; }
+  .sat-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .sat-table th, .sat-table td { border-bottom: 1px solid var(--line); padding: 5px 6px; text-align: left; }
+  .sat-table th { font-size: 12px; }
+  .sat-table td:nth-child(-n+3) { font-family: var(--mono); }
+  .sat-table tr.on { background: #fff7e8; }
   .rb-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
   .combo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-family: var(--mono); font-weight: 700; }
   .combo .matrix.m3 td { min-width: 40px; height: 26px; font-size: 13px; }
@@ -114,7 +119,7 @@
         <span id="handResult" class="small"></span>
       </div>
       <div class="row-hint hidden" id="rowHint"></div>
-      <div class="screen-q" data-hint="결과 픽셀에서 R, G, B 중 무엇이 그대로이고 무엇이 바뀌었나요?|(200, 120, 40) → (200, 40, 120). 두 숫자가 자리를 바꿨어요. 어떤 두 색일까요?">문제 1의 행렬은 어떤 필터일까요? 결과 픽셀의 색을 원래 색과 비교해 보세요.</div>
+      <div class="screen-q" data-hint="결과 픽셀에서 R, G, B 중 무엇이 그대로이고 무엇이 바뀌었나요?|(200, 120, 40) → (200, 40, 120). 두 숫자가 자리를 바꿨어요. 어떤 두 색일까요?">문제 1의 행렬은 어떤 필터일까요?</div>
     </div>
   </section>
 
@@ -201,7 +206,14 @@
         <div class="side">
           <div class="slider-row"><label>채도 s</label><input type="range" min="0" max="2.5" step="0.05" value="1.6" id="satS"><output id="satSo"></output></div>
           <div class="combo" id="satCombo"></div>
-          <div class="box small">s = 0 이면 흑백, s = 1 이면 원본, s > 1 이면 더 쨍한 색이 돼요.</div>
+          <div class="box small" id="satExplain"></div>
+          <table class="sat-table">
+            <tr><th>s</th><th>대각선 성분<br><span class="muted">(자기 색)</span></th><th>나머지 성분<br><span class="muted">(다른 색 섞기)</span></th><th>결과</th></tr>
+            <tr data-s="0"><td>0</td><td>0.33</td><td>0.33</td><td>흑백 (흑백 행렬 G와 같아요)</td></tr>
+            <tr data-s="0.5"><td>0.5</td><td>0.67</td><td>0.17</td><td>색이 연해져요</td></tr>
+            <tr data-s="1"><td>1</td><td>1</td><td>0</td><td>원본 (단위행렬 E와 같아요)</td></tr>
+            <tr data-s="2"><td>2</td><td>1.67</td><td>−0.33</td><td>더 쨍해져요</td></tr>
+          </table>
           <div class="box small">🎚️ 필터 앱에서 필터를 고른 뒤 효과를 얼마나 줄지 정하는 <b>강도</b> 조절도 같은 원리예요. 단위행렬 E와 필터 행렬 F를 섞어서 <b>(1 − t)E + tF</b>로 계산해요. 다음 화면에서 직접 써 봐요!</div>
         </div>
       </div>
@@ -278,7 +290,7 @@
   </div>
 </main>
 
-<script src="assets/common.js?v=202610251800"></script>
+<script src="assets/common.js?v=202610252100"></script>
 <script>
 (() => {
   /* ===== 공유 상태 ===== */
@@ -489,6 +501,14 @@
     labs.sat.show(SAT(s));
     // s·E + (1 − s)·G 순서로 보여준다
     $('satCombo').innerHTML = comboHTML('단위 E', MF.I3, '흑백 G', GRAY_AVG, 1 - s, '채도 행렬');
+    // s에 따라 채도 행렬이 어떻게 바뀌는지: 대각선 = (1 + 2s) ÷ 3, 나머지 = (1 − s) ÷ 3
+    const dg = (1 + 2 * s) / 3, off = (1 - s) / 3;
+    $('satExplain').innerHTML = `지금 s = <b>${s.toFixed(2)}</b> → 대각선 성분 = (1 + 2s) ÷ 3 = <b>${MF.num(dg)}</b>, 나머지 성분 = (1 − s) ÷ 3 = <b>${MF.num(off)}</b><br>` +
+      (s < 0.05 ? '세 행이 모두 같아져서 R′ = G′ = B′ → <b>흑백</b>이에요.'
+        : s < 0.95 ? '자기 색(대각선)은 줄고 <b>다른 색이 섞여서</b> 색끼리 비슷해져요 → 색이 <b>연해져요</b>.'
+        : s <= 1.05 ? '대각선은 1, 나머지는 0인 <b>단위행렬</b>이라 원본 그대로예요.'
+        : '자기 색(대각선)은 1보다 커지고 나머지는 <b>음수</b>라서 다른 색을 <b>빼요</b> → 색끼리 차이가 커져서 <b>더 쨍해져요</b>.');
+    document.querySelectorAll('.sat-table tr[data-s]').forEach(tr => tr.classList.toggle('on', Math.abs(+tr.dataset.s - s) < 0.03));
   };
   satS.addEventListener('input', () => R.sat());
 

@@ -434,6 +434,8 @@
   MF.pickedPoint = photo => pickFrac
     ? { x: Math.min(photo.width - 1, Math.floor(pickFrac[0] * photo.width)), y: Math.min(photo.height - 1, Math.floor(pickFrac[1] * photo.height)) }
     : MF.defaultPoint(photo);
+  // 버튼 등으로 점을 직접 고를 때 (fx, fy: 0~1 비율)
+  MF.setPick = (fx, fy) => { pickFrac = [Math.min(0.999, Math.max(0, fx)), Math.min(0.999, Math.max(0, fy))]; };
   // 사진 위에 고른 점을 그린 복사본
   MF.withMark = (src, p) => {
     const c = MF.copyCanvas(src), x = c.getContext('2d'), r = Math.max(7, Math.round(src.width / 70));

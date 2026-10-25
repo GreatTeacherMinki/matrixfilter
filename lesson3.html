@@ -57,6 +57,7 @@
   .choice { display: flex; gap: 8px; flex-wrap: wrap; }
   .mat-sum { font-family: var(--mono); font-size: 13px; color: var(--muted); }
   .mat-sum b { color: var(--ink); }
+  .rb-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
   .combo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-family: var(--mono); font-weight: 700; }
   .combo .matrix.m3 td { min-width: 40px; height: 26px; font-size: 13px; }
   .combo .lbl { font-size: 12px; color: var(--muted); text-align: center; display: block; font-family: inherit; }
@@ -151,7 +152,6 @@
           <div id="diagMV"></div>
         </div>
       </div>
-      <div class="screen-q" data-hint="R 세기 슬라이더를 0으로 옮겨 보세요. 빨강이 빠지면 초록과 파랑만 남아요.|따뜻함은 빨강은 키우고 파랑은 줄였어요. 대각선의 1행 1열은 1보다 크게, 3행 3열은 1보다 작게 해 보세요.">R 세기만 0으로 하면 어떤 색의 사진이 되나요? 2차시의 '따뜻함'과 비슷하게 만들려면?</div>
     </div>
   </section>
 
@@ -170,7 +170,20 @@
           <div class="box small" id="permNote"></div>
         </div>
       </div>
-      <div class="screen-q" data-hint="빨간 풍선은 R이 크고 B가 작아요. B′가 원래 R 값을 가져오면 어떻게 될까요?|&#x27;R ↔ B&#x27; 버튼을 눌러 보고 1이 어느 자리에 있는지 확인해 보세요.">빨간 풍선을 파란 풍선으로 바꾸려면 1을 어느 자리에 두어야 할까요?</div>
+      <div class="box tip" style="margin-top:14px">
+        <h3>🎯 미션: 빨간색과 파란색을 맞바꾸는 행렬을 만들어 봅시다</h3>
+        <p class="small">아래 행렬의 성분 9개에 숫자를 채워 보세요. 숫자를 넣으면 위 사진에 바로 적용돼요. <b>빨간 풍선은 파란 풍선으로, 파란 풍선은 빨간 풍선으로</b> 바뀌면 성공!</p>
+        <div class="rb-row">
+          <div class="matrix m3" id="rbEditor"></div>
+          <div class="btn-row">
+            <button class="btn sm primary" id="rbCheck">채점하기</button>
+            <button class="btn sm" id="rbHint">💡 힌트</button>
+            <button class="btn sm" id="rbClear">↺ 지우기</button>
+          </div>
+        </div>
+        <p class="small" id="rbHintText" style="margin-top:8px"></p>
+        <p class="small" id="rbResult" style="margin-top:6px"></p>
+      </div>
     </div>
   </section>
 
@@ -190,7 +203,6 @@
           <div class="box small" id="famousNote"></div>
         </div>
       </div>
-      <div class="screen-q" data-hint="세 행이 같으면 R′, G′, B′를 계산하는 식이 모두 같아요.|R′ = G′ = B′ 이면 회색이에요(1차시 4번 화면). 행의 합이 1보다 크면 결과 숫자가 원래보다 커져요.">세 행이 모두 같으면 왜 회색이 될까요? 각 행의 합이 1보다 크면 어떻게 될까요?</div>
     </div>
   </section>
 
@@ -199,7 +211,7 @@
     <div class="step">
       <div class="step-head">
         <div class="step-num">6</div>
-        <div><h2>채도 = 단위행렬과 흑백 행렬 섞기</h2><p>인스타그램의 '채도' 슬라이더예요. 단위행렬 E(원본)와 흑백 행렬 G를 <b>실수배해서 더하면</b> 채도 행렬이 돼요.</p></div>
+        <div><h2>채도 = 단위행렬과 흑백 행렬 섞기</h2><p>휴대폰 갤러리 사진 편집(아이폰 '사진', 갤럭시 '갤러리')에 있는 '채도'는 색이 얼마나 진한지를 정해요. 단위행렬 E(원본)와 흑백 행렬 G를 <b>실수배해서 더하면</b> 채도 행렬이 돼요.</p></div>
       </div>
       <div class="cols wide-left">
         <div class="lab-photo" data-lab="sat"></div>
@@ -207,10 +219,10 @@
           <div class="slider-row"><label>채도 s</label><input type="range" min="0" max="2.5" step="0.05" value="1.6" id="satS"><output id="satSo"></output></div>
           <div class="combo" id="satCombo"></div>
           <div class="box small">s = 0 이면 흑백, s = 1 이면 원본, s > 1 이면 더 쨍한 색이 돼요.</div>
-          <div class="box small">🎚️ 인스타그램에서 필터를 한 번 더 누르면 나오는 <b>강도 슬라이더</b>도 같은 원리예요. 단위행렬 E와 필터 행렬 F를 섞어서 <b>(1 − t)E + tF</b>로 계산해요. 다음 화면에서 직접 써 봐요!</div>
+          <div class="box small">🎚️ 필터 앱에서 필터를 고른 뒤 효과를 얼마나 줄지 정하는 <b>강도</b> 조절도 같은 원리예요. 단위행렬 E와 필터 행렬 F를 섞어서 <b>(1 − t)E + tF</b>로 계산해요. 다음 화면에서 직접 써 봐요!</div>
         </div>
       </div>
-      <div class="screen-q" data-hint="채도 슬라이더를 0.5에 맞추고 행렬을 보세요.|0.5 × E + 0.5 × G 예요. 1행은 0.5 × (1, 0, 0) + 0.5 × (0.3, 0.59, 0.11)을 계산하면 돼요.">2차시에 배운 행렬의 덧셈과 실수배가 '필터 행렬'을 만드는 데도 쓰였어요. s = 0.5 이면 어떤 행렬이 될까요?</div>
+      <div class="screen-q" data-hint="채도 슬라이더를 0.5에 맞추고 행렬을 보세요.|0.5 × E + 0.5 × G 예요. 1행은 0.5 × (1, 0, 0) + 0.5 × (1/3, 1/3, 1/3)을 계산하면 돼요.">2차시에 배운 행렬의 덧셈과 실수배가 '필터 행렬'을 만드는 데도 쓰였어요. s = 0.5 이면 어떤 행렬이 될까요?</div>
     </div>
   </section>
 
@@ -261,7 +273,7 @@
       <div class="box key" style="margin-top:14px">
         <p>흐리게 하면 경계가 부드러워지고, 선명하게 하면 경계가 또렷해져요. 경계는 <b>픽셀과 그 이웃 픽셀의 숫자 차이</b>예요. 그래서 이 필터들은 <b>주변 픽셀까지 함께</b> 계산해요.</p>
       </div>
-      <p class="screen-next">💡 인스타그램 수정 메뉴의 '선명하게', '구조' 슬라이더도 이웃 픽셀을 함께 계산하는 필터예요.</p>
+      <p class="screen-next">💡 휴대폰 사진 편집의 '선명도' 조절도 이웃 픽셀을 함께 계산하는 필터예요.</p>
     </div>
   </section>
 
@@ -339,7 +351,8 @@
     rerender();
   };
   const applyM = m => MF.applySteps(photo, [{ t: 'matrix', m }]);
-  const SAT = s => MF.mixMat(MF.GRAY3, MF.I3, s); // s·E + (1−s)·G
+  const GRAY_AVG = Array(9).fill(1 / 3); // 1차시 흑백 식 (R + G + B) ÷ 3
+  const SAT = s => MF.mixMat(GRAY_AVG, MF.I3, s); // s·E + (1−s)·G
   const ROWC = ['#d32f2f', '#2e7d32', '#1565c0'];
 
   // 사진 결과 칸 (누르고 있으면 원본, 이미지 저장)
@@ -447,16 +460,18 @@
   /* ===== 4. 색 이사 ===== */
   const PERMS = [
     ['그대로 (E)', MF.I3, "대각선이 모두 1인 단위행렬이에요. R' = R, G' = G, B' = B."],
-    ['R ↔ B', [0, 0, 1, 0, 1, 0, 1, 0, 0], "R' = B, B' = R. 빨강과 파랑이 자리를 바꿔요."],
     ['R ↔ G', [0, 1, 0, 1, 0, 0, 0, 0, 1], "R' = G, G' = R. 빨강과 초록이 자리를 바꿔요."],
     ['G ↔ B', [1, 0, 0, 0, 0, 1, 0, 1, 0], "G' = B, B' = G. 초록과 파랑이 자리를 바꿔요."],
     ['한 칸씩 돌리기', [0, 0, 1, 1, 0, 0, 0, 1, 0], "R' = B, G' = R, B' = G. 세 색이 한 칸씩 이사 가요."],
     ['빨강만 남기기', [1, 0, 0, 0, 0, 0, 0, 0, 0], "R' = R, G' = 0, B' = 0. R 행렬만 남아요 (1차시의 R 행렬 사진!)."]
   ];
-  let permIdx = 1;
+  let permIdx = 1, rbMine = false; // rbMine: 미션 행렬을 사진에 보여 주는 중
   $('permChoice').innerHTML = PERMS.map(([n], i) => `<button class="btn sm${i === permIdx ? ' on' : ''}" data-perm="${i}">${n}</button>`).join('');
+  const RB = [0, 0, 1, 0, 1, 0, 1, 0, 0];
+  const rbVals = () => [...$('rbEditor').querySelectorAll('input')].map(inp => inp.value.trim());
+  const rbMatrix = () => rbVals().map(v => (v === '' || isNaN(+v) ? 0 : +v));
   R.perm = () => {
-    const [, m, note] = PERMS[permIdx];
+    const [, m, note] = rbMine ? ['내 행렬', rbMatrix(), '🎯 미션에서 내가 만든 행렬을 사진에 적용했어요.'] : PERMS[permIdx];
     labs.perm.show(m);
     $('permMV').innerHTML = ptMV(m);
     $('permMV').querySelectorAll('.m3:first-child td').forEach((td, k) => td.classList.toggle('hl', m[k] === 1));
@@ -464,16 +479,45 @@
   };
   $('permChoice').addEventListener('click', e => {
     const b = e.target.closest('[data-perm]'); if (!b) return;
-    permIdx = +b.dataset.perm; $('permChoice').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); R.perm();
+    permIdx = +b.dataset.perm; rbMine = false; $('permChoice').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); R.perm();
+  });
+  // 미션: 빨간색 ↔ 파란색 행렬 만들기
+  $('rbEditor').innerHTML = `<table>${[0, 1, 2].map(r => '<tr>' + [0, 1, 2].map(c =>
+    `<td style="padding:2px;border:0;background:none"><input type="number" step="1" data-k="${r * 3 + c}" style="color:${ROWC[r]}"></td>`).join('') + '</tr>').join('')}</table>`;
+  $('rbEditor').addEventListener('input', () => {
+    rbMine = true; $('permChoice').querySelectorAll('button').forEach(x => x.classList.remove('on'));
+    $('rbResult').textContent = ''; R.perm();
+  });
+  let rbHintStep = 0;
+  $('rbHint').addEventListener('click', () => {
+    rbHintStep = Math.min(rbHintStep + 1, 2);
+    $('rbHintText').innerHTML = [
+      "힌트 1: 1행은 R', 2행은 G', 3행은 B'를 만들어요. R' = B가 되려면 1행의 어느 칸이 1이어야 할까요?",
+      "힌트 2: [R ↔ G] 버튼을 눌러 1이 어디에 있는지 보세요. 빨강과 파랑을 바꾸려면 1을 어디로 옮겨야 할까요? 초록(G)은 그대로 두어야 해요."
+    ].slice(0, rbHintStep).join('<br>');
+  });
+  $('rbClear').addEventListener('click', () => {
+    $('rbEditor').querySelectorAll('input').forEach(inp => { inp.value = ''; inp.classList.remove('bad'); });
+    rbMine = false; $('rbResult').textContent = ''; R.perm();
+  });
+  $('rbCheck').addEventListener('click', () => {
+    const v = rbVals();
+    if (v.some(x => x === '')) { MF.toast('빈칸 없이 9칸을 모두 채워 주세요. (0도 꼭 써요!)'); return; }
+    const m = rbMatrix();
+    const wrongRows = [0, 1, 2].filter(r => [0, 1, 2].some(c => m[r * 3 + c] !== RB[r * 3 + c]));
+    $('rbEditor').querySelectorAll('input').forEach((inp, k) => inp.classList.toggle('bad', wrongRows.includes(Math.floor(k / 3))));
+    rbMine = true; R.perm();
+    $('rbResult').innerHTML = !wrongRows.length
+      ? "<b style=\"color:var(--ok)\">🎉 정답!</b> 1행 3열이 1이라 R' = B, 3행 1열이 1이라 B' = R이 돼요. 2행 2열의 1은 G를 그대로 두고요."
+      : `<b>${wrongRows.map(r => `${r + 1}행`).join(', ')}</b>을 다시 생각해 보세요. ${wrongRows.map(r => `${r + 1}행은 ${["R'", "G'", "B'"][r]}를 만들어요. ${["R'", "G'", "B'"][r]}는 원래의 ${['B여야', 'G여야', 'R이어야'][r]} 해요.`).join(' ')}`;
   });
 
   /* ===== 5. 흑백·세피아 ===== */
   const FAMOUS = [
-    ['흑백 (평균)', [1 / 3, 1 / 3, 1 / 3, 1 / 3, 1 / 3, 1 / 3, 1 / 3, 1 / 3, 1 / 3], '세 행이 <b>모두 같아요</b>. 그래서 R\' = G\' = B\' → 회색! 각 행의 합은 1이라 밝기도 그대로예요.'],
-    ['흑백 (눈 맞춤)', MF.GRAY3, '역시 세 행이 같아요. 사람 눈은 초록에 가장 민감해서 G의 계수(0.59)가 가장 커요.'],
+    ['흑백', GRAY_AVG, '1차시에 만든 흑백 식 R\' = G\' = B\' = (R + G + B) ÷ 3을 행렬로 쓴 거예요. 세 행이 <b>모두 같아서</b> R\' = G\' = B\' → 회색! 각 행의 합은 1이라 밝기도 그대로예요.'],
     ['세피아', MF.SEPIA3, '세 행이 <b>비슷하지만</b> 위에서부터 조금씩 작아요. 그래서 거의 흑백인데 R\' > G\' > B\' 인 갈색빛이 돼요. 1행의 합이 1보다 커서 조금 밝아져요.']
   ];
-  let famIdx = 2;
+  let famIdx = 1;
   $('famousChoice').innerHTML = FAMOUS.map(([n], i) => `<button class="btn sm${i === famIdx ? ' on' : ''}" data-fam="${i}">${n}</button>`).join('');
   const rowSums = m => [0, 1, 2].map(r => MF.num(m[r * 3] + m[r * 3 + 1] + m[r * 3 + 2]));
   R.famous = () => {
@@ -498,7 +542,7 @@
     const s = +satS.value; satSo.textContent = s.toFixed(2);
     labs.sat.show(SAT(s));
     // s·E + (1 − s)·G 순서로 보여준다
-    $('satCombo').innerHTML = comboHTML('단위 E', MF.I3, '흑백 G', MF.GRAY3, 1 - s, '채도 행렬');
+    $('satCombo').innerHTML = comboHTML('단위 E', MF.I3, '흑백 G', GRAY_AVG, 1 - s, '채도 행렬');
   };
   satS.addEventListener('input', () => R.sat());
 
@@ -631,6 +675,7 @@
   const ws = MF.worksheet({
     lesson: 3, title: '색을 바꾸는 행렬 곱',
     q1title: '오늘 가장 인상 깊었던 내용', q1hint: '',
+    records: () => { const v = rbVals(), filled = v.every(x => x !== ''); return { '색 이사하기': [['미션: 빨간색과 파란색을 맞바꾸는 행렬', filled ? `[${v.slice(0, 3).join(' ')} / ${v.slice(3, 6).join(' ')} / ${v.slice(6).join(' ')}]` + (rbMatrix().every((x, k) => x === RB[k]) ? '  ✅ 정답' : '') : '']] }; },
     q2: '7번 화면에서 만든 색감 행렬의 이름을 쓰고, 숫자를 어떻게 정했는지와 각 행이 하는 역할을 설명해 주세요.',
     getResult: () => { if (!labs.mine.result) R.mine(); return { canvas: labs.mine.result, name: $('mineName').value.trim(), code: $('codeOut').value }; }
   });

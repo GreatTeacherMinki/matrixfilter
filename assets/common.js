@@ -514,7 +514,7 @@
     sc.onload = () => res(); sc.onerror = () => rej(new Error('html2canvas'));
     document.head.append(sc);
   });
-  MF.worksheet = function ({ lesson, title, q1title = '오늘 가장 인상 깊었던 수학 원리', q1hint, q2, getResult, extras = [], records = () => ({}) }) {
+  MF.worksheet = function ({ lesson, title, q1title = '오늘 가장 인상 깊었던 수학 원리', q1hint, q2, getResult, extras = [], moreReq = [], records = () => ({}) }) {
     const KEY = 'mf-ws-' + lesson, ID_KEY = 'mf-ws-id';
     const read = k => { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch (e) { return {}; } };
     const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
@@ -543,6 +543,19 @@
         list.append(p); shown++;
         if (shown < steps.length) btn.textContent = `💡 힌트 ${shown + 1} 더 보기`;
         else { btn.textContent = '힌트를 모두 봤어요'; btn.disabled = true; }
+      });
+      return wrap;
+    };
+
+    // 질문의 data-answer="..." 를 눌러서 열고 닫는 예시 답안
+    const answerFor = ans => {
+      const wrap = document.createElement('div');
+      wrap.className = 'ws-hint';
+      wrap.innerHTML = `<button type="button" class="btn sm ws-hint-btn">📝 예시 답안 보기</button><div class="ws-hint-list hidden"><p><b>예시 답안</b> ${esc(ans)}</p></div>`;
+      const btn = wrap.querySelector('button'), list = wrap.querySelector('.ws-hint-list');
+      btn.addEventListener('click', () => {
+        const open = list.classList.toggle('hidden') === false;
+        btn.textContent = open ? '📝 예시 답안 닫기' : '📝 예시 답안 보기';
       });
       return wrap;
     };
@@ -591,6 +604,7 @@
       } else memo = box(K, 2, '✏️ 내 생각 메모 (선택) · 활동지에 함께 저장돼요', 'ws-memo');
       q.after(memo);
       if (q.dataset.hint) memo.after(hintFor(q.dataset.hint));
+      if (q.dataset.answer) memo.after(answerFor(q.dataset.answer));
     }));
     // 생각해보기 답 칸 (선택)과 힌트
     last.querySelectorAll('.think li').forEach((li, j) => {
@@ -602,7 +616,8 @@
     const REQ = [
       [q1title, q1hint],
       ['내가 만든 필터 설명', q2],
-      ['새로 궁금해진 점', '오늘 활동을 하며 새로 궁금해진 점이나, 앞으로 더 만들어 보고 싶은 필터를 써 주세요.']
+      ['새로 궁금해진 점', '오늘 활동을 하며 새로 궁금해진 점이나, 앞으로 더 만들어 보고 싶은 필터를 써 주세요.'],
+      ...moreReq // 차시마다 더하는 필수 기록 (예: 4차시 느낀 점)
     ];
     const MIN = 1; // 글자 수 기준은 보여주지 않는다 (최소 글자만 채우는 것을 막기 위해)
     last.dataset.title = last.dataset.title + '·제출';

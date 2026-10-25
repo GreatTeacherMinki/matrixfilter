@@ -36,6 +36,29 @@
   .op-big { font-size: 22px; font-weight: 800; color: var(--muted); align-self: center; }
 
   .zoom-box { margin-top: 12px; }
+  /* 커널 계산 과정: 겹친 창이 움직이며 결과 칸을 채운다 */
+  .gwrap { position: relative; width: max-content; }
+  .kwin { position: absolute; left: 2px; top: 2px; width: 136px; height: 136px; box-sizing: border-box; border: 3px solid #e1306c; border-radius: 6px; background: rgba(225, 48, 108, .12);
+    display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); transition: left .45s ease, top .45s ease, opacity .3s; pointer-events: none; opacity: 0; }
+  .kwin.on { opacity: 1; }
+  .kwin span { align-self: end; justify-self: end; font: 700 10px var(--mono); background: #e1306c; color: #fff; border-radius: 4px; padding: 0 3px; margin: 2px; }
+  .gridm div.mid { box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 4px #e1306c; }
+  .gridm div.cur { animation: pop .5s ease; outline: 3px solid #e1306c; outline-offset: -3px; }
+  @keyframes pop { 0% { transform: scale(1.3); } 100% { transform: scale(1); } }
+  /* 결과 예상하기 */
+  .ref-kernels { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; margin: 6px 0 14px; }
+  .ref-kernels .lbl { font-size: 12px; color: var(--muted); text-align: center; display: block; }
+  /* 커널 성분 관찰 */
+  .why-k .matrix.m3 td { min-width: 46px; height: 34px; font-size: 15px; font-weight: 800; }
+  .why-k td.pos { background: #e8f5e9 !important; color: #2e7d32 !important; }
+  .why-k td.neg { background: #fdecea !important; color: #c62828 !important; }
+  .why-k td.zero { background: #fff !important; color: #aaa !important; }
+  .read-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
+  .read-table th, .read-table td { border-bottom: 1px solid var(--line); padding: 7px 8px; text-align: left; vertical-align: top; }
+  /* AI에게 커널 물어보기 */
+  .ai-tip { margin-top: 12px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #f7f9ff; }
+  .ai-tip summary { cursor: pointer; font-weight: 800; font-size: 14px; }
+  .ai-tip .prompt { font-size: 13px; background: #fff; border: 1px dashed var(--line); border-radius: 8px; padding: 8px 10px; margin: 6px 0; line-height: 1.6; }
   .zoom-pair figure div { margin-top: 4px; }
   .how-box { margin: 4px 0 14px; background: #f4f0ff; }
   .how-steps { margin: 6px 0 8px 18px; padding: 0; font-size: 14px; line-height: 1.7; }
@@ -95,10 +118,6 @@
   .split-wrap { position: relative; }
   .split-label { position: absolute; top: 10px; background: rgba(0,0,0,.65); color: #fff; font-size: 12px; padding: 2px 9px; border-radius: 999px; pointer-events: none; }
 
-  /* 발표 카드 */
-  .card-wrap { display: grid; grid-template-columns: 1fr 340px; gap: 22px; align-items: start; }
-  @media (max-width: 860px) { .card-wrap { grid-template-columns: 1fr; } }
-  #cardCanvas { width: 100%; max-width: 340px; border-radius: 14px; box-shadow: var(--shadow); display: block; border: 1px solid var(--line); }
   .save-box { margin-top: 14px; display: grid; gap: 8px; }
 </style>
 </head>
@@ -124,25 +143,33 @@
   <ol class="stepper" id="stepper"></ol>
   <div class="photo-bar" id="photoBar"><div id="picker"></div></div>
 
-  <!-- 1. 이웃을 보는 필터 = 커널 -->
-  <section class="screen" data-key="slide" data-title="이웃을 보는 필터" data-photo>
+  <!-- 1. 이웃을 보는 필터 -->
+  <section class="screen" data-key="nbr" data-title="이웃을 보는 필터" data-photo>
     <div class="step">
       <div class="step-head">
         <div class="step-num">1</div>
-        <div><h2>이웃을 보는 필터 = 커널</h2><p>1~3차시에 만든 필터는 모두 픽셀 하나의 숫자(R, G, B)만 보고 계산했어요. 그런데 흐림, 선명하게, 윤곽선 필터는 픽셀 하나만 봐서는 만들 수 없어요.</p></div>
+        <div><h2>이웃을 보는 필터</h2><p>1~3차시에 만든 필터는 모두 픽셀 하나의 숫자(R, G, B)만 보고 계산했어요. 그런데 흐림, 선명하게, 윤곽선 필터는 픽셀 하나만 봐서는 만들 수 없어요.</p></div>
       </div>
       <div class="hook-grid" id="hookGrid"></div>
       <div class="zoom-box">
         <div class="choice" id="edgeSpots"></div>
-        <p class="small muted" style="margin:6px 0 0" id="edgeTip">📍 장소 버튼을 누르거나 원본 사진을 클릭하면, 그 부분을 크게 확대해서 필터마다 비교해요.</p>
+        <p class="small muted" style="margin:6px 0 0" id="edgeTip"></p>
         <div class="zoom-pair" id="zoomPair"></div>
       </div>
       <div class="box key" style="margin-top:14px">
         <p>흐리게 하면 경계가 부드러워지고, 선명하게 하면 경계가 또렷해져요. 경계는 <b>픽셀과 그 이웃 픽셀의 숫자 차이</b>예요. 그래서 이 필터들은 <b>주변 픽셀까지 함께</b> 계산해요.</p>
       </div>
       <p class="screen-next">💡 휴대폰 사진 편집의 '선명도' 조절도 이웃 픽셀을 함께 계산하는 필터예요.</p>
-      <h3 style="margin:24px 0 6px">🔍 3×3 창이 미끄러지며 계산해요</h3>
-      <p class="small" style="margin-bottom:10px">이웃 픽셀까지 함께 계산하는 3×3 크기의 작은 행렬을 <b>커널</b>이라고 해요.</p>
+    </div>
+  </section>
+
+  <!-- 2. 커널 계산 과정 -->
+  <section class="screen" data-key="slide" data-title="커널 계산 과정">
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">2</div>
+        <div><h2>커널 계산 과정 보기</h2><p>이웃 픽셀까지 함께 계산하는 3×3 크기의 작은 행렬을 <b>커널</b>이라고 해요. 커널이 이미지 위를 한 칸씩 미끄러지며 <b>결과 칸을 하나씩 채워 가는</b> 모습을 보세요.</p></div>
+      </div>
       <div class="box how-box">
         <h3>🧮 커널 계산, 이렇게 해요</h3>
         <ol class="how-steps">
@@ -155,13 +182,12 @@
         <p class="small muted">💡 커널은 '주변 9칸을 어떤 비율로 섞을지' 적어 둔 레시피예요. 흐리게 커널은 9칸을 똑같이(1씩) 섞어 <b>평균</b>을 내고, 윤곽선 커널은 가운데는 크게(8) 더하고 이웃은 빼서(−1) <b>차이만</b> 남겨요.</p>
         <p class="small muted">❓ 6×6 이미지인데 결과가 4×4인 이유: 3×3 창이 이미지 밖으로 나가지 않게 놓을 수 있는 자리가 가로 4곳, 세로 4곳뿐이라서예요.</p>
       </div>
-      <p class="small" style="margin-bottom:12px">아래에서 '다음 칸'을 눌러 ①~④ 단계를 한 칸씩 따라가 보세요.</p>
       <div class="choice" style="margin-bottom:14px">
         <button class="btn sm on" data-sk="blur">흐리게 커널</button>
         <button class="btn sm" data-sk="edge">윤곽선 커널</button>
       </div>
       <div class="slide-wrap">
-        <div><span class="lbl">이미지 (6×6)</span><div class="gridm" id="slideIn" style="grid-template-columns:repeat(6,44px)"></div></div>
+        <div><span class="lbl">이미지 (6×6) · 분홍 창 = 겹친 커널</span><div class="gwrap"><div class="gridm" id="slideIn" style="grid-template-columns:repeat(6,44px)"></div><div class="kwin" id="kwin"></div></div></div>
         <span class="op-big">⊛</span>
         <div><span class="lbl">커널</span><div id="slideK"></div></div>
         <span class="op-big">=</span>
@@ -169,6 +195,7 @@
       </div>
       <div class="btn-row" style="margin-top:14px">
         <button class="btn primary" id="slideNext">다음 칸 ▶</button>
+        <button class="btn" id="slidePlay">▶ 자동 재생</button>
         <button class="btn" id="slideAll">⏩ 모두 계산</button>
         <button class="btn" id="slideReset">↺ 처음부터</button>
       </div>
@@ -177,30 +204,25 @@
     </div>
   </section>
 
-  <!-- 2. 손계산 -->
-  <section class="screen" data-key="hand" data-title="직접 계산해 보기">
-    <div class="step">
-      <div class="step-head">
-        <div class="step-num">2</div>
-        <div><h2>커널 계산 직접 해 보기</h2><p>앞 화면에서 본 계산을 이번엔 직접 해 봐요. 픽셀 주변 3×3 숫자와 커널의 <b>같은 자리끼리 곱한 뒤 모두 더하면</b> 가운데 픽셀의 새 값이에요.</p></div>
-      </div>
-      <div class="probs" id="probs"></div>
-      <div class="hand" id="hand"></div>
-      <div class="btn-row" style="margin-top:14px">
-        <button class="btn primary" id="handCheck">채점하기</button>
-        <button class="btn" id="handHint">💡 곱한 값 보기</button>
-        <span id="handResult" class="small"></span>
-      </div>
-      <div id="handHintBox" class="hidden" style="margin-top:14px"></div>
-      <div class="screen-q" data-hint="가운데 픽셀은 8을 곱하고, 이웃 8개는 −1을 곱해요.|8 × 80 − 8 × 80 = 0. 이웃과 차이가 없으면 0이 되니까, 차이가 있는 곳(경계)만 남아요.">문제 3에서 결과가 0이 나왔어요. 윤곽선 커널은 왜 변화가 없는 곳을 검정(0)으로 만들까요?</div>
-    </div>
-  </section>
-
-  <!-- 3. 커널 실험실 (갤러리 + 내 커널) -->
-  <section class="screen" data-key="mykernel" data-title="커널 실험실" data-photo>
+  <!-- 3. 커널 결과 예상하기 -->
+  <section class="screen" data-key="predict" data-title="결과 예상하기">
     <div class="step">
       <div class="step-head">
         <div class="step-num">3</div>
+        <div><h2>커널 결과 예상하기</h2><p>커널의 숫자를 보고 결과를 예상해 보세요. 내 생각을 먼저 쓴 다음 <b>[예시 답안]</b>과 비교해 봐요.</p></div>
+      </div>
+      <div class="ref-kernels" id="refK"></div>
+      <div class="screen-q" data-answer="100이에요. (100 × 9) ÷ 9 = 100. 흐리게 커널은 이웃 9칸의 평균이라서, 모두 같은 숫자인 곳은 평균도 그대로예요. 그래서 흐리게 해도 고르게 칠해진 부분은 변하지 않고, 숫자가 달라지는 경계만 부드러워져요.">모든 칸이 100인 곳(고르게 칠해진 벽)에 흐리게 커널을 쓰면 가운데 값은 얼마가 될까요? 왜 그럴까요?</div>
+      <div class="screen-q" data-answer="0이에요. 8 × 100 − (100 × 8) = 0. 윤곽선 커널은 '나와 이웃의 차이'를 계산하기 때문에, 이웃과 똑같은 곳은 0(검정)이 돼요. 그래서 사진에서는 고른 부분은 까맣게 사라지고, 숫자가 달라지는 경계만 밝게 남아요.">같은 곳에 윤곽선 커널을 쓰면 가운데 값은 얼마가 될까요? 사진에서는 어떻게 보일까요?</div>
+      <div class="screen-q" data-answer="점점 더 흐려져요. 이미 평균을 낸 값끼리 다시 평균을 내니까, 한 점의 숫자가 더 멀리 있는 이웃까지 퍼져서 경계가 더 넓게 번져요. 다음 화면의 커널 실험실에서 반복 횟수를 올려 확인해 볼 수 있어요.">흐리게 커널을 여러 번 반복해서 쓰면 사진은 어떻게 될까요? 그 이유는 무엇일까요?</div>
+    </div>
+  </section>
+
+  <!-- 4. 커널 실험실 (갤러리 + 내 커널) -->
+  <section class="screen" data-key="mykernel" data-title="커널 실험실" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">4</div>
         <div><h2>커널 실험실</h2><p>커널의 숫자만 바꾸면 전혀 다른 필터가 돼요. <b>커널 갤러리</b>에서 유명한 커널을 골라 본 뒤, 숫자 9개를 직접 바꿔 <b>나만의 커널</b>을 만들어 보세요.</p></div>
       </div>
       <div class="cols wide-left">
@@ -217,35 +239,44 @@
           <button class="btn grad" id="kToStudio">➕ 이 커널을 최종 필터에 추가</button>
         </div>
       </div>
-      <div class="screen-q" data-hint="갤러리의 커널을 하나씩 골라 아래 '숫자의 합'을 확인해 보세요.|합이 1이면(또는 합으로 나누면) 밝기가 그대로이고, 합이 0이면 변화가 없는 곳이 0(검정)이 돼서 경계만 남아요.">커널 숫자의 합이 1인 것과 0인 것은 각각 어떤 필터인가요? 합이 밝기와 어떤 관계가 있을까요?</div>
     </div>
   </section>
 
-  <!-- 4. AI와 커널 -->
-  <section class="screen" data-key="ai" data-title="AI도 커널을 쓴다" data-photo>
-    <div class="step">
-      <div class="step-head">
-        <div class="step-num">4</div>
-        <div><h2>인공지능도 커널을 써요</h2><p>사진 속 물체를 알아보는 인공지능 <b>CNN(합성곱 신경망)</b>의 '합성곱'이 바로 우리가 배운 커널 계산이에요.</p></div>
-      </div>
-      <div class="ai-grid">
-        <figure><canvas id="aiGray"></canvas><figcaption>입력 (흑백)</figcaption></figure>
-        <figure><canvas id="aiV"></canvas><figcaption>세로선 찾기 커널 [−1 0 1]</figcaption></figure>
-        <figure><canvas id="aiH"></canvas><figcaption>가로선 찾기 커널 [−1 0 1]ᵀ</figcaption></figure>
-      </div>
-      <div class="box key" style="margin-top:14px">
-        <p>사람은 '윤곽선 커널'의 숫자를 직접 정했지만, 인공지능은 수많은 사진을 보면서 <b>커널의 숫자를 스스로 학습</b>해요. 처음 층의 커널은 선과 모서리를 찾고, 다음 층은 그것들을 조합해 눈, 귀, 바퀴 같은 특징을 찾아요.</p>
-      </div>
-      <p class="small" style="margin-top:10px">🔗 더 탐구하기: <a href="https://tjdgus1121.github.io/activity17_cnn_visualizer.html" target="_blank" rel="noopener">CNN 합성곱 신경망 시각화</a> (인공지능 수학 웹앱)</p>
-      <div class="screen-q" data-hint="이 커널은 오른쪽 픽셀에서 왼쪽 픽셀을 빼는 계산이에요.|좌우의 밝기 차이가 큰 곳, 즉 세로 방향의 경계(풍선의 옆선 등)가 밝게 보여요.">세로선 찾기 커널의 결과에서 밝게 보이는 곳은 어디인가요? 왜 그럴까요?</div>
-    </div>
-  </section>
-
-  <!-- 5. 이 수학은 어디에 쓰일까? (진로 연계) -->
-  <section class="screen" data-key="field" data-title="어디에 쓰일까?" data-photo>
+  <!-- 5. 커널 성분 관찰 -->
+  <section class="screen" data-key="why" data-title="커널 성분 관찰" data-photo>
     <div class="step">
       <div class="step-head">
         <div class="step-num">5</div>
+        <div><h2>대표 커널, 왜 이런 숫자일까?</h2><p>커널 갤러리의 대표 커널을 하나씩 골라 보세요. 숫자의 <b>부호(+, −)</b>와 <b>합</b>을 관찰하고, 왜 그런 효과가 나는지 생각한 다음 설명을 열어 봐요.</p></div>
+      </div>
+      <div class="choice" id="whyChoice" style="margin-bottom:12px"></div>
+      <div class="cols wide-left">
+        <div class="lab-photo" data-lab="why"></div>
+        <div class="side">
+          <div class="matrix-label">커널 (초록 = 양수, 빨강 = 음수, 흰색 = 0)</div>
+          <div class="why-k" id="whyK"></div>
+          <div class="kcalc" id="whyFacts"></div>
+          <div class="box small" id="whyLook"></div>
+          <button class="btn sm" id="whyBtn">🔍 왜 그럴까? 설명 보기</button>
+          <div class="box key small hidden" id="whyExplain"></div>
+        </div>
+      </div>
+      <h3 style="margin:20px 0 4px">📋 커널 숫자 읽는 법</h3>
+      <table class="read-table">
+        <tr><th>숫자의 모양</th><th>계산의 뜻</th><th>효과</th></tr>
+        <tr><td>모두 양수, 합으로 나눔</td><td>이웃을 섞어 <b>평균</b>을 내요</td><td>흐리게, 부드럽게</td></tr>
+        <tr><td>가운데는 크게 +, 이웃은 −, 합 = 1</td><td>원래 값에 <b>나와 이웃의 차이</b>를 더해요</td><td>선명하게</td></tr>
+        <tr><td>가운데 +, 이웃 −, 합 = 0</td><td><b>차이만</b> 남기고 원래 값은 지워요</td><td>윤곽선</td></tr>
+        <tr><td>한쪽은 +, 반대쪽은 −</td><td>한 방향의 밝기 차이를 계산해요</td><td>엠보싱 (입체감)</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- 6. 이 수학은 어디에 쓰일까? (진로 연계) -->
+  <section class="screen" data-key="field" data-title="어디에 쓰일까?" data-photo>
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num">6</div>
         <div><h2>이 수학은 어디에 쓰일까?</h2><p>지금까지 배운 행렬과 커널은 여러 분야에서 쓰여요. 카드를 눌러 그 분야의 필터를 체험해 보고, <b>나의 관심 분야</b>를 골라 보세요.</p></div>
       </div>
       <div class="cols">
@@ -266,11 +297,11 @@
     </div>
   </section>
 
-  <!-- 6. 1~4차시 종합: 최종 필터 완성 -->
+  <!-- 7. 1~4차시 종합: 최종 필터 완성 -->
   <section class="screen" data-key="studio" data-title="최종 필터 완성" data-photo>
     <div class="step">
       <div class="step-head">
-        <div class="step-num">6</div>
+        <div class="step-num">7</div>
         <div><h2>1~4차시 종합: 나만의 최종 필터 완성하기</h2><p>1~4차시에 만든 필터를 <b>층(레이어)</b>처럼 쌓아서 하나의 최종 필터로 완성해요. <b>1차시 식, 2차시 보정 프리셋, 3차시 색감 행렬, 4차시 커널</b>의 필터 코드를 붙여넣거나 빠르게 추가해 보세요. 목표는 <b>3가지 이상의 수학</b>을 담는 거예요! 레이어는 위에서부터 차례로 계산되고, 사진은 내가 고른 사진으로 바꿀 수 있어요.</p></div>
       </div>
       <div class="studio">
@@ -304,10 +335,20 @@
               <div class="matrix m3 kernel-editor" id="sKEditor"></div>
               <div>
                 <label class="small" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="sKNorm" checked> 숫자의 합으로 나누기 (밝기 유지)</label>
-                <div class="small" id="sKSum" style="margin:4px 0 8px"></div>
+                <div class="small" id="sKSum" style="margin:4px 0 4px"></div>
+                <div class="slider-row" style="grid-template-columns:70px 1fr 40px;margin-bottom:8px"><label>반복 횟수</label><input type="range" min="1" max="5" step="1" value="1" id="sKN"><output id="sKNo">1번</output></div>
                 <button class="btn sm primary" id="sKAdd">➕ 이 커널을 레이어로 추가</button>
               </div>
             </div>
+            <details class="ai-tip">
+              <summary>🤖 원하는 효과의 커널을 AI에게 물어보기</summary>
+              <p class="small" style="margin-top:6px">ChatGPT, Gemini, Claude 같은 AI에게 원하는 효과를 말하면 커널을 추천받을 수 있어요. 이렇게 물어보세요.</p>
+              <div class="prompt" id="aiPrompt">사진 필터에 쓸 3×3 커널을 만들어 줘. 원하는 효과: 물체가 옆으로 움직이는 것처럼 잔상이 남는 느낌. 숫자 9개를 3줄로 쓰고, 숫자의 합으로 나눠야 하는지와 몇 번 반복하면 좋은지도 알려 줘.</div>
+              <div class="btn-row"><button class="btn sm" id="aiCopy">📋 질문 복사</button></div>
+              <p class="small" style="margin-top:8px">⚠️ AI의 답이 항상 맞지는 않아요. 받은 숫자를 위 칸에 직접 넣어 <b>정말 그 효과가 나는지 확인</b>하고, 마음에 들게 고쳐 보세요. 5×5처럼 큰 커널을 주면 "3×3으로 바꿔 줘"라고 다시 물어보세요.</p>
+              <div class="matrix-label" style="margin-top:8px">예시: AI가 추천할 만한 잔상 커널 (눌러서 위 칸에 넣어 보기)</div>
+              <div class="choice" id="aiExamples"></div>
+            </details>
           </div>
         </div>
       </div>
@@ -320,35 +361,15 @@
     </div>
   </section>
 
-  <!-- 7. 발표 카드와 돌아보기 -->
-  <section class="screen" data-key="end" data-title="발표 카드·돌아보기" data-photo>
+  <!-- 8. 돌아보기 -->
+  <section class="screen" data-key="end" data-title="돌아보기">
     <div class="step">
       <div class="step-head">
         <div class="step-num">✓</div>
-        <div><h2>발표 카드 만들고 돌아보기</h2><p>내 최종 필터를 소개하는 발표 카드(인스타그램 게시물 크기 4:5)를 만들고, 4차시 동안 배운 것을 돌아봐요. 사진 속 행렬에서 시작해 나만의 필터까지 왔어요!</p></div>
-      </div>
-      <div class="card-wrap">
-        <div class="side">
-          <div><div class="matrix-label">만든 사람 (이름 또는 별명)</div><input type="text" id="cardBy" maxlength="20" placeholder="예: 1학년 3반 수학왕"></div>
-          <div><div class="matrix-label">필터 소개: 어떤 수학을 왜 썼나요?</div>
-            <textarea id="cardDesc" rows="5" maxlength="200" placeholder="예: 사진이 너무 쨍해서 3차시 채도 행렬로 채도를 낮추고, 2차시 페이드로 검정을 들어 올려 필름 느낌을 냈어요. 마지막에 선명하게 커널로 윤곽을 살렸어요."></textarea></div>
-          <div><div class="matrix-label">🎯 이 수학이 쓰일 곳 · 나의 관심 분야</div>
-            <p class="small" style="margin:0 0 6px">관심 분야: <b id="cardField">5번 화면에서 골라요</b></p>
-            <textarea id="cardUse" rows="2" maxlength="90" placeholder="예: 의료 영상의 경계를 또렷하게 보는 데 윤곽선 커널을 쓸 수 있어요."></textarea></div>
-          <p class="small muted">필터 이름과 레이어는 6번, 관심 분야는 5번 화면에서 가져와요.</p>
-          <div class="btn-row"><button class="btn grad" id="cardDownload">💾 발표 카드 저장</button></div>
-        </div>
-        <canvas id="cardCanvas"></canvas>
-      </div>
-      <h3 style="margin:22px 0 10px">📚 4차시 동안 배운 것</h3>
-      <div class="box key" style="margin-bottom:16px">
-        <p>1차시: 사진 = R·G·B <b>행렬</b>, 필터 = 성분마다 같은 규칙<br>
-        2차시: 밝기·노출·대비·페이드 = 행렬의 <b>덧셈과 실수배</b> (aA + b), 비네트 기법 = 같은 자리끼리 곱하기<br>
-        3차시: 색감 필터 = 3×3 행렬과 픽셀의 <b>행렬 곱셈</b><br>
-        4차시: 흐림·선명·윤곽 = 이웃 픽셀과 <b>커널</b>의 합성곱 → 인공지능 CNN의 기본</p>
+        <div><h2>돌아보기</h2><p>생각해보기 질문에 답하고, 느낀 점까지 써서 활동지를 제출해요.</p></div>
       </div>
       <ol class="think">
-        <li data-hint="6번 화면에서 레이어의 ↑ ↓ 버튼으로 순서를 바꿔 보세요.|3차시에서 행렬의 곱셈은 AB ≠ BA 였어요. 필터도 계산 순서에 따라 결과가 달라질 수 있어요.">레이어의 순서를 바꾸면 결과가 달라질까요? 내 필터로 실험해 보고 그 이유를 설명해 보세요.</li>
+        <li data-hint="7번 화면에서 레이어의 ↑ ↓ 버튼으로 순서를 바꿔 보세요.|3차시에서 행렬의 곱셈은 AB ≠ BA 였어요. 필터도 계산 순서에 따라 결과가 달라질 수 있어요.">레이어의 순서를 바꾸면 결과가 달라질까요? 내 필터로 실험해 보고 그 이유를 설명해 보세요.</li>
         <li data-hint="1차시 전에는 행렬을 어떻게 생각했나요? 지금은요?|&quot;행렬은 ___ 인 줄 알았는데, ___ 에 쓰인다는 것을 알게 되었다&quot; 형식으로 써 보세요.">4차시 활동을 하면서 행렬에 대한 생각이 어떻게 바뀌었나요?</li>
       </ol>
     </div>
@@ -361,7 +382,7 @@
   </div>
 </main>
 
-<script src="assets/common.js?v=202610252100"></script>
+<script src="assets/common.js?v=202610252300"></script>
 <script>
 (() => {
   /* ===== 공유 상태 ===== */
@@ -378,10 +399,13 @@
     rerender();
   };
   const rerender = () => { if (wiz) R[SCREENS[wiz.current].dataset.key]?.(); };
+  // 숫자 뒤 조사: 3으로, 9로 (끝자리 0·3·6은 받침이 있어 '으로')
+  const ro = n => ('036'.includes(String(MF.num(n)).slice(-1)) ? '으로' : '로');
+  const eul = n => ('013678'.includes(String(MF.num(n)).slice(-1)) ? '을' : '를'); // 28을, 255를
   const kStep = (key, n = 1) => ({ t: 'kernel', name: K[key].name, k: K[key].k, d: K[key].d, n });
   const kMat = (k, d) => `<div style="display:flex;align-items:center;gap:6px">${MF.mat3HTML(k)}${d !== 1 ? `<b style="font-family:var(--mono)">÷ ${d}</b>` : ''}</div>`;
 
-  const labs = {}, PICK = ['gallery', 'mykernel']; // 고른 점으로 계산하는 칸
+  const labs = {}, PICK = ['mykernel']; // 고른 점으로 계산하는 칸
   document.querySelectorAll('[data-lab]').forEach(el => {
     const key = el.dataset.lab, pick = PICK.includes(key);
     el.innerHTML = `
@@ -399,7 +423,7 @@
     labs[el.dataset.lab] = lab;
   });
 
-  /* ===== 1. 이웃을 보는 필터 + 미끄러지는 창 ===== */
+  /* ===== 1. 이웃을 보는 필터 ===== */
   const HOOK = [['원본', '', []], ['흐리게', '블러', [kStep('blur', 3)]], ['선명하게', '샤픈', [kStep('sharpen')]], ['윤곽선', '엣지', [kStep('edge')]], ['모자이크', '픽셀화', [{ t: 'mosaic', size: 14 }]]];
   // 샘플 사진에서 경계를 볼 만한 곳 (가로, 세로 비율)
   const EDGE_SPOTS = [
@@ -409,9 +433,9 @@
   let spotIdx = 0;
   $('edgeSpots').addEventListener('click', e => {
     const b = e.target.closest('[data-spot]'); if (!b) return;
-    spotIdx = +b.dataset.spot; MF.setPick(EDGE_SPOTS[spotIdx][1], EDGE_SPOTS[spotIdx][2]); R.slide();
+    spotIdx = +b.dataset.spot; MF.setPick(EDGE_SPOTS[spotIdx][1], EDGE_SPOTS[spotIdx][2]); R.nbr();
   });
-  R.slide = () => {
+  R.nbr = () => {
     // 장소 버튼은 샘플 사진일 때만 (내 사진은 클릭으로 고르기)
     $('edgeSpots').innerHTML = photo.isSample ? EDGE_SPOTS.map(([n], i) => `<button class="btn sm${i === spotIdx ? ' on' : ''}" data-spot="${i}">${n}</button>`).join('') : '';
     $('edgeTip').textContent = photo.isSample ? '📍 장소 버튼을 누르거나 원본 사진을 클릭하면, 그 부분을 크게 확대해서 필터마다 비교해요.' : '📍 원본 사진에서 물체의 경계(가장자리)를 클릭하면, 그 부분을 크게 확대해서 필터마다 비교해요.';
@@ -422,10 +446,9 @@
       const fig = document.createElement('figure');
       fig.innerHTML = `<figcaption>${name}<small>${sub || '필터 없음 · 클릭해 보세요'}</small></figcaption>`;
       fig.prepend(shown); $('hookGrid').append(fig);
-      if (k === 0) MF.pickable(shown, () => { spotIdx = -1; R.slide(); });
+      if (k === 0) MF.pickable(shown, () => { spotIdx = -1; R.nbr(); });
       return c;
     });
-    // 고른 곳을 크게 확대해서 비교
     const z = 12;
     $('zoomPair').innerHTML = `<span class="small muted">📍 (${p.x}, ${p.y}) 확대 →</span>`;
     [[0, '원본'], [1, '흐리게'], [2, '선명하게'], [3, '윤곽선']].forEach(([k, label]) => {
@@ -436,12 +459,13 @@
     });
   };
 
-  // 3×3 창이 미끄러지며 계산
+  /* ===== 2. 커널 계산 과정: 겹친 창이 한 칸씩 움직이며 결과 칸을 채운다 ===== */
   const SIN = [
     [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 255, 255, 255, 255],
     [0, 0, 255, 255, 255, 255], [0, 0, 255, 255, 255, 255], [0, 0, 255, 255, 255, 255]
   ];
-  let sKey = 'blur', sPos = 0, sOut = Array(16).fill(null);
+  const CELL = 46; // 칸 크기 44px + 간격 2px
+  let sKey = 'blur', sPos = 0, sOut = Array(16).fill(null), sTimer = null;
   const sCell = (r, c) => {
     const k = K[sKey], terms = [];
     let sum = 0;
@@ -454,18 +478,23 @@
     return { val, text: `${k.d !== 1 ? '(' : ''}${terms.join(' + ')}${k.d !== 1 ? ') ÷ ' + k.d : ''} = ${MF.num(raw)}${val !== Math.round(raw) ? ' → ' + val : raw !== val ? ' ≈ ' + val : ''}` };
   };
   function renderSlide() {
-    const r0 = Math.floor(Math.max(0, sPos - 1) / 4), c0 = Math.max(0, sPos - 1) % 4, showWin = sPos > 0;
+    const showWin = sPos > 0, r0 = Math.floor(Math.max(0, sPos - 1) / 4), c0 = Math.max(0, sPos - 1) % 4;
     $('slideIn').innerHTML = SIN.flatMap((row, r) => row.map((v, c) => {
-      const win = showWin && r >= r0 && r < r0 + 3 && c >= c0 && c < c0 + 3;
-      return `<div class="${win ? 'win' : ''}" style="background:${MF.tint(v)};color:${v > 130 ? '#111' : '#fff'}">${v}</div>`;
+      const mid = showWin && r === r0 + 1 && c === c0 + 1;
+      return `<div class="${mid ? 'mid' : ''}" style="background:${MF.tint(v)};color:${v > 130 ? '#111' : '#fff'}">${v}</div>`;
     })).join('');
-    $('slideK').innerHTML = kMat(K[sKey].k, K[sKey].d);
+    // 이미지 위에 겹친 커널 창 (움직이는 분홍 창)
+    const win = $('kwin'), k = K[sKey];
+    win.innerHTML = k.k.map(v => `<span>×${v}</span>`).join('');
+    win.style.left = (2 + c0 * CELL) + 'px'; win.style.top = (2 + r0 * CELL) + 'px';
+    win.classList.toggle('on', showWin);
+    $('slideK').innerHTML = kMat(k.k, k.d);
     $('slideOut').innerHTML = sOut.map((v, i) => v === null
       ? `<div class="empty">?</div>`
       : `<div class="${showWin && i === sPos - 1 ? 'cur' : ''}" style="background:${MF.tint(v)};color:${v > 130 ? '#111' : '#fff'}">${v}</div>`).join('');
   }
-  $('slideNext').addEventListener('click', () => {
-    if (sPos >= 16) { MF.toast('모두 계산했어요! 처음부터 다시 해 보세요.'); return; }
+  function slideStep() {
+    if (sPos >= 16) { stopPlay(); MF.toast('16칸을 모두 계산했어요! 처음부터 다시 해 보세요.'); return; }
     const r = Math.floor(sPos / 4), c = sPos % 4, { val, text } = sCell(r, c), k = K[sKey];
     const patch = [0, 1, 2].flatMap(a => [0, 1, 2].map(b => SIN[r + a][c + b])), prod = patch.map((v, i) => v * k.k[i]);
     sOut[sPos] = val; sPos++;
@@ -473,55 +502,36 @@
       `<div class="calc-mats"><div><span class="lbl">① 겹친 부분</span>${MF.mat3HTML(patch)}</div><span class="op-big">×</span>` +
       `<div><span class="lbl">커널</span>${kMat(k.k, k.d)}</div><span class="op-big">→</span>` +
       `<div><span class="lbl">② 같은 자리끼리 곱</span>${MF.mat3HTML(prod)}</div></div>` +
-      `③ 모두 더하면: ${text}<br>④ 결과 행렬의 (${r + 1}, ${c + 1}) 칸에 <b>${val}</b>을 써요. → '다음 칸'으로 창을 한 칸 옮겨요.`;
+      `③ 모두 더하면: ${text}<br>④ 결과 행렬의 (${r + 1}, ${c + 1}) 칸에 <b>${val}</b>${eul(val)} 써요.${sPos < 16 ? ' → 창을 한 칸 옮겨요.' : ' 🎉 16칸 완성!'}`;
     renderSlide();
+  }
+  function stopPlay() { clearInterval(sTimer); sTimer = null; $('slidePlay').textContent = '▶ 자동 재생'; }
+  $('slideNext').addEventListener('click', () => { stopPlay(); slideStep(); });
+  $('slidePlay').addEventListener('click', () => {
+    if (sTimer) { stopPlay(); return; }
+    if (sPos >= 16) slideReset();
+    $('slidePlay').textContent = '⏸ 멈추기';
+    slideStep(); sTimer = setInterval(slideStep, 1100);
   });
   $('slideAll').addEventListener('click', () => {
+    stopPlay();
     for (let i = 0; i < 16; i++) sOut[i] = sCell(Math.floor(i / 4), i % 4).val;
     sPos = 16; $('slideCalc').textContent = '16칸을 모두 계산했어요. 결과 행렬을 원래 이미지와 비교해 보세요.'; renderSlide();
   });
-  const slideReset = () => { sPos = 0; sOut.fill(null); $('slideCalc').textContent = "'다음 칸'을 누르면 계산 과정이 ①~④ 단계로 여기에 나와요."; renderSlide(); };
+  function slideReset() { stopPlay(); sPos = 0; sOut.fill(null); $('slideCalc').textContent = "'다음 칸' 또는 '자동 재생'을 누르면 계산 과정이 ①~④ 단계로 여기에 나와요."; renderSlide(); }
   $('slideReset').addEventListener('click', slideReset);
   document.querySelectorAll('[data-sk]').forEach(b => b.addEventListener('click', () => {
     sKey = b.dataset.sk; document.querySelectorAll('[data-sk]').forEach(x => x.classList.toggle('on', x === b)); slideReset();
   }));
   slideReset();
 
-  /* ===== 2. 손계산 ===== */
-  const PROBS = [
-    { key: 'blur', patch: [10, 20, 30, 40, 50, 60, 70, 80, 90] },
-    { key: 'sharpen', patch: [100, 100, 100, 100, 120, 100, 100, 100, 100] },
-    { key: 'edge', patch: [80, 80, 80, 80, 80, 80, 80, 80, 80] }
-  ];
-  let pIdx = 0;
-  $('probs').innerHTML = PROBS.map((p, i) => `<button class="btn sm${i ? '' : ' on'}" data-p="${i}">문제 ${i + 1} · ${K[p.key].name}</button>`).join('');
-  const probAns = p => MF.clamp(Math.round(p.patch.reduce((s, v, i) => s + v * K[p.key].k[i], 0) / K[p.key].d));
-  function renderProb() {
-    const p = PROBS[pIdx], k = K[p.key];
-    $('hand').innerHTML = `<div><span class="lbl">픽셀 주변 3×3</span>${MF.mat3HTML(p.patch, { hl: [4] })}</div><span class="op">⊛</span>` +
-      `<div><span class="lbl">${k.name} 커널</span>${kMat(k.k, k.d)}</div><span class="op">=</span>` +
-      `<div><span class="lbl">가운데 픽셀의 새 값</span><input id="handIn" inputmode="numeric"></div>`;
-    $('handResult').textContent = ''; $('handHintBox').classList.add('hidden');
-  }
-  $('probs').addEventListener('click', e => {
-    const b = e.target.closest('[data-p]'); if (!b) return;
-    pIdx = +b.dataset.p; $('probs').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderProb();
-  });
-  $('handCheck').addEventListener('click', () => {
-    const inp = $('handIn'), v = parseFloat(inp.value), ans = probAns(PROBS[pIdx]);
-    const ok = !isNaN(v) && Math.abs(v - ans) <= 1;
-    inp.className = ok ? 'right' : 'wrong';
-    $('handResult').innerHTML = ok ? '<b style="color:var(--ok)">🎉 정답!</b>' : '다시 계산해 보세요. 💡 버튼으로 곱한 값을 확인할 수 있어요.';
-  });
-  $('handHint').addEventListener('click', () => {
-    const p = PROBS[pIdx], k = K[p.key], prod = p.patch.map((v, i) => v * k.k[i]), sum = prod.reduce((a, b) => a + b, 0);
-    $('handHintBox').classList.remove('hidden');
-    $('handHintBox').innerHTML = `<div class="hand"><div><span class="lbl">같은 자리끼리 곱한 값</span>${MF.mat3HTML(prod)}</div>` +
-      `<div class="kcalc">모두 더하면 ${sum}${k.d !== 1 ? ` → ÷ ${k.d} = ${MF.num(sum / k.d)}` : ''}${sum / k.d > 255 ? ' → 255' : sum / k.d < 0 ? ' → 0' : ''}</div></div>`;
-  });
-  renderProb();
+  /* ===== 3. 커널 결과 예상하기: 참고용 커널과 고른 부분 ===== */
+  $('refK').innerHTML =
+    `<div><span class="lbl">모든 칸이 100인 곳</span>${MF.mat3HTML(Array(9).fill(100))}</div>` +
+    `<div><span class="lbl">흐리게 커널</span>${kMat(K.blur.k, K.blur.d)}</div>` +
+    `<div><span class="lbl">윤곽선 커널</span>${kMat(K.edge.k, K.edge.d)}</div>`;
 
-  /* ===== 3. 커널 실험실 (갤러리 + 내 커널) ===== */
+  /* ===== 4. 커널 실험실 (갤러리 + 내 커널) ===== */
   const NOTES = {
     blur: '모든 이웃의 <b>평균</b>이에요. 숫자의 합 9 ÷ 9 = 1 이라 밝기는 그대로예요.',
     soft: '가운데에 가까울수록 큰 숫자를 줘요(가중평균). 흐리게보다 자연스러워요. 합 16 ÷ 16 = 1.',
@@ -550,7 +560,7 @@
     kNo.textContent = kN.value + '번';
     labs.mykernel.show([myStep()]);
     const s = myK.reduce((a, b) => a + b, 0);
-    $('kSum').innerHTML = `숫자의 합 = <b>${MF.num(s)}</b>${kNorm.checked && s > 0 ? ` → ${MF.num(s)}로 나눠요` : s <= 0 ? ' → 합이 0 이하라 나누지 않아요' : ''}<br>` + kernelCalcHTML(myK, myDiv(), '픽셀');
+    $('kSum').innerHTML = `숫자의 합 = <b>${MF.num(s)}</b>${kNorm.checked && s > 0 ? ` → ${MF.num(s)}${ro(s)} 나눠요` : s <= 0 ? ' → 합이 0 이하라 나누지 않아요' : ''}<br>` + kernelCalcHTML(myK, myDiv(), '픽셀');
   };
   // 갤러리에서 고르면 그 커널이 편집 칸에 들어간다
   $('galChoice').innerHTML = Object.entries(K).map(([key, k]) => `<button class="btn sm" data-gk="${key}">${k.name}</button>`).join('');
@@ -579,15 +589,55 @@
   });
   kSync();
 
-  /* ===== 4. AI와 커널 ===== */
-  R.ai = () => {
-    const g = { t: 'gray', w: [0.3, 0.59, 0.11] };
-    MF.draw($('aiGray'), MF.applySteps(photo, [g]));
-    MF.draw($('aiV'), MF.applySteps(photo, [g, { t: 'kernel', k: [-1, 0, 1, -2, 0, 2, -1, 0, 1], d: 1 }]));
-    MF.draw($('aiH'), MF.applySteps(photo, [g, { t: 'kernel', k: [-1, -2, -1, 0, 0, 0, 1, 2, 1], d: 1 }]));
+  /* ===== 5. 커널 성분 관찰 ===== */
+  const WHY = {
+    blur: {
+      look: '숫자가 <b>모두 1</b>로 같고, 옆에 <b>÷ 9</b>가 있어요. 9칸을 똑같이 섞으면 무엇을 구하는 걸까요?',
+      why: '9칸을 같은 비율(1)로 더해서 9로 나누면 <b>평균</b>이에요. 평균은 튀는 값을 누그러뜨리니까 경계의 차이가 줄어들어 흐려져요. 숫자의 합(9)을 9로 나눠서 결국 1이 되니까, 밝기는 그대로예요.'
+    },
+    soft: {
+      look: '가운데(4)가 가장 크고, 가까운 이웃(2), 대각선 이웃(1) 순서로 작아져요. 왜 거리에 따라 숫자가 다를까요?',
+      why: '<b>가까운 이웃일수록 더 많이</b> 섞는 가중평균이에요. 멀리 있는 대각선 칸의 영향이 작아서 흐리게 커널보다 자연스럽게 흐려져요. 합 16을 16으로 나눠서 밝기는 그대로예요.'
+    },
+    sharpen: {
+      look: '가운데는 <b>5</b>로 크고, 위·아래·왼쪽·오른쪽은 <b>−1</b>이에요. 숫자의 합은 1이에요. 이웃을 빼는 이유는 무엇일까요?',
+      why: '5 = 1 + 4로 나눠 보면, <b>원래 값(1) + (나 × 4 − 이웃 4칸)</b>이에요. 뒤쪽은 <b>나와 이웃의 차이</b>라서, 경계처럼 차이가 큰 곳은 더 강조되고 고른 곳은 차이가 0이라 그대로예요. 합이 1이라 밝기는 유지돼요.'
+    },
+    edge: {
+      look: '가운데는 <b>8</b>, 이웃 8칸은 모두 <b>−1</b>이에요. 숫자의 합은 <b>0</b>이에요. 합이 0이면 어떤 일이 생길까요?',
+      why: '8 × 나 − (이웃 8칸의 합) = 8 × (나 − 이웃 평균)이에요. 즉 <b>나와 이웃의 차이만</b> 계산해요. 원래 값(밝기)은 지워지고 차이만 남으니까, 고른 곳은 0(검정), 경계만 밝게 보여요.'
+    },
+    emboss: {
+      look: '왼쪽 위는 <b>음수(−2, −1)</b>, 오른쪽 아래는 <b>양수(1, 2)</b>예요. 한쪽은 빼고 반대쪽은 더하면 무엇을 계산하는 걸까요?',
+      why: '오른쪽 아래와 왼쪽 위의 <b>밝기 차이</b>를 계산해요. 한 방향으로 밝기가 바뀌는 경계만 밝거나 어둡게 나타나서, 빛이 비스듬히 비친 것처럼 <b>입체감</b>이 생겨요. 합이 1이라 바탕은 원래 밝기를 유지해요.'
+    }
   };
+  let whyKey = 'blur';
+  $('whyChoice').innerHTML = Object.keys(WHY).map(key => `<button class="btn sm${key === whyKey ? ' on' : ''}" data-why="${key}">${K[key].name}</button>`).join('');
+  const whyMat = (k, d) => `<div style="display:flex;align-items:center;gap:8px"><div class="matrix m3"><table>${[0, 1, 2].map(r => '<tr>' + [0, 1, 2].map(c => {
+    const v = k[r * 3 + c]; return `<td class="${v > 0 ? 'pos' : v < 0 ? 'neg' : 'zero'}">${v}</td>`;
+  }).join('') + '</tr>').join('')}</table></div>${d !== 1 ? `<b style="font-family:var(--mono);font-size:16px">÷ ${d}</b>` : ''}</div>`;
+  R.why = () => {
+    const k = K[whyKey], sum = k.k.reduce((a, b) => a + b, 0);
+    labs.why.show([kStep(whyKey, whyKey === 'blur' ? 2 : 1)]);
+    $('whyK').innerHTML = whyMat(k.k, k.d);
+    const pos = k.k.filter(v => v > 0).length, neg = k.k.filter(v => v < 0).length;
+    $('whyFacts').innerHTML = `숫자의 합 = <b>${sum}</b>${k.d !== 1 ? ` → ÷ ${k.d} 하면 <b>${MF.num(sum / k.d)}</b>` : ''}<br>양수 <b>${pos}</b>칸 · 음수 <b>${neg}</b>칸 · 0 <b>${9 - pos - neg}</b>칸 · 가운데 <b>${k.k[4]}</b>`;
+    $('whyLook').innerHTML = '👀 ' + WHY[whyKey].look;
+    $('whyExplain').innerHTML = '🔍 ' + WHY[whyKey].why;
+  };
+  $('whyChoice').addEventListener('click', e => {
+    const b = e.target.closest('[data-why]'); if (!b) return;
+    whyKey = b.dataset.why; $('whyChoice').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    $('whyExplain').classList.add('hidden'); $('whyBtn').textContent = '🔍 왜 그럴까? 설명 보기';
+    R.why();
+  });
+  $('whyBtn').addEventListener('click', () => {
+    const open = $('whyExplain').classList.toggle('hidden') === false;
+    $('whyBtn').textContent = open ? '🔍 설명 닫기' : '🔍 왜 그럴까? 설명 보기';
+  });
 
-  /* ===== 6. 1~4차시 종합: 최종 필터 완성 ===== */
+  /* ===== 7. 1~4차시 종합: 최종 필터 완성 ===== */
   let layers = [], studioResult = null, studioFiltered = null;
   const QUICK = [
     ['1차시 노을빛 식', '1차시', [{ t: 'formula', f: ['R × 1.2 + 20', 'G', 'B × 0.7'] }]],
@@ -611,7 +661,7 @@
   let sK = [0, -1, 0, -1, 5, -1, 0, -1, 0], sKCount = 0;
   $('sKEditor').innerHTML = `<table>${[0, 1, 2].map(r => '<tr>' + [0, 1, 2].map(c => `<td style="padding:2px;border:0;background:none"><input type="number" step="1" data-k="${r * 3 + c}" value="${sK[r * 3 + c]}"></td>`).join('') + '</tr>').join('')}</table>`;
   const sKDiv = () => { const t = sK.reduce((a, b) => a + b, 0); return $('sKNorm').checked && t > 0 ? t : 1; };
-  const sKShow = () => { const t = sK.reduce((a, b) => a + b, 0); $('sKSum').innerHTML = `숫자의 합 = <b>${MF.num(t)}</b>${sKDiv() !== 1 ? ` → ${MF.num(t)}로 나눠요` : ''}`; };
+  const sKShow = () => { const t = sK.reduce((a, b) => a + b, 0); $('sKSum').innerHTML = `숫자의 합 = <b>${MF.num(t)}</b>${sKDiv() !== 1 ? ` → ${MF.num(t)}${ro(t)} 나눠요` : ''}`; };
   $('sKEditor').addEventListener('input', e => {
     const k = e.target.dataset.k; if (k === undefined) return;
     const v = parseFloat(e.target.value); if (isNaN(v) || Math.abs(v) > 20) return;
@@ -620,10 +670,25 @@
   $('sKNorm').addEventListener('input', sKShow);
   $('sKAdd').addEventListener('click', () => {
     sKCount++;
-    addLayer({ label: `직접 만든 커널 ${sKCount}`, from: '4차시', steps: [{ t: 'kernel', name: '직접 만든 커널', k: sK.slice(), d: sKDiv(), n: 1 }] });
+    addLayer({ label: `직접 만든 커널 ${sKCount}`, from: '4차시', steps: [{ t: 'kernel', name: '직접 만든 커널', k: sK.slice(), d: sKDiv(), n: +$('sKN').value }] });
     MF.toast('커널을 레이어로 추가했어요!');
   });
   sKShow();
+  $('sKN').addEventListener('input', () => { $('sKNo').textContent = $('sKN').value + '번'; });
+  // AI에게 커널 물어보기: 질문 복사, 예시 커널
+  $('aiCopy').addEventListener('click', () => MF.copy($('aiPrompt').textContent.trim()));
+  const AI_EX = [
+    ['➡️ 가로 잔상', [0, 0, 0, 1, 1, 1, 0, 0, 0], 4], ['↘️ 대각선 잔상', [1, 0, 0, 0, 1, 0, 0, 0, 1], 4],
+    ['⬆️ 세로 잔상', [0, 1, 0, 0, 1, 0, 0, 1, 0], 4], ['💨 한쪽으로 끌리는 잔상', [0, 0, 0, 0, 2, 1, 0, 0, 0], 4]
+  ];
+  $('aiExamples').innerHTML = AI_EX.map(([n], i) => `<button class="btn sm" data-ai="${i}">${n}</button>`).join('');
+  $('aiExamples').addEventListener('click', e => {
+    const b = e.target.closest('[data-ai]'); if (!b) return;
+    const [, k, n] = AI_EX[+b.dataset.ai];
+    sK = k.slice(); $('sKEditor').querySelectorAll('input').forEach(inp => inp.value = sK[+inp.dataset.k]);
+    $('sKNorm').checked = true; $('sKN').value = n; $('sKNo').textContent = n + '번'; sKShow();
+    MF.toast('위 칸에 넣었어요. [이 커널을 레이어로 추가]를 눌러 확인해 보세요!');
+  });
   function addLayer(layer) {
     layers.push(Object.assign({ on: true }, layer));
     if (wiz && SCREENS[wiz.current].dataset.key === 'studio') R.studio(); else saveCode();
@@ -724,95 +789,26 @@
     } catch (e) { MF.toast(e.message); }
   });
 
-  /* ===== 7. 발표 카드 (1080 × 1350) ===== */
-  const wrapText = (x, text, maxW) => {
-    const lines = []; let line = '';
-    for (const ch of String(text)) {
-      if (ch === '\n') { lines.push(line); line = ''; continue; }
-      if (x.measureText(line + ch).width > maxW && line) { lines.push(line); line = ch.trim() ? ch : ''; }
-      else line += ch;
-    }
-    if (line) lines.push(line);
-    return lines;
-  };
-  function drawCard() {
-    if (!studioResult) computeStudio();
-    const W = 1080, H = 1350, cv = $('cardCanvas'), x = cv.getContext('2d');
-    cv.width = W; cv.height = H;
-    const font = (w, s) => `${w} ${s}px Pretendard, 'Malgun Gothic', sans-serif`;
-    x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H);
-    const g = x.createLinearGradient(0, 0, W, 220);
-    g.addColorStop(0, '#6d4aff'); g.addColorStop(0.55, '#e1306c'); g.addColorStop(1, '#f77737');
-    x.fillStyle = g; x.fillRect(0, 0, W, 220);
-    x.fillStyle = 'rgba(255,255,255,.85)'; x.font = font(600, 30); x.fillText('행렬 필터 연구소 · 나만의 필터', 60, 72);
-    x.fillStyle = '#fff'; x.font = font(800, 72);
-    x.fillText(($('filterName').value.trim() || '이름 없는 필터').slice(0, 14), 60, 165);
-
-    // 원본 / 필터 사진
-    const iw = 465, ih = Math.min(380, Math.round(iw * photo.height / photo.width)), iy = 260;
-    [[photo, '원본', 60], [studioResult, '필터 적용', 555]].forEach(([img, label, ix]) => {
-      x.save(); x.beginPath(); x.roundRect(ix, iy, iw, ih, 22); x.clip();
-      const s = Math.max(iw / img.width, ih / img.height), dw = img.width * s, dh = img.height * s;
-      x.drawImage(img, ix + (iw - dw) / 2, iy + (ih - dh) / 2, dw, dh); x.restore();
-      x.fillStyle = 'rgba(0,0,0,.6)'; x.beginPath(); x.roundRect(ix + 16, iy + 16, label.length * 26 + 30, 46, 23); x.fill();
-      x.fillStyle = '#fff'; x.font = font(700, 26); x.fillText(label, ix + 31, iy + 48);
-    });
-
-    let y = iy + ih + 70;
-    x.fillStyle = '#1f1d2e'; x.font = font(800, 36); x.fillText('🧮 수학 레시피', 60, y); y += 50;
-    x.font = font(500, 25);
-    const active = layers.filter(l => l.on);
-    if (!active.length) { x.fillStyle = '#6b6880'; x.fillText('레이어가 없어요.', 60, y); y += 40; }
-    active.slice(0, 6).forEach((l, i) => {
-      const lines = wrapText(x, `${i + 1}. [${l.from}] ${l.steps.map(MF.describeStep).join(' → ')}`, W - 120).slice(0, 2);
-      lines.forEach(t => { x.fillStyle = '#3a3750'; x.fillText(t, 60, y); y += 36; });
-      y += 4;
-    });
-    if (+strength.value < 100) { x.fillStyle = '#6b6880'; x.fillText(`필터 강도 ${strength.value}%: (1 − t)×원본 + t×필터`, 60, y); y += 40; }
-
-    const field = ws.get('careerField'), use = $('cardUse').value.trim();
-    if (field || use) {
-      y += 24;
-      x.fillStyle = '#1f1d2e'; x.font = font(800, 36); x.fillText('🎯 나의 관심 분야' + (field ? ': ' + field : ''), 60, y); y += 50;
-      x.font = font(500, 27); x.fillStyle = '#3a3750';
-      wrapText(x, use || '(이 수학이 쓰일 곳을 써 주세요)', W - 120).slice(0, 2).forEach(t => { x.fillText(t, 60, y); y += 40; });
-    }
-
-    y += 24;
-    x.fillStyle = '#1f1d2e'; x.font = font(800, 36); x.fillText('💬 필터 소개', 60, y); y += 50;
-    x.font = font(500, 27); x.fillStyle = '#3a3750';
-    const desc = $('cardDesc').value.trim() || '(필터 소개를 써 주세요)';
-    const maxLines = Math.max(1, Math.floor((H - 110 - y) / 40));
-    wrapText(x, desc, W - 120).slice(0, maxLines).forEach(t => { x.fillText(t, 60, y); y += 40; });
-
-    x.fillStyle = '#f1eefb'; x.fillRect(0, H - 90, W, 90);
-    x.fillStyle = '#6b6880'; x.font = font(600, 26);
-    x.fillText(`by ${$('cardBy').value.trim() || '익명의 수학자'}`, 60, H - 36);
-    x.textAlign = 'right'; x.fillText('사진 = 행렬, 필터 = 행렬 연산', W - 60, H - 36); x.textAlign = 'left';
-  }
-  R.card = () => { computeStudio(); drawCard(); };
-  [$('cardBy'), $('cardDesc'), $('cardUse')].forEach(el => el.addEventListener('input', drawCard));
-  $('cardDownload').addEventListener('click', () => { drawCard(); MF.download($('cardCanvas'), ($('filterName').value.trim() || '나만의필터') + '_발표카드.png'); });
-
   /* ===== 활동지 ===== */
   const ws = MF.worksheet({
     lesson: 4, title: '나만의 필터 만들기',
     q1title: '오늘 가장 인상 깊었던 내용', q1hint: '',
     q2: '완성한 필터의 레이어 순서와 각 레이어에 쓰인 수학을 쓰고, 왜 이렇게 조합했는지 설명해 주세요.',
-    getResult: () => { R.card(); saveCode(); return { canvas: $('cardCanvas'), name: $('filterName').value.trim(), code: $('codeOut').value }; },
-    extras: [{ key: 'career', title: '내 관심 분야와의 연결', hint: '5번 화면에서 고른 관심 분야에서 오늘 배운 수학이 어떻게 쓰일 수 있는지, 무엇이 더 궁금해졌는지 써 주세요.', labelKey: 'careerField', label: '관심 분야' }]
+    getResult: () => { if (!studioResult) computeStudio(); saveCode(); return { canvas: studioResult, name: $('filterName').value.trim(), code: $('codeOut').value }; },
+    moreReq: [['4차시 수업을 마치며 느낀 점', '1~4차시 활동을 하며 느낀 점, 새롭게 알게 된 점, 어려웠던 점 등을 자유롭게 써 주세요.']],
+    extras: [{ key: 'career', title: '내 관심 분야와의 연결', hint: '6번 화면에서 고른 관심 분야에서 오늘 배운 수학이 어떻게 쓰일 수 있는지, 무엇이 더 궁금해졌는지 써 주세요.', labelKey: 'careerField', label: '관심 분야' }]
   });
-  R.end = () => { R.card(); ws.refresh(); };
+  R.end = ws.refresh;
 
 
   /* ===== 5. 어디에 쓰일까? (진로 연계) ===== */
   const G3 = { t: 'gray', w: [0.3, 0.59, 0.11] };
   const FIELDS = [
     ['🏥', '의료·생명', 'X선·CT 같은 의료 영상의 대비를 조절하고 경계를 또렷하게 해서 관찰을 돕는 데 영상 처리가 쓰여요.', ['2차시 대비', '4차시 선명하게'], [G3, { t: 'adjust', p: { contrast: 1.5 } }, kStep('sharpen')]],
-    ['🚗', '자율주행·로봇', '카메라 영상에서 차선이나 물체의 경계를 찾는 데 방향별 경계 커널과 합성곱 신경망이 쓰여요.', ['4차시 커널', '4차시 CNN'], [G3, { t: 'kernel', name: '세로선', k: [-1, 0, 1, -2, 0, 2, -1, 0, 1], d: 1 }]],
+    ['🚗', '자율주행·로봇', '카메라 영상에서 차선이나 물체의 경계를 찾는 데 방향별 경계 커널과 합성곱 신경망이 쓰여요.', ['4차시 커널'], [G3, { t: 'kernel', name: '세로선', k: [-1, 0, 1, -2, 0, 2, -1, 0, 1], d: 1 }]],
     ['🎬', '영상·디자인', '영화나 광고 영상의 분위기를 만드는 색보정에 색감 행렬과 보정 곡선(aA + b)이 쓰여요.', ['2차시 aA+b', '3차시 행렬 곱'], [{ t: 'matrix', m: [1.1, 0, 0, 0, 1, 0, 0, 0.1, 0.9] }, { t: 'adjust', p: { contrast: 1.15, fade: 0.15 } }]],
     ['🛰️', '환경·우주', '위성 사진의 색 채널을 따로 보거나 섞어서 숲, 물, 도시를 구분하는 데 행렬 연산이 쓰여요.', ['1차시 RGB 행렬', '3차시 행렬 곱'], [{ t: 'matrix', m: [0.6, 0, 0, 0, 1.5, 0, 0, 0, 0.6] }]],
-    ['🔐', '보안·개인정보', '영상 속 얼굴이나 번호판을 자동으로 가리는 데 인공지능의 위치 찾기와 모자이크 계산이 함께 쓰여요.', ['모자이크', '4차시 CNN'], [{ t: 'mosaic', size: 16 }]],
+    ['🔐', '보안·개인정보', '영상 속 얼굴이나 번호판을 자동으로 가리는 데 인공지능의 위치 찾기와 모자이크 계산이 함께 쓰여요.', ['모자이크'], [{ t: 'mosaic', size: 16 }]],
     ['🏭', '반도체·제조', '제품 사진에서 흠집이나 불량을 찾는 검사 장비에 윤곽선 검출 같은 영상 처리가 쓰여요.', ['4차시 윤곽선'], [G3, kStep('edge')]],
     ['🎮', '게임·그래픽스', '게임 화면의 흐림, 가장자리 어둡게 같은 화면 효과에 커널과 마스크 계산이 쓰여요.', ['2차시 비네트', '4차시 흐리게'], [kStep('blur', 2), { t: 'adjust', p: { vignette: 0.7 } }]],
     ['🏛️', '문화재·예술', '오래된 사진이나 그림을 디지털로 복원할 때 대비 조절과 선명하게 필터가 쓰여요.', ['2차시 대비', '4차시 선명하게'], [{ t: 'adjust', p: { contrast: 1.3 } }, kStep('sharpen')]]
@@ -823,7 +819,6 @@
   const showField = () => {
     const picked = ws.get('careerField');
     $('fieldPicked').textContent = picked || '아직 고르지 않았어요';
-    $('cardField').textContent = picked || '5번 화면에서 골라요';
     fieldIdx = FIELDS.findIndex(f => f[1] === picked);
     $('fieldGrid').querySelectorAll('.field-card').forEach((b, i) => b.classList.toggle('on', i === fieldIdx));
     if (fieldIdx >= 0) {

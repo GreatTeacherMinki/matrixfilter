@@ -230,8 +230,7 @@
           <div class="why-k" id="whyK"></div>
           <div class="kcalc" id="whyFacts"></div>
           <div class="box small" id="whyLook"></div>
-          <button class="btn sm" id="whyBtn">🔍 왜 그럴까? 설명 보기</button>
-          <div class="box key small hidden" id="whyExplain"></div>
+          <div class="box key small" id="whyExplain"></div>
           <div class="slider-row"><label>반복 횟수</label><input type="range" min="1" max="4" step="1" value="1" id="whyN"><output id="whyNo">1번</output></div>
           <button class="btn grad" id="kToStudio">➕ 이 커널을 최종 필터에 추가</button>
         </div>
@@ -475,7 +474,7 @@
     })).join('');
     // 이미지 위에 겹친 커널 창 (움직이는 분홍 창)
     const win = $('kwin'), k = K[sKey];
-    win.innerHTML = k.k.map(v => `<span>×${v}</span>`).join('');
+    win.innerHTML = k.k.map(v => `<span>×${v}${k.d !== 1 ? '/' + k.d : ''}</span>`).join(''); // 흐리게: ×1/9
     win.style.left = (2 + c0 * CELL) + 'px'; win.style.top = (2 + r0 * CELL) + 'px';
     win.classList.toggle('on', showWin);
     $('slideK').innerHTML = kMat(k.k, k.d);
@@ -551,22 +550,17 @@
     const pos = k.k.filter(v => v > 0).length, neg = k.k.filter(v => v < 0).length;
     $('whyFacts').innerHTML = `숫자의 합 = <b>${sum}</b>${k.d !== 1 ? ` → × 1/${k.d} 하면 <b>${MF.num(sum / k.d)}</b>` : ''}<br>양수 <b>${pos}</b>칸 · 음수 <b>${neg}</b>칸 · 0 <b>${9 - pos - neg}</b>칸 · 가운데 <b>${k.k[4]}</b>`;
     $('whyLook').innerHTML = '👀 ' + WHY[whyKey].look;
-    $('whyExplain').innerHTML = '🔍 ' + WHY[whyKey].why;
+    $('whyExplain').innerHTML = '🔍 <b>왜 그럴까?</b> ' + WHY[whyKey].why;
   };
   $('whyChoice').addEventListener('click', e => {
     const b = e.target.closest('[data-why]'); if (!b) return;
     whyKey = b.dataset.why; $('whyChoice').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
-    $('whyExplain').classList.add('hidden'); $('whyBtn').textContent = '🔍 왜 그럴까? 설명 보기';
     R.why();
   });
   $('whyN').addEventListener('input', () => R.why());
   $('kToStudio').addEventListener('click', () => {
     addLayer({ label: K[whyKey].name, from: '4차시', steps: [kStep(whyKey, +$('whyN').value)] });
     MF.toast(`${NO('studio')}번 화면의 최종 필터에 추가했어요!`);
-  });
-  $('whyBtn').addEventListener('click', () => {
-    const open = $('whyExplain').classList.toggle('hidden') === false;
-    $('whyBtn').textContent = open ? '🔍 설명 닫기' : '🔍 왜 그럴까? 설명 보기';
   });
 
   /* ===== 7. 1~4차시 종합: 최종 필터 완성 ===== */

@@ -856,7 +856,7 @@
    * 수업을 진행한 차시만 열어 둔다. 다음 차시를 열 때 이 목록에 번호를 추가한다.
    * 선생님 미리보기: 주소 끝에 ?preview 를 붙이면 모든 차시가 열린다.
    */
-  MF.OPEN_LESSONS = [1, 2, 3, 4];
+  MF.OPEN_LESSONS = [1, 2];
   const lessonNo = href => { const m = /lesson(\d)\.html/.exec(href || ''); return m ? +m[1] : 0; };
   const isOpen = n => /[?&](preview|edit)/.test(location.search) || MF.OPEN_LESSONS.includes(n);
   const lockLessons = () => {

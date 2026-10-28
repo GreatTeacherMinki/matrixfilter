@@ -144,11 +144,6 @@
           <p class="small muted">📝 비유: 모든 학생 점수에 <b>+10점</b> → 40점은 50점(+10), 90점은 100점(+10)</p>
         </div>
         <div class="lab" data-concept="bright" style="margin-top:12px"></div>
-        <div class="box tip" style="margin-top:12px">
-          <h3>🧪 되돌리기 실험</h3>
-          <p class="small">밝기를 +100 한 다음 다시 −100 하면 원래 사진으로 돌아올까요? 예상해 보고 버튼을 눌러 확인해 보세요.</p>
-          <div class="btn-row" style="margin-top:8px"><button class="btn sm" id="undoTest">+100 → −100 해 보기</button><span class="small" id="undoResult"></span></div>
-        </div>
       </div>
       <h3 style="margin-top:18px">🔍 노출과 밝기 비교</h3>
       <table class="tool-table why-table">
@@ -491,18 +486,6 @@
     }
   }, { bright: 40 });
   R.addmul = () => { labE.render(); labB.render(); };
-
-  // 되돌리기 실험: 255에서 잘린 정보는 돌아오지 않는다
-  $('undoTest').addEventListener('click', () => {
-    const once = MF.applyFns(photo, [0, 1, 2].map(() => v => v + 100));
-    const back = MF.applyFns(once, [0, 1, 2].map(() => v => v - 100));
-    MF.draw(labB.q('canvas'), MF.withMark(back, MF.pickedPoint(photo)));
-    labB.q('badge').textContent = '+100 → −100 결과';
-    const d = MF.ctx(back).getImageData(0, 0, back.width, back.height).data, s = photoData.data;
-    let same = 0;
-    for (let i = 0; i < s.length; i += 4) if (d[i] === s[i] && d[i + 1] === s[i + 1] && d[i + 2] === s[i + 2]) same++;
-    $('undoResult').innerHTML = `원래와 같은 픽셀은 <b>${Math.round(same / (s.length / 4) * 100)}%</b>뿐이에요. 왜 그럴까요?`;
-  });
 
   /* ===== 2. 대비·페이드 (위아래로 따로) ===== */
   const labC = modeLab('contrast', {

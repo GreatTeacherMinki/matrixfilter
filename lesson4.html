@@ -131,6 +131,39 @@
   .f-in label { display: flex; align-items: center; gap: 6px; }
   .f-in input { flex: 1; min-width: 0; font-family: var(--mono); font-size: 14px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; }
   .sub-label { font-size: 12.5px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+  /* 1·2차시 재료 카드: 슬라이더 + 숫자 칸 */
+  .sl-box { display: grid; gap: 4px; }
+  .sl { display: grid; grid-template-columns: 74px 1fr 66px; gap: 8px; align-items: center; font-size: 13.5px; font-weight: 700; }
+  .sl input[type=number] { width: 100%; font-family: var(--mono); font-size: 14px; padding: 3px 4px; border: 1px solid var(--line); border-radius: 6px; text-align: right; }
+  .lin-out { font-family: var(--mono); font-size: 13px; background: var(--soft); border-radius: 8px; padding: 6px 10px; line-height: 1.7; }
+  .layer .why { width: 100%; margin-top: 4px; font-size: 13px; padding: 4px 8px; border: 1px dashed var(--line); border-radius: 6px; font-family: inherit; }
+  .trace-box { margin-top: 14px; }
+  .trace { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px; }
+  .trace th, .trace td { border-bottom: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
+  .trace td.v { font-family: var(--mono); white-space: nowrap; }
+  .trace .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid #0002; vertical-align: -1px; margin-right: 4px; }
+  .report-box { margin-top: 18px; background: #f7f5ff; }
+  /* 보고서 (그림으로 저장할 때만 화면 밖에 그려짐) */
+  #rpPrint { display: none; }
+  #rpPrint.on { display: block; position: absolute; left: -10000px; top: 0; width: 860px; padding: 40px 44px; background: #fff; color: #111; font-size: 15px; line-height: 1.65; font-family: Pretendard, sans-serif; }
+  #rpPrint .rh { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #6d4aff; padding-bottom: 10px; }
+  #rpPrint .rk { font-size: 13px; color: #e1306c; font-weight: 700; }
+  #rpPrint h1 { font-size: 26px; margin: 2px 0 0; }
+  #rpPrint .rid { text-align: right; font-size: 14px; }
+  #rpPrint h2 { font-size: 17px; margin: 22px 0 8px; padding: 4px 12px; background: #f1eefb; border-radius: 6px; }
+  #rpPrint .imgs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  #rpPrint .imgs img { width: 100%; border-radius: 6px; display: block; }
+  #rpPrint .imgs div { text-align: center; font-size: 13px; color: #555; }
+  #rpPrint table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  #rpPrint th, #rpPrint td { border: 1px solid #ddd; padding: 5px 8px; text-align: left; vertical-align: top; }
+  #rpPrint th { background: #f7f7fb; }
+  #rpPrint .mono { font-family: Consolas, monospace; font-size: 12.5px; word-break: break-all; }
+  #rpPrint .qt { font-weight: 700; margin-top: 10px; }
+  #rpPrint .a { white-space: pre-wrap; border-left: 3px solid #d9cffd; padding: 2px 0 2px 12px; margin-top: 3px; }
+  #rpPrint .none { color: #999; }
+  #rpPrint .teacher { border: 2px solid #6d4aff; border-radius: 10px; padding: 10px 14px; margin-top: 22px; font-size: 14px; }
+  #rpPrint .teacher b { color: #6d4aff; }
+  #rpPrint .chips span { display: inline-block; border: 1px solid #cfc6f5; border-radius: 999px; padding: 0 9px; margin: 2px 4px 2px 0; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -262,12 +295,12 @@
       </div>
       <div class="box career-box">
         <h3>🎯 나의 관심 분야와 연결하기</h3>
+        <p style="margin:4px 0 0;font-weight:700">내 관심 분야에서 이 수학을 쓴다면, 어떤 문제를 해결할 수 있을까요?</p>
         <p class="small" style="margin:4px 0 8px">관심 분야: <b id="fieldPicked">아직 고르지 않았어요</b></p>
         <input type="text" id="fieldOwn" maxlength="20" placeholder="목록에 없으면 직접 쓰기 (예: 스포츠 분석, 농업, 패션)">
         <textarea id="careerText" rows="3" style="margin-top:8px" placeholder="예: 의료 영상에서 병변의 경계를 또렷하게 보는 데 오늘 배운 대비 조절과 윤곽선 커널이 쓰일 수 있다. 영상 속 경계를 인공지능이 자동으로 찾는 방법이 궁금하다."></textarea>
-        <p class="small muted" style="margin:6px 0 0">여기 쓴 내용은 활동지에 함께 담겨요. 관심 분야가 아직 없다면 가장 흥미로운 분야를 골라도 좋아요.</p>
+        <p class="small muted" style="margin:6px 0 0">💡 그 분야에서 사진이나 영상의 무엇을 바꾸거나 찾아야 할지 생각한 다음, 지금까지 배운 계산(대비, 색감 행렬, 윤곽선, 모자이크 등) 중 무엇이 도울 수 있을지 연결해 써 보세요. 여기 쓴 내용은 5번 화면의 보고서에 함께 담겨요.</p>
       </div>
-      <div class="screen-q" data-hint="분야 카드를 하나씩 눌러 보고 가장 흥미로운 분야를 골라 보세요.|그 분야에서 사진이나 영상의 무엇을 바꾸거나 찾아야 할지 생각한 다음, 지금까지 배운 계산(대비, 색감 행렬, 윤곽선, 모자이크 등) 중 무엇이 도울 수 있을지 연결해 써 보세요.">내 관심 분야에서 이 수학을 쓴다면, 어떤 문제를 해결할 수 있을까요?</div>
     </div>
   </section>
 
@@ -276,7 +309,7 @@
     <div class="step">
       <div class="step-head">
         <div class="step-num">5</div>
-        <div><h2>1~4차시 종합: 나만의 최종 필터 완성하기</h2><p>아래 <b>재료 카드</b>에서 1~4차시의 필터를 골라 <b>층(레이어)</b>처럼 쌓아서 하나의 최종 필터로 완성해요. 차시마다 저장한 필터 코드를 붙여넣거나, 예시를 누르거나, 직접 만들어 추가할 수 있어요. 목표는 <b>3가지 이상의 수학</b>을 담는 거예요! 레이어는 위에서부터 차례로 계산돼요.</p></div>
+        <div><h2>1~4차시 종합: 나만의 최종 필터 완성하기</h2><p>아래 <b>재료 카드</b>에서 1~4차시의 필터를 골라 <b>층(레이어)</b>처럼 쌓아서 하나의 최종 필터로 완성해요. 숫자를 직접 조절하거나 예시를 눌러 만든 다음 [레이어로 추가]를 눌러요. 목표는 <b>3가지 이상의 수학</b>을 담는 거예요! 레이어는 위에서부터 차례로 계산돼요.</p></div>
       </div>
       <div class="studio">
         <div>
@@ -291,24 +324,26 @@
           <div class="matrix-label">🧱 내 필터의 레이어</div>
           <div class="layers" id="layers"></div>
           <div class="mix-check" id="mixCheck"></div>
+          <div class="trace-box">
+            <div class="matrix-label">📍 픽셀 하나 따라가기 <span class="small muted">(왼쪽 사진을 클릭해 위치를 바꿔요)</span></div>
+            <div id="trace"></div>
+          </div>
         </div>
       </div>
       <h3 style="margin:22px 0 2px">🧩 재료 카드: 1~4차시 필터를 골라 레이어로 쌓아요</h3>
       <div class="parts">
         <div class="part-card" data-part="1">
-          <h4>1차시 · 식으로 만든 필터<small>R′, G′, B′를 R, G, B로 계산하는 식</small></h4>
-          <div class="f-in">
-            <label style="color:#d32f2f">R′ = <input id="fR" value="R × 1.2 + 20"></label>
-            <label style="color:#2e7d32">G′ = <input id="fG" value="G"></label>
-            <label style="color:#1565c0">B′ = <input id="fB" value="B × 0.8"></label>
-          </div>
-          <div class="btn-row"><button class="btn sm primary" id="fAdd">➕ 이 식을 레이어로 추가</button></div>
-          <div class="btn-row"><input type="text" class="code" data-code placeholder="1차시에 저장한 필터 코드 (MF-...)" style="flex:1;min-width:140px"><button class="btn sm" data-code-add>코드로 추가</button></div>
+          <h4>1차시 · R, G, B 행렬에 수 더하기<small>R′ = R + a, G′ = G + b, B′ = B + c (행렬의 덧셈)</small></h4>
+          <div class="sl-box" id="addSliders"></div>
+          <div class="lin-out" id="addOut"></div>
+          <div class="btn-row"><button class="btn sm primary" id="fAdd">➕ 레이어로 추가</button><button class="btn sm" id="fReset">0으로</button></div>
         </div>
         <div class="part-card" data-part="2">
-          <h4>2차시 · 일차함수 보정 프리셋<small>밝기·노출·대비·따뜻함·페이드·비네트</small></h4>
-          <div><div class="sub-label">예시 프리셋</div><div class="choice" data-quick="2"></div></div>
-          <div class="btn-row"><input type="text" class="code" data-code placeholder="2차시에 저장한 필터 코드 (MF-...)" style="flex:1;min-width:140px"><button class="btn sm" data-code-add>코드로 추가</button></div>
+          <h4>2차시 · 일차함수 보정<small>노출·밝기·대비·따뜻함·페이드·비네트 → A′ = pA + q</small></h4>
+          <div><div class="sub-label">예시 프리셋 (누르면 아래 칸에 들어가요)</div><div class="choice" data-quick="2"></div></div>
+          <div class="sl-box" id="adjSliders"></div>
+          <div class="lin-out" id="adjOut"></div>
+          <div class="btn-row"><button class="btn sm primary" id="aAdd">➕ 레이어로 추가</button><button class="btn sm" id="aReset">처음 값으로</button></div>
         </div>
         <div class="part-card" data-part="3">
           <h4>3차시 · 색감 행렬<small>3×3 행렬 × 픽셀 (R, G, B)</small></h4>
@@ -317,7 +352,6 @@
             <button class="btn sm primary" id="mAdd">➕ 이 행렬을 레이어로 추가</button>
           </div>
           <div><div class="sub-label">예시 행렬 (누르면 위 칸에 들어가요)</div><div class="choice" data-mquick></div></div>
-          <div class="btn-row"><input type="text" class="code" data-code placeholder="3차시에 저장한 필터 코드 (MF-...)" style="flex:1;min-width:140px"><button class="btn sm" data-code-add>코드로 추가</button></div>
         </div>
         <div class="part-card" data-part="4">
           <h4>4차시 · 커널<small>이웃 픽셀까지 함께 계산하는 3×3 커널</small></h4>
@@ -345,21 +379,19 @@
           </div>
         </div>
       </div>
-      <div class="box save-box">
-        <h3>🔑 완성 필터 코드</h3>
-        <p class="small">레이어 전체가 코드 하나에 담겨요. 제출하거나, 다음에 이 화면에 붙여넣어 이어서 만들 수 있어요.</p>
-        <div class="btn-row"><input type="text" class="code" id="codeOut" readonly style="flex:1;min-width:200px"><button class="btn sm primary" id="copyCode">복사</button></div>
-        <div class="btn-row"><input type="text" class="code" id="codeIn" placeholder="저장해 둔 완성 필터 코드를 붙여넣으세요" style="flex:1;min-width:200px"><button class="btn sm" id="loadCode">불러오기</button></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 6. 활동지 제출 -->
-  <section class="screen" data-key="end" data-title="마무리">
-    <div class="step">
-      <div class="step-head">
-        <div class="step-num">✓</div>
-        <div><h2>활동지 제출</h2><p>필수 기록과 느낀 점을 쓰고, 활동지를 이미지로 저장해서 제출해요. 최종 필터 결과 이미지와 필터 코드가 자동으로 함께 담겨요.</p></div>
+      <div class="box report-box">
+        <h3>📄 4차시 탐구 보고서</h3>
+        <p class="small muted" style="margin:4px 0 10px">아래를 쓰고 [보고서 다운로드]를 누르면, 내 필터의 레이어 구성과 담긴 수학, 픽셀 계산 과정, 관심 분야 연결(4번 화면)이 자동으로 함께 담긴 보고서 그림 파일이 저장돼요. 그 파일을 카카오톡에 올리면 제출 끝!</p>
+        <div class="ws-id">
+          <label>학번 <input type="text" id="rpNo" maxlength="10" placeholder="예: 10101"></label>
+          <label>이름 <input type="text" id="rpName" maxlength="20"></label>
+        </div>
+        <div class="ws-req"><div class="ws-req-t">필수 1. 필터를 만든 의도</div><div class="small muted">어떤 사진에, 어떤 느낌이나 목적으로 쓰려고 만들었나요?</div><textarea class="ws-req-in" rows="2" data-r="intent"></textarea></div>
+        <div class="ws-req"><div class="ws-req-t">필수 2. 레이어를 이 순서로 조합한 이유</div><div class="small muted">각 레이어가 맡은 역할과, 순서를 바꾸면 결과가 어떻게 달라지는지 써 주세요.</div><textarea class="ws-req-in" rows="3" data-r="order"></textarea></div>
+        <div class="ws-req"><div class="ws-req-t">필수 3. 내 필터 속 수학 원리 설명</div><div class="small muted">위의 '픽셀 하나 따라가기' 표에서 숫자가 크게 바뀐 레이어 하나를 골라, 그 숫자가 어떤 계산(덧셈, 일차함수, 행렬 곱, 커널)으로 나왔는지 직접 식을 써서 설명해 주세요.</div><textarea class="ws-req-in" rows="4" data-r="math"></textarea></div>
+        <div class="ws-req"><div class="ws-req-t">필수 4. 1~4차시를 마치며</div><div class="small muted">새로 알게 된 점, 어려웠다가 이해하게 된 점, 더 탐구해 보고 싶은 점을 써 주세요.</div><textarea class="ws-req-in" rows="3" data-r="end"></textarea></div>
+        <div class="btn-row" style="margin-top:14px"><button class="btn grad" id="rpDownload">📄 보고서 다운로드</button></div>
+        <p class="small muted" style="margin-top:8px">⚠️ 쓴 내용은 이 컴퓨터에 임시로 남지만 컴퓨터실 PC는 껐다 켜면 지워질 수 있어요. 수업이 끝나기 전에 꼭 다운로드해서 제출해요.</p>
       </div>
     </div>
   </section>
@@ -574,20 +606,62 @@
     4: [...[['blur', 1], ['soft', 2], ['sharpen', 1], ['edge', 1], ['emboss', 1]].map(([key, n]) => [K[key].name, [kStep(key, n)]]),
       ['모자이크', [{ t: 'mosaic', size: 10 }]]]
   };
-  document.querySelectorAll('[data-quick]').forEach(box => {
-    const no = +box.dataset.quick;
-    box.innerHTML = QUICK[no].map(([n], i) => `<button class="btn sm" data-q="${i}">+ ${n}</button>`).join('');
-    box.addEventListener('click', e => {
-      const b = e.target.closest('[data-q]'); if (!b) return;
-      const [label, steps] = QUICK[no][+b.dataset.q];
-      addLayer({ label: label.replace(/^\S+\s/, ''), from: no + '차시', steps: JSON.parse(JSON.stringify(steps)) });
+  // 슬라이더 + 숫자 칸 묶음 (둘 중 하나를 바꾸면 다른 하나도 맞춰진다)
+  const sliders = (el, defs, val, onChange) => {
+    el.innerHTML = defs.map(([k, label, min, max, step, color]) =>
+      `<label class="sl"${color ? ` style="color:${color}"` : ''}><span>${label}</span><input type="range" min="${min}" max="${max}" step="${step}" data-k="${k}"><input type="number" min="${min}" max="${max}" step="${step}" data-n="${k}"></label>`).join('');
+    const sync = () => defs.forEach(([k]) => { el.querySelector(`[data-k="${k}"]`).value = val[k]; el.querySelector(`[data-n="${k}"]`).value = val[k]; });
+    el.addEventListener('input', e => {
+      const k = e.target.dataset.k || e.target.dataset.n; if (!k) return;
+      const v = parseFloat(e.target.value); if (isNaN(v)) return;
+      val[k] = v;
+      (e.target.dataset.k ? el.querySelector(`[data-n="${k}"]`) : el.querySelector(`[data-k="${k}"]`)).value = v;
+      onChange();
     });
-  });
-  // 1차시: 식 직접 쓰기
+    sync(); return sync;
+  };
+  const sgn = v => (v < 0 ? ' − ' + MF.num(-v) : ' + ' + MF.num(v));
+  // 레이어 설명 (1차시 덧셈은 식 대신 'RGB 덧셈'으로)
+  const descOf = s => (s.t === 'formula' && s.add ? `RGB 덧셈: R′ = R${sgn(s.add[0])}, G′ = G${sgn(s.add[1])}, B′ = B${sgn(s.add[2])}` : MF.describeStep(s));
+  // 1차시: R, G, B에 수 더하기 (행렬의 덧셈)
+  const addV = { r: 0, g: 0, b: 0 };
+  const addShow = () => { $('addOut').innerHTML = `R′ = R${sgn(addV.r)}<br>G′ = G${sgn(addV.g)}<br>B′ = B${sgn(addV.b)}`; };
+  const addSync = sliders($('addSliders'), [['r', 'R + a', -100, 100, 1, '#d32f2f'], ['g', 'G + b', -100, 100, 1, '#2e7d32'], ['b', 'B + c', -100, 100, 1, '#1565c0']], addV, addShow);
+  addShow();
+  $('fReset').addEventListener('click', () => { addV.r = addV.g = addV.b = 0; addSync(); addShow(); });
   $('fAdd').addEventListener('click', () => {
-    const f = [$('fR').value, $('fG').value, $('fB').value].map(v => v.trim() || 'R');
-    try { f.forEach(MF.compileExpr); } catch (e) { MF.toast('식을 계산할 수 없어요. R, G, B, 숫자, + − × ÷ ( )만 써 주세요.'); return; }
-    addLayer({ label: '내 식 필터', from: '1차시', steps: [{ t: 'formula', f }] });
+    if (!addV.r && !addV.g && !addV.b) { MF.toast('더할 수를 하나 이상 정해 주세요.'); return; }
+    addLayer({ label: 'RGB 덧셈', from: '1차시', steps: [{ t: 'formula', add: [addV.r, addV.g, addV.b], f: [`R${sgn(addV.r)}`, `G${sgn(addV.g)}`, `B${sgn(addV.b)}`].map(s => s.replace(/−/g, '-')) }] });
+  });
+  // 2차시: 일차함수 보정 (프리셋은 칸에 넣기만 한다)
+  const adjV = Object.assign({}, MF.ADJ);
+  const linOf = p => { // 보정 6가지를 합친 일차식 A' = pA + q (비네트 제외)
+    const s = p.expo * p.contrast * (1 - p.fade / 2), base = (p.contrast * (p.bright - 128) + 128) * (1 - p.fade / 2) + 127.5 * p.fade, w = p.warm * (1 - p.fade / 2);
+    return { s, q: [base + w, base, base - w] };
+  };
+  const linText = p => { const { s, q } = linOf(p); return ['R', 'G', 'B'].map((c, i) => `${c}′ = ${MF.num(s)} × ${c}${sgn(q[i])}`).join('<br>') + (p.vignette ? `<br>+ 비네트: 모서리 × ${MF.num(1 - p.vignette)}` : ''); };
+  const adjShow = () => { $('adjOut').innerHTML = linText(adjV); };
+  const adjSync = sliders($('adjSliders'), [['expo', '노출 ×', 0.5, 2, 0.05], ['bright', '밝기 +', -100, 100, 1], ['contrast', '대비 ×', 0.5, 2, 0.05], ['warm', '따뜻함', -60, 60, 1], ['fade', '페이드', 0, 1, 0.05], ['vignette', '비네트', 0, 1, 0.05]], adjV, adjShow);
+  adjShow();
+  const qBox = document.querySelector('[data-quick="2"]');
+  qBox.innerHTML = QUICK[2].map(([n], i) => `<button class="btn sm" data-q="${i}">${n}</button>`).join('');
+  qBox.addEventListener('click', e => {
+    const b = e.target.closest('[data-q]'); if (!b) return;
+    Object.assign(adjV, MF.ADJ, QUICK[2][+b.dataset.q][1][0].p); adjSync(); adjShow();
+  });
+  $('aReset').addEventListener('click', () => { Object.assign(adjV, MF.ADJ); adjSync(); adjShow(); });
+  $('aAdd').addEventListener('click', () => {
+    const p = {}; Object.keys(MF.ADJ).forEach(k => { if (adjV[k] !== MF.ADJ[k]) p[k] = adjV[k]; });
+    if (!Object.keys(p).length) { MF.toast('값을 하나 이상 바꿔 주세요.'); return; }
+    addLayer({ label: '일차함수 보정', from: '2차시', steps: [{ t: 'adjust', p }] });
+  });
+  // 4차시 대표 커널 · 모자이크: 누르면 바로 레이어로
+  const q4 = document.querySelector('[data-quick="4"]');
+  q4.innerHTML = QUICK[4].map(([n], i) => `<button class="btn sm" data-q="${i}">+ ${n}</button>`).join('');
+  q4.addEventListener('click', e => {
+    const b = e.target.closest('[data-q]'); if (!b) return;
+    const [label, steps] = QUICK[4][+b.dataset.q];
+    addLayer({ label, from: '4차시', steps: JSON.parse(JSON.stringify(steps)) });
   });
   // 3차시: 색감 행렬 직접 쓰기
   const GRAY_AVG = Array(9).fill(1 / 3);
@@ -636,14 +710,15 @@
     MF.toast('커널 칸에 넣었어요. [이 커널을 레이어로 추가]를 눌러 확인해 보세요!');
   });
   function addLayer(layer) {
-    layers.push(Object.assign({ on: true }, layer));
-    if (wiz && SCREENS[wiz.current].dataset.key === 'studio') R.studio(); else saveCode();
+    layers.push(Object.assign({ on: true, why: '' }, layer));
+    if (wiz && SCREENS[wiz.current].dataset.key === 'studio') { R.studio(); MF.toast(`${layers.length}번 레이어로 추가했어요!`); } else saveState();
   }
   function renderLayers() {
     $('layers').innerHTML = layers.length ? layers.map((l, i) => `
       <div class="layer${l.on ? '' : ' off'}">
         <span class="no">${i + 1}</span>
-        <div><div class="t">${l.label.replace(/</g, '&lt;')} <span class="chip">${l.from}</span></div><div class="d">${l.steps.map(MF.describeStep).join(' → ').replace(/</g, '&lt;')}</div></div>
+        <div><div class="t">${l.label.replace(/</g, '&lt;')} <span class="chip">${l.from}</span></div><div class="d">${l.steps.map(descOf).join(' → ').replace(/</g, '&lt;')}</div>
+          <input class="why" data-why="${i}" maxlength="80" placeholder="이 레이어를 넣은 이유 (보고서에 담겨요)" value="${(l.why || '').replace(/"/g, '&quot;')}"></div>
         <div class="ctl">
           <button title="켜기/끄기" data-act="toggle" data-i="${i}">${l.on ? '👁' : '🚫'}</button>
           <button title="위로" data-act="up" data-i="${i}">↑</button>
@@ -652,7 +727,7 @@
         </div>
       </div>`).join('') : '<div class="empty-layers">아직 레이어가 없어요. 아래 재료 카드에서 1~4차시 필터를 골라 추가해 보세요.</div>';
     // 1~4차시 중 어떤 수학이 담겼는지 (켜진 레이어 기준)
-    const MIX = [[['formula'], '1차시 식'], [['adjust'], '2차시 일차함수 보정'], [['matrix'], '3차시 행렬 곱'], [['kernel', 'mosaic'], '4차시 커널']];
+    const MIX = [[['formula'], '1차시 RGB 덧셈'], [['adjust'], '2차시 일차함수 보정'], [['matrix'], '3차시 행렬 곱'], [['kernel', 'mosaic'], '4차시 커널']];
     const used = new Set(layers.filter(l => l.on).flatMap(l => l.steps.map(s => s.t)));
     const has = ts => ts.some(t => used.has(t)), cnt = MIX.filter(([ts]) => has(ts)).length;
     $('mixCheck').innerHTML = `<div class="matrix-label" style="width:100%">🧩 내 필터에 담긴 수학 (${cnt} / 4)</div>` +
@@ -667,6 +742,10 @@
     if (act === 'up' && i > 0) [layers[i - 1], layers[i]] = [layers[i], layers[i - 1]];
     if (act === 'down' && i < layers.length - 1) [layers[i + 1], layers[i]] = [layers[i], layers[i + 1]];
     R.studio();
+  });
+  $('layers').addEventListener('input', e => {
+    const i = e.target.dataset.why; if (i === undefined) return;
+    layers[+i].why = e.target.value; saveState();
   });
   const activeSteps = () => layers.filter(l => l.on).flatMap(l => l.steps);
   function computeStudio() {
@@ -690,63 +769,143 @@
     x.fillStyle = '#fff'; x.fillRect(sx - 1.5, 0, 3, h);
     splitXo.textContent = splitX.value + '%';
   }
-  function saveCode() {
-    $('codeOut').value = MF.encode({
-      v: 1, lesson: 4, name: $('filterName').value.trim(), strength: +strength.value,
-      layers: layers.map(l => ({ label: l.label, from: l.from, on: l.on, steps: l.steps })),
-      steps: activeSteps()
-    });
+  /* 기록 저장: 새로고침해도 남도록 이 컴퓨터(localStorage)에 저장 */
+  const store = (key) => {
+    let d = {}; try { d = JSON.parse(localStorage.getItem(key)) || {}; } catch (e) {}
+    return { d, save: () => { try { localStorage.setItem(key, JSON.stringify(d)); } catch (e) {} } };
+  };
+  const WS = store('mf-ws-4'), ID = store('mf-ws-id'), STU = store('mf-l4-studio');
+  function saveState() {
+    STU.d.name = $('filterName').value; STU.d.strength = +strength.value;
+    STU.d.layers = layers.map(l => ({ label: l.label, from: l.from, on: l.on, why: l.why || '', steps: l.steps }));
+    STU.save();
   }
+  if (Array.isArray(STU.d.layers)) layers = STU.d.layers.filter(l => l && Array.isArray(l.steps) && l.steps.every(s => MF.filters[s.t]));
+  if (STU.d.name) $('filterName').value = STU.d.name;
+  if (STU.d.strength !== undefined) strength.value = STU.d.strength;
+
+  /* 픽셀 하나 따라가기: 레이어를 하나씩 적용하며 같은 자리의 (R, G, B)를 기록 */
+  const rgbAt = (c, p) => [...MF.ctx(c).getImageData(p.x, p.y, 1, 1).data.slice(0, 3)];
+  function traceRows() {
+    const p = MF.pickedPoint(photo), rows = [['원본', '', rgbAt(photo, p)]];
+    let cur = photo;
+    layers.forEach((l, i) => {
+      if (!l.on) return;
+      try { cur = MF.applySteps(cur, l.steps); } catch (e) { return; }
+      rows.push([`${i + 1}. ${l.label}`, l.from, rgbAt(cur, p)]);
+    });
+    if (+strength.value < 100) rows.push([`필터 강도 ${strength.value}%`, '', rgbAt(studioResult, p)]);
+    return { p, rows };
+  }
+  const traceHTML = ({ p, rows }) => `<div class="small muted">위치 (${p.x}, ${p.y})</div><table class="trace"><tr><th>단계</th><th>(R, G, B)</th></tr>${rows.map(([n, f, c]) =>
+    `<tr><td>${n.replace(/</g, '&lt;')}${f ? ` <span class="chip">${f}</span>` : ''}</td><td class="v"><span class="sw" style="background:rgb(${c})"></span>(${c.join(', ')})</td></tr>`).join('')}</table>`;
+  const drawTrace = () => { $('trace').innerHTML = traceHTML(traceRows()); };
+  MF.pickable($('studioCanvas'), () => drawTrace());
+
   R.studio = () => {
     strengtho.textContent = strength.value + '%';
-    renderLayers(); computeStudio(); drawSplit(); saveCode();
+    renderLayers(); computeStudio(); drawSplit(); drawTrace(); saveState();
   };
   splitX.addEventListener('input', drawSplit);
-  strength.addEventListener('input', () => { strengtho.textContent = strength.value + '%'; computeStudio(); drawSplit(); saveCode(); });
-  $('filterName').addEventListener('input', saveCode);
-  // 차시 카드의 [코드로 추가]
-  document.querySelectorAll('[data-code-add]').forEach(btn => btn.addEventListener('click', () => {
-    const inp = btn.parentElement.querySelector('[data-code]');
-    try {
-      const obj = MF.decode(inp.value);
-      if (obj.lesson === 4 && obj.layers) {
-        obj.layers.forEach(l => addLayer({ label: l.label, from: l.from, steps: l.steps, on: l.on !== false }));
-      } else {
-        if (!obj.steps || !obj.steps.length) throw new Error('레이어로 쓸 수 있는 필터가 없어요.');
-        obj.steps.forEach(st => { if (!MF.filters[st.t]) throw new Error('알 수 없는 필터 종류예요.'); if (st.t === 'formula') st.f.forEach(MF.compileExpr); });
-        addLayer({ label: obj.name || `${obj.lesson}차시 필터`, from: `${obj.lesson || '?'}차시`, steps: obj.steps });
-      }
-      inp.value = '';
-      MF.toast('레이어를 추가했어요!');
-    } catch (e) { MF.toast(e.message); }
-  }));
+  strength.addEventListener('input', () => { strengtho.textContent = strength.value + '%'; computeStudio(); drawSplit(); drawTrace(); saveState(); });
+  $('filterName').addEventListener('input', saveState);
   $('studioDownload').addEventListener('click', () => studioResult && MF.download(studioResult, ($('filterName').value.trim() || '나만의필터') + '.png'));
-  $('copyCode').addEventListener('click', () => {
-    if (!$('filterName').value.trim()) { MF.toast('필터 이름을 먼저 지어 주세요!'); $('filterName').focus(); return; }
-    if (!layers.length) { MF.toast('레이어를 하나 이상 추가해 주세요!'); return; }
-    MF.copy($('codeOut').value);
-  });
-  $('loadCode').addEventListener('click', () => {
-    try {
-      const obj = MF.decode($('codeIn').value);
-      if (obj.lesson !== 4 || !obj.layers) throw new Error('4차시 완성 필터 코드가 아니에요. 1~3차시 코드는 위의 재료 카드에 넣어 주세요.');
-      layers = obj.layers.map(l => ({ label: l.label, from: l.from, steps: l.steps, on: l.on !== false }));
-      $('filterName').value = obj.name || ''; strength.value = obj.strength ?? 100;
-      R.studio();
-      MF.toast(`'${obj.name || '이름 없는 필터'}'를 불러왔어요!`);
-    } catch (e) { MF.toast(e.message); }
-  });
 
-  /* ===== 활동지 ===== */
-  const ws = MF.worksheet({
-    lesson: 4, title: '나만의 필터 만들기',
-    q1title: '오늘 가장 인상 깊었던 내용', q1hint: '',
-    q2: '완성한 필터의 레이어 순서와 각 레이어에 쓰인 수학을 쓰고, 왜 이렇게 조합했는지 설명해 주세요.',
-    getResult: () => { if (!studioResult) computeStudio(); saveCode(); return { canvas: studioResult, name: $('filterName').value.trim(), code: $('codeOut').value }; },
-    moreReq: [['4차시 수업을 마치며 느낀 점', '1~4차시 활동을 하며 느낀 점, 새롭게 알게 된 점, 어려웠던 점 등을 자유롭게 써 주세요.']],
-    extras: [{ key: 'career', title: '내 관심 분야와의 연결', hint: '4번 화면에서 고른 관심 분야에서 오늘 배운 수학이 어떻게 쓰일 수 있는지, 무엇이 더 궁금해졌는지 써 주세요.', labelKey: 'careerField', label: '관심 분야' }]
+  /* ===== 보고서 ===== */
+  // 단계마다 담긴 수학 (교사가 생기부에 옮기기 쉬운 말로)
+  const mathOf = s => {
+    if (s.t === 'formula') return '행렬의 덧셈: R, G, B 행렬의 모든 성분에 같은 수를 더함';
+    if (s.t === 'adjust') {
+      const p = Object.assign({}, MF.ADJ, s.p), out = [];
+      if (p.expo !== 1) out.push('노출 = 일차함수의 기울기');
+      if (p.bright) out.push('밝기 = y절편(평행이동)');
+      if (p.contrast !== 1) out.push('대비 = 점 (128, 128)을 지나는 직선의 기울기');
+      if (p.warm) out.push('따뜻함 = R에 더하고 B에서 빼기');
+      if (p.fade) out.push('페이드 = 점 (255, 255)를 지나며 기울기 감소');
+      if (p.vignette) out.push('비네트 = 마스크 행렬과 같은 자리끼리 곱');
+      return '일차함수 A′ = pA + q: ' + out.join(', ');
+    }
+    if (s.t === 'matrix') return '행렬의 곱셈: (R′, G′, B′) = 3×3 행렬 × (R, G, B)';
+    if (s.t === 'kernel') { const sum = s.k.reduce((a, b) => a + b, 0); return `합성곱(커널): 이웃 9칸과 같은 자리끼리 곱해 더함 (성분 합 ${MF.num(sum)}${(s.d || 1) !== 1 ? `, ÷ ${s.d}` : ''})`; }
+    if (s.t === 'mosaic') return `블록 평균: ${s.size}×${s.size} 칸의 평균으로 채움`;
+    if (s.t === 'gray') return '가중평균으로 흑백 만들기';
+    return '';
+  };
+  const calcOf = s => (s.t === 'adjust' ? linText(Object.assign({}, MF.ADJ, s.p)).replace(/<br>/g, ' / ') : descOf(s));
+  const KEYWORD = { formula: '행렬의 덧셈', adjust: '일차함수', matrix: '행렬의 곱셈', kernel: '합성곱(커널)', mosaic: '블록 평균' };
+  const RQ = [['intent', '필터를 만든 의도'], ['order', '레이어를 이 순서로 조합한 이유'], ['math', '내 필터 속 수학 원리 설명'], ['end', '1~4차시를 마치며']];
+  document.querySelectorAll('[data-r]').forEach(ta => {
+    ta.value = WS.d['rp_' + ta.dataset.r] || '';
+    ta.addEventListener('input', () => { WS.d['rp_' + ta.dataset.r] = ta.value; WS.save(); });
   });
-  R.end = ws.refresh;
+  [['rpNo', 'no'], ['rpName', 'name']].forEach(([id, k]) => {
+    $(id).value = ID.d[k] || '';
+    $(id).addEventListener('input', () => { ID.d[k] = $(id).value; ID.save(); });
+  });
+  const loadH2C = () => window.html2canvas ? Promise.resolve() : new Promise((res, rej) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    sc.onload = () => res(); sc.onerror = () => rej(new Error('html2canvas'));
+    document.head.append(sc);
+  });
+  const jpg = c => { const s = Math.min(1, 700 / Math.max(c.width, c.height)), o = MF.makeCanvas(Math.round(c.width * s), Math.round(c.height * s)); o.getContext('2d').drawImage(c, 0, 0, o.width, o.height); return o.toDataURL('image/jpeg', 0.88); };
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  $('rpDownload').addEventListener('click', () => {
+    const no = $('rpNo').value.trim(), name = $('rpName').value.trim(), fname = $('filterName').value.trim();
+    if (!no || !name) { MF.toast('학번과 이름을 먼저 써 주세요.'); $(no ? 'rpName' : 'rpNo').focus(); return; }
+    if (!fname) { MF.toast('필터 이름을 먼저 지어 주세요.'); $('filterName').focus(); return; }
+    const on = layers.filter(l => l.on);
+    if (!on.length) { MF.toast('레이어를 하나 이상 추가해 주세요.'); return; }
+    const miss = RQ.findIndex(([k]) => !(WS.d['rp_' + k] || '').trim());
+    if (miss >= 0) { MF.toast(`필수 ${miss + 1}번을 써 주세요.`); document.querySelector(`[data-r="${RQ[miss][0]}"]`).focus(); return; }
+    computeStudio();
+    const tr = traceRows(), today = new Date(), date = `${today.getFullYear()}.${today.getMonth() + 1}.${today.getDate()}`;
+    const used = [...new Set(on.flatMap(l => l.steps.map(s => KEYWORD[s.t]).filter(Boolean)))];
+    if (+strength.value < 100) used.push('행렬의 실수배와 덧셈(필터 강도)');
+    const lessons = [...new Set(on.map(l => l.from))].sort();
+    const field = WS.d.x_careerField || '', career = (WS.d.x_career || '').trim();
+    const ans = k => esc((WS.d['rp_' + k] || '').trim());
+    let pr = $('rpPrint'); if (!pr) { pr = document.createElement('div'); pr.id = 'rpPrint'; document.body.append(pr); }
+    pr.innerHTML = `
+      <div class="rh"><div><div class="rk">AI 융합캠프(조민기) · 행렬을 활용한 이미지 필터 만들기 · 4차시 탐구 보고서</div><h1>나만의 필터: ${esc(fname)}</h1></div>
+        <div class="rid">학번 <b>${esc(no)}</b> · 이름 <b>${esc(name)}</b><br>${date}</div></div>
+      <h2>1. 완성한 필터</h2>
+      <div class="imgs"><div><img src="${jpg(photo)}">원본</div><div><img src="${jpg(studioResult)}">필터 적용${+strength.value < 100 ? ` (강도 ${strength.value}%)` : ''}</div></div>
+      <div class="qt">필터를 만든 의도</div><div class="a">${ans('intent')}</div>
+      <h2>2. 레이어 구성과 담긴 수학</h2>
+      <table><tr><th style="width:34px">순서</th><th style="width:58px">차시</th><th>계산</th><th>담긴 수학</th><th style="width:150px">넣은 이유</th></tr>
+        ${on.map((l, i) => `<tr><td>${i + 1}</td><td>${esc(l.from)}</td><td class="mono">${l.steps.map(s => esc(calcOf(s))).join('<br>')}</td><td>${l.steps.map(s => esc(mathOf(s))).join('<br>')}</td><td>${esc(l.why) || '<span class="none">-</span>'}</td></tr>`).join('')}</table>
+      <h2>3. 픽셀 하나 따라가기</h2>
+      <table><tr><th>단계</th><th>위치 (${tr.p.x}, ${tr.p.y})의 (R, G, B)</th></tr>${tr.rows.map(([n, f, c]) => `<tr><td>${esc(n)}${f ? ` · ${esc(f)}` : ''}</td><td class="mono">(${c.join(', ')})</td></tr>`).join('')}</table>
+      <h2>4. 학생 서술</h2>
+      <div class="qt">레이어를 이 순서로 조합한 이유</div><div class="a">${ans('order')}</div>
+      <div class="qt">내 필터 속 수학 원리 설명</div><div class="a">${ans('math')}</div>
+      <div class="qt">관심 분야와 연결${field ? ` (${esc(field)})` : ''}</div><div class="a">${esc(career) || '<span class="none">(작성하지 않음)</span>'}</div>
+      <div class="qt">1~4차시를 마치며</div><div class="a">${ans('end')}</div>
+      <div class="teacher"><b>교사용 요약</b><br>
+        사용한 차시: ${lessons.join(', ')} (${lessons.length}/4) · 레이어 ${on.length}개<br>
+        담긴 수학: <span class="chips">${used.map(u => `<span>${esc(u)}</span>`).join('')}</span><br>
+        관심 분야: ${esc(field) || '-'}<br>
+        서술 분량: 의도 ${ans('intent').length}자 · 조합 이유 ${ans('order').length}자 · 수학 원리 ${ans('math').length}자 · 관심 분야 ${career.length}자 · 마치며 ${ans('end').length}자</div>`;
+    const file = `4차시_보고서_${no}_${name}`, btn = $('rpDownload'), label = btn.textContent;
+    btn.disabled = true; btn.textContent = '⏳ 보고서 만드는 중…';
+    const imgs = [...pr.querySelectorAll('img')];
+    Promise.all(imgs.map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })))
+      .then(loadH2C)
+      .then(() => { pr.classList.add('on'); return window.html2canvas(pr, { scale: 2, backgroundColor: '#ffffff', logging: false }); })
+      .then(c => { MF.download(c, file + '.png'); MF.toast('보고서를 다운로드 폴더에 저장했어요! 카카오톡에 올려 주세요.'); })
+      .catch(() => {
+        MF.toast("이미지 저장이 안 돼서 인쇄 창을 열어요. 대상을 'PDF로 저장'으로 골라 주세요.");
+        const t = document.title; document.title = file; pr.classList.add('on', 'print');
+        setTimeout(() => { window.print(); document.title = t; pr.classList.remove('on', 'print'); }, 300);
+      })
+      .finally(() => { pr.classList.remove('on'); btn.disabled = false; btn.textContent = label; });
+  });
+  const ws = { // 4번 화면(관심 분야)이 쓰는 기록
+    get: k => WS.d['x_' + k] || '',
+    set: (k, v) => { WS.d['x_' + k] = v; WS.save(); },
+    bind: (el, k) => { el.value = WS.d['x_' + k] || ''; el.addEventListener('input', () => { WS.d['x_' + k] = el.value; WS.save(); }); }
+  };
 
 
   /* ===== 5. 어디에 쓰일까? (진로 연계) ===== */

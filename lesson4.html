@@ -145,6 +145,17 @@
   .lin-out { font-family: var(--mono); font-size: 13px; background: var(--soft); border-radius: 8px; padding: 6px 10px; line-height: 1.7; }
   .layer .why { width: 100%; margin-top: 4px; font-size: 13px; padding: 4px 8px; border: 1px dashed var(--line); border-radius: 6px; font-family: inherit; }
   .trace-box { margin-top: 14px; }
+  .eq { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 4px 0; }
+  .eq .op { font-weight: 800; font-size: 18px; color: var(--muted); }
+  .eq .vv { font-family: var(--mono); font-weight: 700; }
+  .eq .matrix.m3 td { min-width: 34px; height: 24px; font-size: 12.5px; }
+  .eq-row { border-top: 1px solid var(--line); padding: 6px 0; font-size: 13.5px; }
+  .eq-row.skip { color: var(--muted); }
+  .eq-final { margin-top: 6px; background: #f4f0ff; border-radius: 10px; padding: 8px 10px; }
+  #rpPrint .eq .op { font-size: 16px; color: #555; font-weight: 800; }
+  #rpPrint .fx { font-size: 14px; }
+  #rpPrint .fx .small { font-size: 12.5px; color: #666; }
+  #rpPrint .chip { font-size: 12px; color: #666; }
   .trace { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px; }
   .trace th, .trace td { border-bottom: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
   .trace td.v { font-family: var(--mono); white-space: nowrap; }
@@ -330,7 +341,7 @@
           <div class="layers" id="layers"></div>
           <div class="mix-check" id="mixCheck"></div>
           <div class="trace-box">
-            <div class="matrix-label">📍 픽셀 하나 따라가기 <span class="small muted">(왼쪽 사진을 클릭해 위치를 바꿔요)</span></div>
+            <div class="matrix-label">🧮 내 필터를 하나의 식으로 <span class="small muted">(3×3 행렬 × 색 + 벡터)</span></div>
             <div id="trace"></div>
           </div>
         </div>
@@ -396,7 +407,7 @@
         </div>
         <div class="ws-req"><div class="ws-req-t">필수 1. 필터를 만든 의도</div><div class="small muted">어떤 사진에, 어떤 느낌이나 목적으로 쓰려고 만들었나요?</div><textarea class="ws-req-in" rows="2" data-r="intent"></textarea></div>
         <div class="ws-req"><div class="ws-req-t">필수 2. 레이어를 이 순서로 조합한 이유</div><div class="small muted">각 레이어가 맡은 역할과, 순서를 바꾸면 결과가 어떻게 달라지는지 써 주세요.</div><textarea class="ws-req-in" rows="3" data-r="order"></textarea></div>
-        <div class="ws-req"><div class="ws-req-t">필수 3. 내 필터 속 수학 원리 설명</div><div class="small muted">위의 '픽셀 하나 따라가기' 표에서 숫자가 크게 바뀐 레이어 하나를 골라, 그 숫자가 어떤 계산(덧셈, 일차함수, 행렬 곱, 커널)으로 나왔는지 직접 식을 써서 설명해 주세요.</div><textarea class="ws-req-in" rows="4" data-r="math"></textarea></div>
+        <div class="ws-req"><div class="ws-req-t">필수 3. 내 필터 속 수학 원리 설명</div><div class="small muted">위의 '내 필터를 하나의 식으로'에서 최종 행렬이나 벡터의 숫자 하나를 골라, 어느 레이어의 어떤 계산(덧셈, 일차함수, 행렬 곱)이 합쳐져서 나왔는지 직접 식을 써서 설명해 주세요. 커널을 넣었다면 커널이 어떻게 계산되는지도 써 보세요.</div><textarea class="ws-req-in" rows="4" data-r="math"></textarea></div>
         <div class="ws-req"><div class="ws-req-t">필수 4. 1~4차시를 마치며</div><div class="small muted">새로 알게 된 점, 어려웠다가 이해하게 된 점, 더 탐구해 보고 싶은 점을 써 주세요.</div><textarea class="ws-req-in" rows="3" data-r="end"></textarea></div>
         <div class="btn-row" style="margin-top:14px"><button class="btn grad" id="rpDownload">📄 보고서 다운로드</button></div>
         <p class="small muted" style="margin-top:8px">⚠️ 쓴 내용은 이 컴퓨터에 임시로 남지만 컴퓨터실 PC는 껐다 켜면 지워질 수 있어요. 수업이 끝나기 전에 꼭 다운로드해서 제출해요.</p>
@@ -818,24 +829,41 @@
   if (STU.d.name) $('filterName').value = STU.d.name;
   if (STU.d.strength !== undefined) strength.value = STU.d.strength;
 
-  /* 픽셀 하나 따라가기: 레이어를 하나씩 적용하며 같은 자리의 (R, G, B)를 기록 */
-  const rgbAt = (c, p) => [...MF.ctx(c).getImageData(p.x, p.y, 1, 1).data.slice(0, 3)];
-  function traceRows(withPv = true) {
-    const p = MF.pickedPoint(photo), rows = [['원본', '', rgbAt(photo, p)]];
-    let cur = photo;
-    layers.forEach((l, i) => {
-      if (!l.on) return;
-      try { cur = MF.applySteps(cur, l.steps); } catch (e) { return; }
-      rows.push([`${i + 1}. ${l.label}`, l.from, rgbAt(cur, p)]);
+  /* 내 필터를 하나의 식으로: 커널·모자이크를 뺀 모든 단계를 (3×3 행렬) × (R, G, B) + (벡터) 로 합친다 */
+  const I3 = MF.I3, Z3 = [0, 0, 0];
+  const mm = (A, B) => [0, 1, 2].flatMap(r => [0, 1, 2].map(c => A[r * 3] * B[c] + A[r * 3 + 1] * B[3 + c] + A[r * 3 + 2] * B[6 + c]));
+  const isI = M => M.every((v, i) => Math.abs(v - I3[i]) < 1e-9), isZ = v => v.every(x => Math.abs(x) < 1e-9);
+  const affOf = s => {
+    if (s.t === 'formula' && s.add) return { M: I3, c: s.add.slice() };
+    if (s.t === 'adjust') { const p = Object.assign({}, MF.ADJ, s.p), { s: k, q } = linOf(p); return { M: [k, 0, 0, 0, k, 0, 0, 0, k], c: q, note: p.vignette ? `비네트(모서리 × ${MF.num(1 - p.vignette)})는 위치마다 달라 식에서 뺐어요` : '' }; }
+    if (s.t === 'matrix') return { M: s.m.map(Number), c: Z3 };
+    if (s.t === 'gray') return { M: [...s.w, ...s.w, ...s.w], c: Z3 };
+    if (s.t === 'invert') return { M: [-1, 0, 0, 0, -1, 0, 0, 0, -1], c: [255, 255, 255] };
+    return null; // 커널·모자이크: 이웃 픽셀을 함께 계산해서 식으로 나타내지 않는다
+  };
+  const SUB = n => String(n).replace(/\d/g, d => '₀₁₂₃₄₅₆₇₈₉'[d]);
+  const VIN = MF.vecHTML(['R', 'G', 'B']), VOUT = MF.vecHTML(["R′", "G′", "B′"]);
+  const rhs = (M, c, x) => `${isI(M) ? '' : MF.mat3HTML(M) + '<span class="op">×</span>'}${x}${isZ(c) ? '' : '<span class="op">+</span>' + MF.vecHTML(c.map(v => Math.round(v * 100) / 100))}`;
+  function formulaParts(withPv) {
+    const list = [];
+    layers.forEach((l, i) => { if (l.on) l.steps.forEach(s => list.push([`${i + 1}. ${l.label}`, l.from, s])); });
+    if (withPv && pv) pv.steps.forEach(s => list.push([`미리보기: ${pv.label}`, '', s]));
+    let M = I3, c = Z3, k = 0;
+    const rows = [], notes = [], skipped = [];
+    list.forEach(([name, from, s]) => {
+      const a = affOf(s);
+      if (!a) { skipped.push(name); rows.push(`<div class="eq-row skip"><b>${esc(name)}</b> ${from ? `<span class="chip">${from}</span>` : ''} — 이웃 픽셀을 함께 계산하는 커널이라 식에서 제외</div>`); return; }
+      k++;
+      M = mm(a.M, M); c = MF.mulMV(a.M, c).map((v, i) => v + a.c[i]);
+      if (a.note) notes.push(a.note);
+      rows.push(`<div class="eq-row"><div><b>${esc(name)}</b> ${from ? `<span class="chip">${from}</span>` : ''}</div><div class="eq"><span class="vv">v${SUB(k)} =</span>${rhs(a.M, a.c, `<span class="vv">v${SUB(k - 1)}</span>`)}</div></div>`);
     });
-    if (pv && withPv) { try { cur = MF.applySteps(cur, pv.steps); rows.push([`미리보기: ${pv.label}`, '', rgbAt(cur, p)]); } catch (e) {} }
-    if (+strength.value < 100) rows.push([`필터 강도 ${strength.value}%`, '', rgbAt(studioResult, p)]);
-    return { p, rows };
+    const t = +strength.value / 100;
+    if (t < 1 && k) { M = M.map((v, i) => (1 - t) * I3[i] + t * v); c = c.map(v => t * v); notes.push(`필터 강도 ${strength.value}%: (1 − ${MF.num(t)}) × 원본 + ${MF.num(t)} × 필터까지 합쳤어요`); }
+    const final = k ? `<div class="eq-final"><div class="matrix-label">최종 식${skipped.length ? ' (커널 제외)' : ''}</div><div class="eq">${VOUT}<span class="op">=</span>${rhs(M, c, VIN)}</div></div>` : '';
+    return { k, html: list.length ? `<div class="small muted">v${SUB(0)} = (R, G, B) 원래 색에서 시작해요.</div>${rows.join('')}${final}${notes.map(n => `<div class="small muted">※ ${esc(n)}</div>`).join('')}<div class="small muted">※ 계산 결과가 0보다 작으면 0, 255보다 크면 255가 돼요.</div>` : '<div class="small muted">레이어를 추가하면 식이 여기에 나타나요.</div>' };
   }
-  const traceHTML = ({ p, rows }) => `<div class="small muted">위치 (${p.x}, ${p.y})</div><table class="trace"><tr><th>단계</th><th>(R, G, B)</th></tr>${rows.map(([n, f, c]) =>
-    `<tr><td>${n.replace(/</g, '&lt;')}${f ? ` <span class="chip">${f}</span>` : ''}</td><td class="v"><span class="sw" style="background:rgb(${c})"></span>(${c.join(', ')})</td></tr>`).join('')}</table>`;
-  const drawTrace = () => { $('trace').innerHTML = traceHTML(traceRows()); };
-  MF.pickable($('studioCanvas'), () => drawTrace());
+  const drawTrace = () => { $('trace').innerHTML = formulaParts(true).html; };
 
   R.studio = () => {
     strengtho.textContent = strength.value + '%';
@@ -847,26 +875,24 @@
   $('studioDownload').addEventListener('click', () => clearPv() || studioResult && MF.download(studioResult, ($('filterName').value.trim() || '나만의필터') + '.png'));
 
   /* ===== 보고서 ===== */
-  // 단계마다 담긴 수학 (교사가 생기부에 옮기기 쉬운 말로)
-  const mathOf = s => {
-    if (s.t === 'formula') return '행렬의 덧셈: R, G, B 행렬의 모든 성분에 같은 수를 더함';
+  // 보고서의 '계산 식' 칸: 단계마다 계산 순서를 자세히
+  const calcHTML = s => {
+    if (s.t === 'formula' && s.add) return ['R', 'G', 'B'].map((ch, i) => `${ch}′ = ${ch}${sgn(s.add[i])}`).join('<br>');
     if (s.t === 'adjust') {
-      const p = Object.assign({}, MF.ADJ, s.p), out = [];
-      if (p.expo !== 1) out.push('노출 = 일차함수의 기울기');
-      if (p.bright) out.push('밝기 = y절편(평행이동)');
-      if (p.contrast !== 1) out.push('대비 = 점 (128, 128)을 지나는 직선의 기울기');
-      if (p.warm) out.push('따뜻함 = R에 더하고 B에서 빼기');
-      if (p.fade) out.push('페이드 = 점 (255, 255)를 지나며 기울기 감소');
-      if (p.vignette) out.push('비네트 = 마스크 행렬과 같은 자리끼리 곱');
-      return '일차함수 A′ = pA + q: ' + out.join(', ');
+      const p = Object.assign({}, MF.ADJ, s.p), L = [];
+      if (p.expo !== 1) L.push(`노출: A → ${MF.num(p.expo)} × A`);
+      if (p.bright) L.push(`밝기: A → A${sgn(p.bright)}`);
+      if (p.contrast !== 1) L.push(`대비: A → ${MF.num(p.contrast)} × (A − 128) + 128`);
+      if (p.warm) L.push(`따뜻함: R → R${sgn(p.warm)}, B → B${sgn(-p.warm)}`);
+      if (p.fade) L.push(`페이드: A → A + ${MF.num(p.fade)} × (255 − A) ÷ 2`);
+      if (p.vignette) L.push(`비네트: 가운데 × 1, 모서리 × ${MF.num(1 - p.vignette)}`);
+      return `<span class="none">(A는 R, G, B 각각, 위에서부터 차례로 계산)</span><br>${L.join('<br>')}<br><b>정리하면</b><br>${linText(Object.assign({}, p, { vignette: 0 }))}`;
     }
-    if (s.t === 'matrix') return '행렬의 곱셈: (R′, G′, B′) = 3×3 행렬 × (R, G, B)';
-    if (s.t === 'kernel') { const sum = s.k.reduce((a, b) => a + b, 0); return `합성곱(커널): 이웃 9칸과 같은 자리끼리 곱해 더함 (성분 합 ${MF.num(sum)}${(s.d || 1) !== 1 ? `, ÷ ${s.d}` : ''})`; }
-    if (s.t === 'mosaic') return `블록 평균: ${s.size}×${s.size} 칸의 평균으로 채움`;
-    if (s.t === 'gray') return '가중평균으로 흑백 만들기';
-    return '';
+    if (s.t === 'matrix') return `<div class="eq">${VOUT}<span class="op">=</span>${MF.mat3HTML(s.m)}<span class="op">×</span>${VIN}</div>`;
+    if (s.t === 'kernel') return `<div class="eq">${MF.mat3HTML(s.k)}${(s.d || 1) !== 1 ? `<span class="op">÷ ${s.d}</span>` : ''}</div>이웃 3×3칸과 같은 자리끼리 곱해 모두 더함${(s.n || 1) > 1 ? ` · ${s.n}번 반복` : ''}`;
+    if (s.t === 'mosaic') return `${s.size}×${s.size} 칸의 평균으로 채우기`;
+    return esc(descOf(s));
   };
-  const calcOf = s => (s.t === 'adjust' ? linText(Object.assign({}, MF.ADJ, s.p)).replace(/<br>/g, ' / ') : descOf(s));
   const KEYWORD = { formula: '행렬의 덧셈', adjust: '일차함수', matrix: '행렬의 곱셈', kernel: '합성곱(커널)', mosaic: '블록 평균' };
   const RQ = [['intent', '필터를 만든 의도'], ['order', '레이어를 이 순서로 조합한 이유'], ['math', '내 필터 속 수학 원리 설명'], ['end', '1~4차시를 마치며']];
   document.querySelectorAll('[data-r]').forEach(ta => {
@@ -894,7 +920,7 @@
     const miss = RQ.findIndex(([k]) => !(WS.d['rp_' + k] || '').trim());
     if (miss >= 0) { MF.toast(`필수 ${miss + 1}번을 써 주세요.`); document.querySelector(`[data-r="${RQ[miss][0]}"]`).focus(); return; }
     pv = null; computeStudio(); drawSplit(); drawTrace();
-    const tr = traceRows(false), today = new Date(), date = `${today.getFullYear()}.${today.getMonth() + 1}.${today.getDate()}`;
+    const fx = formulaParts(false), today = new Date(), date = `${today.getFullYear()}.${today.getMonth() + 1}.${today.getDate()}`;
     const used = [...new Set(on.flatMap(l => l.steps.map(s => KEYWORD[s.t]).filter(Boolean)))];
     if (+strength.value < 100) used.push('행렬의 실수배와 덧셈(필터 강도)');
     const lessons = [...new Set(on.map(l => l.from))].sort();
@@ -907,11 +933,11 @@
       <h2>1. 완성한 필터</h2>
       <div class="imgs"><div><img src="${jpg(photo)}">원본</div><div><img src="${jpg(studioResult)}">필터 적용${+strength.value < 100 ? ` (강도 ${strength.value}%)` : ''}</div></div>
       <div class="qt">필터를 만든 의도</div><div class="a">${ans('intent')}</div>
-      <h2>2. 레이어 구성과 담긴 수학</h2>
-      <table><tr><th style="width:34px">순서</th><th style="width:58px">차시</th><th>계산</th><th>담긴 수학</th><th style="width:150px">넣은 이유</th></tr>
-        ${on.map((l, i) => `<tr><td>${i + 1}</td><td>${esc(l.from)}</td><td class="mono">${l.steps.map(s => esc(calcOf(s))).join('<br>')}</td><td>${l.steps.map(s => esc(mathOf(s))).join('<br>')}</td><td>${esc(l.why) || '<span class="none">-</span>'}</td></tr>`).join('')}</table>
-      <h2>3. 픽셀 하나 따라가기</h2>
-      <table><tr><th>단계</th><th>위치 (${tr.p.x}, ${tr.p.y})의 (R, G, B)</th></tr>${tr.rows.map(([n, f, c]) => `<tr><td>${esc(n)}${f ? ` · ${esc(f)}` : ''}</td><td class="mono">(${c.join(', ')})</td></tr>`).join('')}</table>
+      <h2>2. 레이어 구성과 계산 식</h2>
+      <table><tr><th style="width:34px">순서</th><th style="width:110px">레이어</th><th>계산 식</th><th style="width:170px">넣은 이유</th></tr>
+        ${on.map((l, i) => `<tr><td>${i + 1}</td><td>${esc(l.label)}<br><span class="none">${esc(l.from)}</span></td><td class="mono">${l.steps.map(calcHTML).join('<br>')}</td><td>${esc(l.why) || '<span class="none">-</span>'}</td></tr>`).join('')}</table>
+      <h2>3. 내 필터를 하나의 식으로</h2>
+      <div class="fx">${fx.html}</div>
       <h2>4. 학생 서술</h2>
       <div class="qt">레이어를 이 순서로 조합한 이유</div><div class="a">${ans('order')}</div>
       <div class="qt">내 필터 속 수학 원리 설명</div><div class="a">${ans('math')}</div>
